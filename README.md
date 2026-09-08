@@ -23,9 +23,26 @@
   <a href="README.hi.md">हिन्दी</a>
 </p>
 
-一个 Chrome 扩展：用 AI 翻译 YouTube 视频标题，译文直接替换原位置显示，原文缩小保留在下方。边浏览边对照，既能快速判断视频讲什么，也能学习其他语言的真实标题表达。免费开源，API Key 和配置只存在你自己的浏览器里。
+> 刷 YouTube 时，是否常因外语标题看不懂而错过优质视频？  
+> 依赖传统机翻，是否受够了死板生硬、完全不懂网络梗与标题党的机械直译？  
+> 好不容易看懂了翻译，原标题却被直接覆盖，丧失了对照学习地道外语的机会？
 
-## 近期更新（v8.0.3）
+**YouTube 标题翻译 - 双语标题** 专为解决这些痛点而生！这是一款专为 YouTube 打造的次世代 AI 双语标题翻译与内容辅助扩展：**译文置顶替换原标题，原文微缩保留在下方**。结合前沿大语言模型的强大理解力，不仅懂梗、懂语气、地道自然，还能自动打上视频分类标签，无需 API Key 也能开箱即用！
+
+---
+
+## 🌟 核心亮点
+
+- 🎯 **极致双语对照，沉浸浏览**：译文作为主标题醒目展示，原文微缩紧随其后。无需鼠标悬停，扫一眼推荐流即可秒懂视频主题，兼顾信息获取与外语对照学习。
+- 🧠 **真正懂“梗”的 AI 语境意译**：彻底告别机械生硬的逐字死译。深度理解网络流行语、文化梗、俚语、缩写与 YouTube 标题党夸张表达，自然地道。
+- 🏷️ **智能视频内容标签**：翻译标题的同时，AI 会自动推断视频所属领域，打上【科技】、【新闻】、【音乐】、【财经】、【游戏】等分类标签，一眼避坑防标题党。
+- ⚡ **零门槛！无需 Key 开箱即用**：全面支持 Chrome 138+ 内置设备端原生翻译（Chrome Translator），未配置 API Key 时也能在本地直接翻译，免费、离线、零成本上手。
+- 🌐 **自由接入主流大模型与本地模型**：内置主流大语言模型快捷支持，并全面兼容 OpenAI 格式的自定义接口（无缝接入 Ollama、LM Studio 等本地私有化模型或中转服务）。
+- 🚀 **极速本地持久缓存与容错重试**：已翻译标题本地持久化秒开，刷新不重复消耗额度；偶遇网络波动失败时，点击红色状态标签即可秒级重试。
+
+---
+
+## 📌 近期更新（v8.0.3）
 
 - **没有 API Key 也能用**：未配置 Key 时，自动改用 Chrome 138+ 内置的设备端翻译，零成本上手
 - **翻译失败可点击重试**：失败标题显示红色提示，点一下即可重新翻译
@@ -33,19 +50,21 @@
 - popup 新增清除翻译缓存按钮（带条数显示）；已保存 Key 的服务商卡片显示绿点；测试配置时直接展示示例译文
 - 新增 12 种本地化语言，界面语言达到 14 种
 
-## 核心功能
+---
 
-| 能力 | 说明 |
-|------|------|
-| 译文 + 原文对照 | 译文作为主标题显示，原文保留在下方，方便快速浏览和语言学习 |
-| AI 语境翻译 | 不是逐词替换，能理解标题里的梗、语气、缩写和标题党表达 |
-| 内容标签 | 自动生成 科技、新闻、音乐、财经 等内容标签，先看类型再决定要不要点开 |
-| 多语言互译 | 自动识别常见源语言，可翻译成 12 种目标语言；已是目标语言的标题自动跳过 |
-| 多 AI 服务商 | 内置 DeepSeek、OpenAI、Gemini、Claude、MiniMax、Z.AI、Kimi，支持自定义 OpenAI 兼容端点 |
-| 无 Key 内置翻译 | 未配置 Key 时使用 Chrome 内置 Translator，设备端运行、免费、不上传文本 |
-| 本地缓存与隐私 | 译文本地缓存避免重复请求；API Key 与配置只保存在当前浏览器 |
+## 📊 特性对比矩阵
 
-## 效果演示
+| 对比维度 | 传统全页机翻 / 传统脚本 | 本扩展（内置无 Key 模式） | 本扩展（云端/本地大模型模式） |
+| :--- | :--- | :--- | :--- |
+| **展示形式** | 覆盖原文，排版混乱 | **译文在上、原文在下对照** | **译文在上、原文在下对照** |
+| **翻译质量** | 逐字生硬死译，丢失语境 | 流畅日常翻译 | **地道意译，深谙网络梗与流行语** |
+| **视频分类标签** | ❌ 无 | ❌ 无 | **✅ 自动生成【科技/财经/娱乐】等标签** |
+| **上手门槛** | 低 | **极低（零配置、即装即用）** | 自备 API Key 或本地模型 |
+| **费用与隐私** | 可能上传整页内容 | **100% 离线、永久免费、文本不离机** | 直连服务商，不经中间服务器 |
+
+---
+
+## 📸 效果演示
 
 | 英文 -> 日语 | 英文 -> 韩语 |
 |---|---|
@@ -67,109 +86,111 @@
 |---|---|
 | ![Chinese to Indonesian](screenshots/v8.0.1/zh-to-id.png) | ![Chinese to Vietnamese](screenshots/v8.0.1/zh-to-vi.png) |
 
-## 快速开始
+---
 
-### 方法一：Chrome 应用商店（推荐）
+## 🚀 快速开始
 
-[点击前往 Chrome 应用商店安装](https://chromewebstore.google.com/detail/bhajnflcikmidmdalnjhknillnkaojhk)
+### 方式一：Chrome 应用商店安装（推荐）
+👉 [点击前往 Chrome 应用商店直接安装](https://chromewebstore.google.com/detail/bhajnflcikmidmdalnjhknillnkaojhk)
 
-### 方法二：开发者模式安装
+### 方式二：开发者模式加载源码
+1. 前往 [GitHub Releases](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/releases) 下载最新版本的 ZIP 压缩包并解压；
+2. 在 Chrome 地址栏访问 `chrome://extensions/`，打开右上角 **“开发者模式”**；
+3. 点击左上角 **“加载已解压的扩展程序”**，选择解压出的文件夹即可。
 
-1. 打开 [GitHub Releases](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/releases)，下载最新版本的 zip 并解压。
-2. 在 Chrome 地址栏输入 `chrome://extensions/`，开启右上角"开发者模式"。
-3. 点击"加载已解压的扩展程序"，选择解压后的文件夹。
+---
 
-安装后点击浏览器工具栏的插件图标：先选目标语言（`Translate titles into`），再选 AI 服务商并粘贴 API Key，保存后刷新 YouTube 页面即可。没有 Key 也可以直接使用，详见下文"内置翻译"。
+## 🛠️ 使用与配置
 
-## 配置说明
+安装后点击浏览器工具栏的插件图标打开控制面板：
 
 ![插件配置界面](screenshots/v8.0.1/config-ui.png)
 
-| 区域 | 作用 |
-|------|------|
-| Interface language | 配置界面显示语言（14 种），不影响 YouTube 页面和翻译目标 |
-| Translation 开关 | 是否在 YouTube 页面自动翻译标题；暂停时会移除页面上已渲染的译文 |
-| Translate titles into | 标题翻译目标语言，默认英文 |
-| Choose AI provider | 选择 AI 服务商，默认并推荐 DeepSeek；已保存 Key 的服务商卡片右下角有绿点 |
-| Model settings | 选择模型版本，或选"其他"手动填写模型 ID |
-| API Key | 你在对应服务商申请的 Key，只保存在本地 |
-| Custom endpoint | 接入 OpenRouter、SiliconFlow、火山方舟、Ollama、LM Studio 等兼容服务 |
-| Save settings | 保存配置，保存后建议刷新 YouTube 页面 |
-| Test configuration | 测试当前配置是否可用，成功时直接展示一条示例译文；失败时按原因提示（Key 无效 / 额度不足 / 模型名错误 / 网络异常） |
-| Clear translation cache | 清除本地译文缓存（显示当前缓存条数）；缓存按目标语言区分，切换语言互不影响 |
+### 1. 基础开箱即用（无需 API Key）
+未配置任何 API Key 时，扩展自动激活 Chrome 138+ 内置设备端翻译。无需任何设置，打开 YouTube 即可直接看到双语标题！
 
-## 没有 API Key？用内置翻译
+### 2. 进阶大模型配置（获得梗意译 + 分类标签）
+若想体验更生动懂梗的翻译以及智能内容标签：
+1. **Translate titles into**：选择目标语言（支持中、英、日、韩等 12 种语言）；
+2. **Choose AI provider**：选择你喜爱的 AI 服务商，并粘贴对应平台的 API Key；
+3. 点击 **Save settings** 保存配置并刷新 YouTube 页面。
 
-在未配置任何 Key 的情况下，扩展会自动尝试 Chrome 138+ 内置的 Translator / LanguageDetector：翻译在你本机完成，不上传文本、不产生费用。设备端不支持的冷门语言对会显示"请配置插件"引导，配置任意一家 AI 服务商的 Key 后即可翻译全部支持语言。
+---
 
-内置翻译没有内容标签分类能力，标签位置会显示"本机 / On-device"。
+## 🤖 支持的 AI 服务商
 
-## 服务商、模型与 API Key
+| 服务商 | API Key 申请入口 |
+| :--- | :--- |
+| **DeepSeek（推荐）** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
+| **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
+| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
+| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
+| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
 
-| 服务商 | 内置模型 | Key 申请入口 |
-|--------|----------|--------------|
-| DeepSeek（推荐） | `deepseek-v4-flash`、`deepseek-v4-pro`、`deepseek-chat` | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
-| OpenAI | `gpt-5.5`、`gpt-5.4-mini`、`gpt-5.4` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| Google Gemini | `gemini-3.5-flash`、`gemini-3-pro-preview`、`gemini-3-flash-preview`、`gemini-2.5-flash` | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
-| Claude | `claude-opus-4-7`、`claude-opus-4-6`、`claude-sonnet-4-6`、`claude-haiku-4-5` | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) |
-| MiniMax | `MiniMax-M2.7-highspeed`、`MiniMax-M2.7`、`MiniMax-M2.5` | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| Z.AI | `glm-5.1`、`glm-5.1-flash`、`glm-4.6` | [z.ai/manage-apikey/apikey-list](https://z.ai/manage-apikey/apikey-list) |
-| Kimi | `kimi-k2.6`、`kimi-k2.6-turbo`、`kimi-k2.6-thinking` | [platform.kimi.ai/console/api-keys](https://platform.kimi.ai/console/api-keys) |
+### 🔌 自定义 OpenAI 兼容端点（本地模型与中转）
+选择 **Custom** 可连接任意兼容 OpenAI Chat Completions 规范的接口：
+- **API Endpoint**：接口完整 URL（如 `http://localhost:11434/v1/chat/completions` 或 OpenRouter 等聚合服务）；
+- **Model name**：调用的具体模型名称（如 `llama3.3`、`qwen2.5`）；
+- **API Key**：对应服务商的 Key（本地无鉴权模型可随意填写）。
 
-扩展本身免费；各服务商按 API 用量计费，以其平台规则为准。
+---
 
-### 自定义端点
+## 🌍 支持的语言
 
-选择 `Custom` 可接入任何兼容 OpenAI Chat Completions 格式的服务，需填写：
+- **目标语言（12 种）**：简体中文、繁體中文、English、日本語、한국어、ไทย、Español、Français、Deutsch、Português、Bahasa Indonesia、Tiếng Việt
+- **界面语言（14 种）**：中、英、日、韩、西、法、德、葡、印尼、越、俄、阿、印地等 14 国语言
+- **源语言识别**：无需手动选择，智能自动识别全语言视频标题；若标题与目标语言一致则自动跳过。
 
-- `API Endpoint`：完整接口地址，例如 `https://openrouter.ai/api/v1/chat/completions`
-- `Model name`：服务商要求的模型 ID，例如 `openai/gpt-5.4-mini`
-- `API Key`：对应服务商的密钥
+---
 
-首次保存新域名时 Chrome 会弹出权限确认，这是扩展直接访问该服务商所必需的。自定义端点必须使用 HTTPS（本机 `localhost` 调试除外）。
+## 🔒 隐私与数据安全
 
-## 支持的语言
+- **0 数据收集**：扩展不追踪用户浏览历史，不收集任何个人敏感信息。
+- **纯本地存储**：API Key、偏好设置和翻译缓存完全保存在你当前浏览器的 `chrome.storage.local` 中。
+- **无中间服务器**：数据直连用户选择的 AI 服务商或在本地设备端运行，绝无第三方服务器转手中继。
 
-**目标语言（12 种）**：简体中文 / 繁體中文 / English / 日本語 / 한국어 / ไทย / Español / Français / Deutsch / Português / Bahasa Indonesia / Tiếng Việt
+---
 
-**界面语言（14 种）**：English / 简体中文 / 日本語 / 한국어 / ไทย / Español / Français / Deutsch / Português / Bahasa Indonesia / Tiếng Việt / Русский / العربية / हिन्दी
+## ❓ 常见问题 FAQ
 
-**源语言**：无需选择，自动识别英文、中文、日语、韩语、泰语、西班牙语、法语、德语、葡萄牙语、印尼语、越南语、俄语、阿拉伯语、印地语等常见标题语言。
+<details>
+<summary><b>Q1: 扩展本身收费吗？</b></summary>
+扩展完全免费且基于 MIT 协议开源。使用 Chrome 内置设备端翻译完全免费；若使用云端大模型，API 额度费用按各服务商官方规则由用户自理。
+</details>
 
-## 隐私与数据
+<details>
+<summary><b>Q2: 频繁刷新页面会重复消耗 API Token 吗？</b></summary>
+不会。扩展内置了完善的持久化本地缓存机制，已翻译标题直接从本地极速加载，绝不发起重复请求。切换目标语言时缓存自动按语言隔离。
+</details>
 
-```text
-API Key / 目标语言 / 界面语言 / 服务商配置 -> Chrome 本地存储
-标题文本                                  -> 只发给你自己选择的 AI 服务商
-                                          -> 不经过作者服务器
-```
+<details>
+<summary><b>Q3: 偶遇网络波动翻译失败了怎么办？</b></summary>
+若单条标题翻译失败，会在标题旁显示红色的错误状态标识，直接鼠标点击该标识即可立即一键重新翻译。
+</details>
 
-扩展不收集任何数据：配置写入当前浏览器本地存储，标题文本直接发送给你配置的服务商用于翻译。使用内置翻译时，文本不离开本机。
+---
 
-## 开发者指南
+## 💻 开发者指南
 
 ```bash
+# 克隆仓库
 git clone https://github.com/GaryGaryyy/YouTube-AI-Title-Translator.git
 cd YouTube-AI-Title-Translator
-```
 
-在 `chrome://extensions/` 开启开发者模式，"加载已解压的扩展程序"选择项目文件夹。修改代码后点击扩展卡片上的刷新按钮，再刷新 YouTube 页面生效。
-
-运行测试（Node 18+，无第三方依赖）：
-
-```bash
+# 运行全量单元测试（Node.js 18+ 原生 test runner，无第三方依赖）
 npm test
 ```
 
-技术栈：Manifest V3（Content Script + Background Service Worker）、原生 HTML/CSS/JS、Chrome Storage Local API，无构建依赖。
+- **技术栈**：Chrome Extension Manifest V3（Content Script + Background Service Worker）、原生 HTML5/ES6+/CSS3、Chrome Storage Local API。
+- **零外部构建**：纯原生前端架构，无需 Webpack/Vite 打包，修改代码后重载插件即可调试。
 
-## 反馈与支持
+---
 
-- Bug 反馈与功能建议：[GitHub Issues](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues)
-- 邮件联系：garyzhang345@gmail.com
+## 📄 开源协议与反馈
 
-## 开源协议
+- **许可证**：本项目采用 [MIT License](LICENSE) 开源。
+- **问题反馈**：欢迎提交 [GitHub Issues](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues) 或通过邮件联系：`garyzhang345@gmail.com`。
 
-本项目采用 MIT License 开源，详情见 [LICENSE](LICENSE)。
-
-*最后更新：2026年9月5日*
+*最后更新：2026年9月*

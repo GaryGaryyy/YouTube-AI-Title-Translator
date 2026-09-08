@@ -1,4 +1,4 @@
-# AI Title Translator - Titres YouTube bilingues avec IA
+# Traducteur de Titres YouTube - Titres Bilingues par IA
 
 [![GitHub stars](https://img.shields.io/github/stars/GaryGaryyy/YouTube-AI-Title-Translator?style=for-the-badge)](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/GaryGaryyy/YouTube-AI-Title-Translator?style=for-the-badge)](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/network)
@@ -23,153 +23,174 @@
   <a href="README.hi.md">हिन्दी</a>
 </p>
 
-Une extension Chrome qui traduit les titres des vidéos YouTube avec l'IA : la traduction remplace le titre à son emplacement d'origine, tandis que le titre original reste affiché en plus petit en dessous. Comparez tout en naviguant : jaugez rapidement le contenu d'une vidéo et découvrez comment les titres s'écrivent vraiment dans d'autres langues. Gratuite et open source, l'extension conserve votre API Key et votre configuration uniquement dans votre propre navigateur.
+> Vous est-il déjà arrivé de passer à côté d'excellentes vidéos YouTube parce que les titres en langue étrangère étaient difficiles à comprendre ?  
+> Vous en avez assez des traductions automatiques rigides et mot à mot qui ignorent complètement les mèmes, l'argot et l'humour d'Internet ?  
+> Frustré de voir le titre original totalement écrasé, vous privant de l'opportunité de comparer et d'apprendre des expressions authentiques ?
 
-## Mises à jour récentes (v8.0.3)
+**Traducteur de Titres YouTube - Titres Bilingues par IA** a été conçu précisément pour cela ! Une extension Chrome nouvelle génération pour YouTube : **la traduction remplace le titre de façon bien visible, tandis que le titre original est conservé juste en dessous en taille compacte**. Grâce à la puissance de compréhension des modèles de langage (LLM), elle traduit avec justesse le ton, l'argot et les formulations clickbait, tout en générant automatiquement des badges thématiques. Et elle fonctionne instantanément sans aucune clé API !
 
-- **Utilisable sans API Key** : sans clé configurée, l'extension bascule automatiquement sur la traduction embarquée de Chrome 138+, pour une prise en main à coût nul
-- **Nouvelle tentative en un clic après un échec** : les titres en échec affichent un indicateur rouge, un clic relance la traduction
-- **Correction de l'erreur « format de réponse du modèle anormal » liée au mode réflexion de DeepSeek V4** : la série V4 active la réflexion par défaut, et la chaîne de raisonnement épuisait le quota de sortie, ce qui tronquait le JSON ; la réflexion est désormais désactivée pour les modèles V4
-- Le popup ajoute un bouton d'effacement du cache de traduction (avec le nombre d'entrées) ; les cartes des fournisseurs dont la clé est enregistrée affichent un point vert ; le test de configuration affiche directement un exemple de traduction
-- 12 nouvelles langues de localisation, pour un total de 14 langues d'interface
+---
 
-## Fonctionnalités principales
+## 🌟 Points Forts
 
-| Fonctionnalité | Description |
-|------|------|
-| Traduction + original côte à côte | La traduction s'affiche comme titre principal et l'original reste en dessous, pour parcourir rapidement les vidéos et apprendre la langue |
-| Traduction contextuelle par IA | Pas de remplacement mot à mot : l'IA comprend les jeux de mots, le ton, les abréviations et les accroches racoleuses des titres |
-| Tags de contenu | Génère automatiquement des tags comme Tech, News, Musique ou Finance : voyez d'abord le type avant de décider de cliquer |
-| Traduction multilingue | Détecte automatiquement les langues sources courantes et traduit vers 12 langues cibles ; les titres déjà dans la langue cible sont ignorés |
-| Plusieurs fournisseurs IA | DeepSeek, OpenAI, Gemini, Claude, MiniMax, Z.AI et Kimi intégrés, avec prise en charge d'endpoints personnalisés compatibles OpenAI |
-| Traduction intégrée sans clé | Sans clé configurée, utilise le Translator intégré de Chrome : fonctionne sur l'appareil, gratuit, aucun texte envoyé |
-| Cache local et confidentialité | Les traductions sont mises en cache localement pour éviter les requêtes répétées ; l'API Key et la configuration restent dans ce navigateur |
+- 🎯 **Affichage Bilingue Intégré & Immersif** : La traduction apparaît comme titre principal et le titre original reste visible juste en dessous. Parcourez votre flux sans survol de souris, saisissez le sujet au premier coup d'œil et apprenez des tournures authentiques en contexte.
+- 🧠 **Traduction Contextuelle par IA (Comprend Mèmes et Argot)** : Finies les traductions littérales mot à mot. L'IA déchiffre l'argot d'Internet, les mèmes culturels, les abréviations et le style racoleur propre aux vidéos YouTube.
+- 🏷️ **Badges Thématiques Intelligents** : En traduisant, l'IA détecte le domaine de la vidéo et ajoute automatiquement des tags comme [Tech], [Actualités], [Musique], [Finance] ou [Gaming] pour vous aider à trier vos vidéos en un clin d'œil.
+- ⚡ **Zéro Configuration ! Fonctionne sans Clé API** : Prend en charge la traduction intégrée sur l'appareil de Chrome 138+ (Chrome Translator). Entièrement gratuit, privé, hors ligne et opérationnel dès l'installation.
+- 🌐 **Prise en Charge Universelle de l'IA et des Modèles Locaux** : Connectez vos fournisseurs d'IA cloud favoris ou n'importe quel endpoint compatible OpenAI (y compris vos modèles locaux via Ollama ou LM Studio).
+- 🚀 **Mise en Cache Rapide et Nouvelle Tentative en un Clic** : Un cache persistant évite les requêtes superflues et préserve vos quotas. En cas d'erreur réseau ponctuelle, cliquez simplement sur le badge rouge pour relancer la traduction.
 
-## Démonstration
+---
 
-| Anglais -> Japonais | Anglais -> Coréen |
+## 📌 Mises à Jour Récentes (v8.0.3)
+
+- **Fonctionne sans clé API** : bascule automatique vers le moteur de traduction local de Chrome 138+ pour démarrer à coût zéro.
+- **Réessai en un clic** : un indicateur rouge signale les titres en échec ; un clic suffit pour retenter la traduction.
+- **Correction DeepSeek V4** : désactivation du mode thinking sur les modèles V4 afin d'éviter la troncature du JSON par épuisement de tokens.
+- Nouveau bouton pour vider le cache dans la popup (avec compteur), point vert sur les cartes avec clé enregistrée, affichage direct d'un exemple lors du test de connexion.
+- Ajout de 12 nouvelles langues, portant l'interface à 14 langues.
+
+---
+
+## 📊 Matrice Comparative
+
+| Critère | Traducteurs de Page Entière / Scripts | Cette Extension (Mode Local sans Clé) | Cette Extension (Mode IA Cloud / Local) |
+| :--- | :--- | :--- | :--- |
+| **Mise en Page** | Écrase l'original, casse le design | **Bilingue : traduction en haut, original en bas** | **Bilingue : traduction en haut, original en bas** |
+| **Qualité** | Mot à mot, sans contexte | Fluide pour un usage quotidien | **Nuancée, saisit l'argot et les mèmes** |
+| **Badges de Catégorie**| ❌ Aucun | ❌ Aucun | **✅ Tags auto [Tech/Finance/Musique...]** |
+| **Facilité d'Accès** | Moyenne | **Immédiate (prêt à l'emploi)** | Clé API ou environnement local requis |
+| **Coût et Confidentialité** | Peut envoyer toute la page | **100% hors ligne, gratuit, données sur l'appareil** | Connexion directe au fournisseur, sans relais |
+
+---
+
+## 📸 Démonstration
+
+| English -> Japanese | English -> Korean |
 |---|---|
 | ![English to Japanese](screenshots/v8.0.1/en-to-ja.png) | ![English to Korean](screenshots/v8.0.1/en-to-ko.png) |
 
-| Anglais -> Thaï | Anglais -> Espagnol |
+| English -> Thai | English -> Spanish |
 |---|---|
 | ![English to Thai](screenshots/v8.0.1/en-to-th.png) | ![English to Spanish](screenshots/v8.0.1/en-to-es.png) |
 
-| Chinois -> Anglais | Chinois -> Français |
+| Chinese -> English | Chinese -> French |
 |---|---|
 | ![Chinese to English](screenshots/v8.0.1/zh-to-en.png) | ![Chinese to French](screenshots/v8.0.1/zh-to-fr.png) |
 
-| Chinois -> Allemand | Chinois -> Portugais |
+| Chinese -> German | Chinese -> Portuguese |
 |---|---|
 | ![Chinese to German](screenshots/v8.0.1/zh-to-de.png) | ![Chinese to Portuguese](screenshots/v8.0.1/zh-to-pt.png) |
 
-| Chinois -> Indonésien | Chinois -> Vietnamien |
+| Chinese -> Indonesian | Chinese -> Vietnamese |
 |---|---|
 | ![Chinese to Indonesian](screenshots/v8.0.1/zh-to-id.png) | ![Chinese to Vietnamese](screenshots/v8.0.1/zh-to-vi.png) |
 
-## Démarrage rapide
+---
 
-### Méthode 1 : Chrome Web Store (recommandé)
+## 🚀 Démarrage Rapide
 
-[Installer depuis le Chrome Web Store](https://chromewebstore.google.com/detail/bhajnflcikmidmdalnjhknillnkaojhk)
+### Option 1 : Installer depuis le Chrome Web Store (Recommandé)
+👉 [Installer directement depuis le Chrome Web Store](https://chromewebstore.google.com/detail/bhajnflcikmidmdalnjhknillnkaojhk)
 
-### Méthode 2 : installation en mode développeur
+### Option 2 : Charger le code source en Mode Développeur
+1. Téléchargez la dernière version ZIP sur [GitHub Releases](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/releases) et décompressez-la ;
+2. Accédez à `chrome://extensions/` dans Chrome et activez le **« Mode développeur »** en haut à droite ;
+3. Cliquez sur **« Charger l'extension non empaquetée »** et sélectionnez le dossier extrait.
 
-1. Ouvrez [GitHub Releases](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/releases), téléchargez le zip de la dernière version et décompressez-le.
-2. Saisissez `chrome://extensions/` dans la barre d'adresse de Chrome et activez le « Mode développeur » en haut à droite.
-3. Cliquez sur « Charger l'extension non empaquetée » et sélectionnez le dossier décompressé.
+---
 
-Après l'installation, cliquez sur l'icône de l'extension dans la barre d'outils du navigateur : choisissez d'abord la langue cible (`Translate titles into` / « Traduire les titres en »), puis un fournisseur IA, collez votre API Key, enregistrez et actualisez la page YouTube. Sans clé, l'extension fonctionne aussi directement ; voir la section « Traduction intégrée » ci-dessous.
+## 🛠️ Utilisation et Paramètres
 
-## Configuration
+Cliquez sur l'icône de l'extension dans la barre d'outils pour ouvrir le panneau :
 
-![Interface de configuration de l'extension](screenshots/v8.0.1/config-ui.png)
+![Interface des paramètres](screenshots/v8.0.1/config-ui.png)
 
-| Zone | Rôle |
-|------|------|
-| `Interface language` (« Langue de l'interface ») | Langue d'affichage de l'interface de configuration (14 langues) ; n'affecte ni la page YouTube ni la langue de traduction |
-| `Translation` (interrupteur) | Active ou non la traduction automatique des titres sur les pages YouTube ; en pause, les traductions déjà affichées sont retirées de la page |
-| `Translate titles into` (« Traduire les titres en ») | Langue cible des titres, anglais par défaut |
-| `Choose AI provider` (« Choisir le fournisseur IA ») | Choisit le fournisseur IA, DeepSeek par défaut et recommandé ; les cartes des fournisseurs dont la clé est enregistrée affichent un point vert en bas à droite |
-| `Model settings` (« Paramètres du modèle ») | Choisit la version du modèle, ou l'option « autre » pour saisir manuellement un ID de modèle |
-| `API Key` | La clé obtenue auprès du fournisseur correspondant, conservée uniquement en local |
-| `Custom endpoint` (« Endpoint personnalisé ») | Connecte OpenRouter, SiliconFlow, Volcengine Ark, Ollama, LM Studio et d'autres services compatibles |
-| `Save settings` (« Enregistrer ») | Enregistre la configuration ; il est conseillé d'actualiser la page YouTube après l'enregistrement |
-| `Test configuration` | Teste si la configuration actuelle fonctionne ; en cas de succès, affiche directement un exemple de traduction ; en cas d'échec, indique la cause (clé invalide / quota insuffisant / nom de modèle erroné / erreur réseau) |
-| `Clear translation cache` | Efface le cache local des traductions (affiche le nombre d'entrées en cache) ; le cache est séparé par langue cible, changer de langue n'y touche pas |
+### 1. Utilisation de Base (Aucune Clé Requise)
+Si aucune clé API n'est renseignée, la traduction sur l'appareil de Chrome 138+ prend le relais automatiquement. Ouvrez YouTube et profitez immédiatement des titres bilingues !
 
-## Pas d'API Key ? Utilisez la traduction intégrée
+### 2. Configuration IA Avancée (Mèmes + Badges Thématiques)
+Pour bénéficier des traductions fines et des catégories automatiques :
+1. **Translate titles into** : Choisissez la langue cible (12 langues disponibles) ;
+2. **Choose AI provider** : Sélectionnez votre fournisseur et collez votre clé API ;
+3. Cliquez sur **Save settings** et actualisez votre page YouTube.
 
-Sans aucune clé configurée, l'extension utilise automatiquement le Translator / LanguageDetector intégré à Chrome 138+ : la traduction se fait sur votre machine, sans envoyer de texte et sans frais. Les paires de langues rares non prises en charge sur l'appareil affichent une invite « veuillez configurer l'extension » ; configurez la clé de n'importe quel fournisseur IA pour traduire toutes les langues prises en charge.
+---
 
-La traduction intégrée ne sait pas classer les tags de contenu ; leur emplacement affiche « 本机 / On-device ».
+## 🤖 Fournisseurs d'IA Pris en Charge
 
-## Fournisseurs, modèles et API Key
+| Fournisseur | Obtenir une Clé API |
+| :--- | :--- |
+| **DeepSeek (Recommandé)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
+| **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
+| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
+| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
+| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
 
-| Fournisseur | Modèles intégrés | Où obtenir la clé |
-|--------|----------|--------------|
-| DeepSeek (recommandé) | `deepseek-v4-flash`, `deepseek-v4-pro`, `deepseek-chat` | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
-| OpenAI | `gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| Google Gemini | `gemini-3.5-flash`, `gemini-3-pro-preview`, `gemini-3-flash-preview`, `gemini-2.5-flash` | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
-| Claude | `claude-opus-4-7`, `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5` | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) |
-| MiniMax | `MiniMax-M2.7-highspeed`, `MiniMax-M2.7`, `MiniMax-M2.5` | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| Z.AI | `glm-5.1`, `glm-5.1-flash`, `glm-4.6` | [z.ai/manage-apikey/apikey-list](https://z.ai/manage-apikey/apikey-list) |
-| Kimi | `kimi-k2.6`, `kimi-k2.6-turbo`, `kimi-k2.6-thinking` | [platform.kimi.ai/console/api-keys](https://platform.kimi.ai/console/api-keys) |
+### 🔌 Endpoints Personnalisés Compatibles OpenAI
+Sélectionnez **Custom** pour connecter tout service conforme au format Chat Completions d'OpenAI :
+- **API Endpoint** : URL complète de l'API (ex. `http://localhost:11434/v1/chat/completions` ou OpenRouter) ;
+- **Model name** : Nom précis du modèle (ex. `llama3.3`, `qwen2.5`) ;
+- **API Key** : Clé d'API du service (valeur arbitraire pour les modèles locaux sans authentification).
 
-L'extension elle-même est gratuite ; chaque fournisseur facture selon l'usage de l'API, selon les règles de sa plateforme.
+---
 
-### Endpoint personnalisé
+## 🌍 Langues Prises en Charge
 
-Choisissez `Custom` pour connecter tout service compatible avec le format OpenAI Chat Completions. Champs à remplir :
+- **Langues Cibles (12)** : Français, Anglais, Chinois simplifié/traditionnel, Japonais, Coréen, Thaï, Espagnol, Allemand, Portugais, Indonésien, Vietnamien.
+- **Langues de l'Interface (14)** : Français, Anglais, Chinois, Japonais, Coréen, Espagnol, Allemand, Russe, Arabe, Hindi, etc.
+- **Détection Automatique** : Détecte les titres dans presque toutes les langues courantes et ignore automatiquement ceux déjà rédigés dans la langue cible.
 
-- `API Endpoint` : l'URL complète de l'interface, par exemple `https://openrouter.ai/api/v1/chat/completions`
-- `Model name` : l'ID de modèle exigé par le fournisseur, par exemple `openai/gpt-5.4-mini`
-- `API Key` : la clé du fournisseur correspondant
+---
 
-Lors du premier enregistrement d'un nouveau domaine, Chrome affiche une demande d'autorisation, indispensable pour que l'extension accède directement à ce fournisseur. Les endpoints personnalisés doivent utiliser HTTPS (sauf le débogage local sur `localhost`).
+## 🔒 Confidentialité et Sécurité
 
-## Langues prises en charge
+- **Zéro Collecte de Données** : Aucun suivi de navigation, aucune donnée personnelle stockée ou transmise à des tiers.
+- **Stockage 100% Local** : Clés API, préférences et cache résident uniquement dans `chrome.storage.local` sur votre navigateur.
+- **Aucun Serveur Relais** : Les requêtes vont directement vers le fournisseur d'IA choisi ou restent sur votre machine.
 
-**Langues cibles (12)** : 简体中文 / 繁體中文 / English / 日本語 / 한국어 / ไทย / Español / Français / Deutsch / Português / Bahasa Indonesia / Tiếng Việt
+---
 
-**Langues d'interface (14)** : English / 简体中文 / 日本語 / 한국어 / ไทย / Español / Français / Deutsch / Português / Bahasa Indonesia / Tiếng Việt / Русский / العربية / हिन्दी
+## ❓ Foire Aux Questions (FAQ)
 
-**Langues sources** : aucune sélection nécessaire ; l'extension reconnaît automatiquement les langues de titres courantes comme l'anglais, le chinois, le japonais, le coréen, le thaï, l'espagnol, le français, l'allemand, le portugais, l'indonésien, le vietnamien, le russe, l'arabe et le hindi.
+<details>
+<summary><b>Q1 : L'extension est-elle gratuite ?</b></summary>
+Oui, l'extension est gratuite et open-source sous licence MIT. La traduction locale sur Chrome est 100% gratuite. Si vous faites appel à des API cloud, la tarification de chaque fournisseur s'applique selon votre consommation de tokens.
+</details>
 
-## Confidentialité et données
+<details>
+<summary><b>Q2 : Recharger une page consomme-t-il des tokens supplémentaires ?</b></summary>
+Non. Un système de cache local persistant restitue immédiatement les titres déjà traduits sans nouvelle requête réseau.
+</details>
 
-```text
-API Key / langue cible / langue d'interface / configuration du fournisseur -> stockage local de Chrome
-Texte des titres                                                           -> envoyé uniquement au fournisseur IA que vous avez choisi
-                                                                           -> ne passe pas par le serveur de l'auteur
-```
+<details>
+<summary><b>Q3 : Que faire en cas d'erreur de traduction réseau ?</b></summary>
+Un badge rouge d'erreur s'affiche à côté du titre. Cliquez simplement dessus pour relancer la traduction instantanément.
+</details>
 
-L'extension ne collecte aucune donnée : la configuration est écrite dans le stockage local du navigateur actuel, et le texte des titres est envoyé directement au fournisseur que vous avez configuré pour la traduction. Avec la traduction intégrée, le texte ne quitte pas votre machine.
+---
 
-## Guide du développeur
+## 💻 Guide du Développeur
 
 ```bash
+# Cloner le dépôt
 git clone https://github.com/GaryGaryyy/YouTube-AI-Title-Translator.git
 cd YouTube-AI-Title-Translator
-```
 
-Activez le mode développeur sur `chrome://extensions/` et choisissez le dossier du projet via « Charger l'extension non empaquetée ». Après avoir modifié le code, cliquez sur le bouton d'actualisation de la carte de l'extension, puis actualisez la page YouTube pour appliquer.
-
-Exécuter les tests (Node 18+, sans dépendance tierce) :
-
-```bash
+# Lancer les tests unitaires (Node.js 18+, sans dépendances externes)
 npm test
 ```
 
-Stack technique : Manifest V3 (Content Script + Background Service Worker), HTML/CSS/JS natif, Chrome Storage Local API, sans étape de build.
+- **Stack Technique** : Chrome Extension Manifest V3 (Content Script + Background Service Worker), HTML5/ES6+/CSS3 natif, Chrome Storage Local API.
+- **Aucune Étape de Build** : Pas de Webpack ni de Vite. Rechargez simplement l'extension dans `chrome://extensions/` pour tester vos modifications en direct.
 
-## Retour et support
+---
 
-- Rapports de bugs et suggestions de fonctionnalités : [GitHub Issues](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues)
-- Contact par e-mail : garyzhang345@gmail.com
+## 📄 Licence et Retours
 
-## Licence
+- **Licence** : Publié sous [Licence MIT](LICENSE).
+- **Retours et Suggestions** : Ouvrez un [GitHub Issue](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues) ou écrivez à `garyzhang345@gmail.com`.
 
-Ce projet est publié sous MIT License. Voir [LICENSE](LICENSE) pour le détail.
-
-*Dernière mise à jour : 5 septembre 2026*
+*Dernière mise à jour : Septembre 2026*

@@ -1,70 +1,123 @@
-# Chrome Web Store Listing (v8.0.3 最终版)
+# Chrome Web Store Listing (v8.0.3 优化版)
 
 商店包：`YouTube_AI_Title_Translator_v8.0.3.zip`（仓库根目录，含全部运行时文件与 14 个语言包）。
 素材：`screenshots/chrome-store-upload/`（global 4 张、localized 5 张、promotional 4 张）。
 
+---
+
 ## 简体中文
 
-名称：
+### 【扩展名称】
 YouTube 标题翻译 - 双语标题
 
-简短说明（130 字符内）：
-将 YouTube 标题翻译成你选择的语言，译文在上、原文在下对照显示。没有 API Key 也能用 Chrome 内置翻译。
+### 【简短说明（132 字符以内）】
+YouTube 双语 AI 标题翻译神器：译文在上、原文在下对照显示，懂梗懂语境，带视频分类标签。无需 Key 开箱即用！
 
-详细说明：
-YouTube 标题翻译 - 双语标题 是一款 Chrome 扩展：用 AI 把 YouTube 视频标题翻译成你选择的语言，译文直接显示在原位置，原始标题缩小保留在下方，方便对照理解和语言学习。
+### 【详细说明】
+刷 YouTube 时，是否常因外语标题看不懂而错过优质视频？
+依赖传统机翻，是否受够了死板生硬、完全不懂网络梗与标题党的机械直译？
+好不容易看懂了翻译，原标题却被直接覆盖，丧失了对照学习地道外语的机会？
 
-【主要功能】
-• 译文 + 原文对照：译文作为主标题显示，原文保留在下方
-• AI 语境翻译：理解标题里的梗、语气、缩写和标题党表达，不是逐词替换
-• 内容标签：自动为标题添加 科技、新闻、音乐、财经 等分类标签，先看类型再决定要不要点开
-• 多语言互译：自动识别常见源语言，支持翻译成简体中文、繁体中文、英语、日语、韩语、泰语、西班牙语、法语、德语、葡萄牙语、印尼语、越南语共 12 种目标语言；已是目标语言的标题自动跳过
-• 多家 AI 服务商：内置 DeepSeek（推荐）、OpenAI、Gemini、Claude、MiniMax、Z.AI、Kimi，并支持自定义 OpenAI 兼容端点（OpenRouter、SiliconFlow、火山方舟、Ollama、LM Studio 等）
-• 没有 API Key 也能用：未配置 Key 时自动使用 Chrome 138+ 内置的设备端翻译，文本不离开本机、不产生费用（此模式无分类标签）
-• 翻译失败可点击重试；译文本地缓存，避免重复请求
-• 配置界面支持 14 种语言，内置连接测试和一键清除缓存
+【YouTube 标题翻译 - 双语标题】专为解决这些痛点而生！
+这是一款专为 YouTube 打造的次世代 AI 双语标题翻译扩展：译文置顶替换原标题，原文微缩保留在下方。结合前沿大模型的语境理解力，不仅懂梗、懂语气、地道自然，还能自动打上视频分类标签，无需 API Key 也能开箱即用！
 
-【隐私与数据】
-扩展不收集任何数据。API Key、目标语言、界面语言和服务商配置只保存在你当前浏览器的本地存储中；标题文本只从你的浏览器直接发送给你自己选择的 AI 服务商，不经过开发者服务器。使用内置翻译时，文本完全在本机处理。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ 核心卖点
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-【权限说明】
-• storage：保存配置与翻译缓存
-• YouTube 页面访问：读取标题并展示译文
-• AI 服务商域名：向你选择的服务商发起翻译请求
-• 自定义端点：仅在你填写自定义接口地址时按需申请授权
+🎯 1. 极致双语对照，沉浸浏览
+• 译文置顶高亮，原文微缩紧随其后。
+• 无需悬停，扫一眼即可秒懂主题，兼顾信息摄入效率与外语对照学习。
 
-【费用】
-扩展免费开源（MIT）。各 AI 服务商按 API 用量计费，以其平台规则为准；使用 Chrome 内置翻译完全免费。
+🧠 2. 真正懂“梗”的 AI 意译
+• 彻底告别机械生硬的逐字死译。
+• 依托大语言模型，深度理解俚语、流行梗、双关、缩写与 YouTube 标题党，表达地道自然。
+
+🏷️ 3. 智能视频内容标签
+• 翻译同时自动推断视频所属领域，打上【科技】、【新闻】、【音乐】、【财经】、【游戏】等分类标签。
+• 一眼锁定感兴趣的视频，快速避坑防标题党。
+
+⚡ 4. 零门槛！无需 Key 开箱即用
+• 支持 Chrome 内置设备端原生翻译（Chrome 138+），未配置任何 Key 也能直接在本地运行，免费、离线、即装即用。
+
+🌐 5. 自由接入主流大模型与本地模型
+• 支持连接主流大语言模型服务，并全面兼容 OpenAI 格式的自定义接口（包括 Ollama、LM Studio 等本地部署模型）。
+
+🚀 6. 极速本地缓存与点击重试
+• 翻译结果本地持久化，刷新页面不卡顿、不重复消耗额度。
+• 遇网络波动失败时，直接点击红色状态标签即可秒级重试。已是目标语言的标题自动智能跳过。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ 极简上手
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 安装扩展，打开 YouTube 即可自动呈现双语对照（开箱即用）！
+2. （可选）点击浏览器工具栏图标，自由切换 12 种目标语言，或填入专属 API Key 开启智能分类标签与更强意译。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ 隐私与常见问题
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ 100% 隐私安全：0 数据收集，无中转服务器。API Key 和翻译缓存仅保存在当前浏览器本地，开源透明（MIT 协议）。
+✔ 费用说明：扩展本身完全免费开源。设备端内置翻译完全免费；云端大模型 API 费用按各平台规则自理。
+✔ 语言支持：支持简体/繁体中文、英语、日语、韩语、泰语、西班牙语、法语、德语、葡萄牙语、印尼语、越南语等 12 种目标语言，自动识别常见源语言。
+
+---
 
 ## English
 
-Name:
+### [Extension Name]
 AI Title Translator - YouTube Titles
 
-Short description (within 132 chars):
-Translate YouTube titles with AI, keeping originals visible. No API key? Chrome's built-in on-device translation has you covered.
+### [Short Description (within 132 characters)]
+Translate YouTube titles with smart AI. Bilingual in-place display, context & meme aware, auto topic badges. Works without API keys!
 
-Detailed description:
-AI Title Translator shows YouTube video titles in your language. The translation replaces the title in place, with the original kept right below — perfect for scanning foreign-language feeds and for language learning.
+### [Detailed Description]
+Ever missed out on great YouTube videos because foreign titles were hard to understand?
+Tired of stiff, robotic machine translations that completely miss internet memes, slang, and puns?
+Frustrated when tools overwrite the original title, leaving no way to compare and learn authentic expressions?
 
-KEY FEATURES
-• Bilingual display: translation on top, original title below
-• Context-aware AI translation: understands memes, tone, abbreviations and clickbait phrasing instead of word-by-word substitution
-• Category labels: Tech, News, Music, Finance and more — judge a video before you click
-• 12 target languages: Simplified & Traditional Chinese, English, Japanese, Korean, Thai, Spanish, French, German, Portuguese, Indonesian, Vietnamese; source languages are detected automatically, and titles already in your target language are skipped
-• Your choice of AI: DeepSeek (recommended), OpenAI, Gemini, Claude, MiniMax, Z.AI, Kimi, plus any custom OpenAI-compatible endpoint (OpenRouter, SiliconFlow, Volcengine Ark, Ollama, LM Studio…)
-• No API key? No problem: on Chrome 138+, the extension falls back to Chrome's built-in on-device translator — free, offline, nothing leaves your device (no category labels in this mode)
-• Click a failed title to retry; translations are cached locally to avoid repeat requests
-• Settings UI in 14 languages, with a built-in connection test and one-click cache clearing
+【AI Title Translator - YouTube Titles】is built to solve exactly that!
+Designed specifically for YouTube, this extension brings you seamless bilingual titles powered by modern AI. Translations sit right in place, while original titles are neatly preserved below. Context-aware, culturally accurate, equipped with smart topic badges, and works instantly without any API keys!
 
-PRIVACY
-No data collection. API keys, language preferences and provider settings live only in your browser's local storage. Title text goes directly from your browser to the AI provider you chose — never through the developer's server. With built-in translation, text never leaves your device.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ KEY FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PERMISSIONS
-• storage: save settings and the translation cache
-• youtube.com access: read titles and display translations
-• AI provider domains: send translation requests to your chosen provider
-• Optional host access: requested only when you configure a custom endpoint
+🎯 1. True Bilingual In-Place Display
+• The translation replaces the title prominently, with the original preserved below.
+• No hovering required. Scan your feed naturally while learning authentic expressions in context.
 
-PRICING
-Free and open source (MIT). AI providers may charge for API usage per their own terms; Chrome's built-in translation is free.
+🧠 2. Context & Meme-Aware AI
+• Say goodbye to rigid, word-by-word machine translation.
+• Accurately understands internet slang, cultural memes, humor, abbreviations, and YouTube clickbait phrasing.
+
+🏷️ 3. Smart Video Topic Badges
+• Automatically identifies video domains and attaches tags like [Tech], [News], [Music], [Finance], [Gaming], and more.
+• Immediately know what a video is about before clicking.
+
+⚡ 4. Zero Setup! Works Without API Keys
+• Leverages Chrome's built-in on-device translation (Chrome 138+).
+• Works out of the box with zero configuration, completely free and offline.
+
+🌐 5. Universal AI & Local Model Support
+• Connect seamlessly to your favorite cloud AI services, or any custom OpenAI-compatible endpoint (including local offline models via Ollama or LM Studio).
+
+🚀 6. Local Caching & One-Click Retry
+• Persistent browser cache eliminates duplicate requests and saves quota.
+• If a network hiccup occurs, simply click the failed badge to retry. Automatically skips titles that already match your target language.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ QUICK START
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Add to Chrome and open YouTube — bilingual titles appear automatically!
+2. (Optional) Click the extension icon to choose from 12 target languages, or add your own API key to enable smart topic badges and enhanced translation.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+★ PRIVACY & FAQ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ 100% Private & Open Source: Zero data collection, no tracking, and no middleman servers. All settings stay in your browser. MIT licensed.
+✔ Pricing: Completely free and open-source. On-device translation is 100% free; cloud AI APIs follow their respective provider's terms.
+✔ Languages: Supports 12 target languages (English, Chinese, Japanese, Korean, Spanish, French, German, Portuguese, Thai, Vietnamese, etc.) with automatic source language detection.
