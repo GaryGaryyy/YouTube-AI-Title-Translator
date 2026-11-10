@@ -73,34 +73,39 @@ function extractJsonValueCandidates(s) {
 // 没有超时兜底的话，一个挂死的连接会永久占住并发槽（MAX_CONCURRENT_TRANSLATIONS），
 // 整支队列停摆，页面 badge 永远停在"翻译中"。
 const FETCH_TIMEOUT_MS = 30000;
-async function fetchWithTimeout(url, options) {
+async function fetchWithTimeout(url, options, canRetry) {
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
             return await fetch(url, Object.assign({}, options, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }));
         } catch (e) {
-            if (attempt === 1) throw e;
+            if (attempt === 1 || (canRetry && !await canRetry())) throw e;
         }
     }
 }
 
+function getApiHost(config) {
+    try { return new URL(config.apiUrl).hostname.toLowerCase(); }
+    catch (e) { return ""; }
+}
+
 function getApiType(config) {
-    const apiUrl = config && config.apiUrl ? config.apiUrl : "";
-    if (apiUrl.includes("googleapis.com")) return "google";
-    if (apiUrl.includes("anthropic.com")) return "anthropic";
+    const host = getApiHost(config);
+    if (host === "generativelanguage.googleapis.com") return "google";
+    if (host === "api.anthropic.com") return "anthropic";
     return "openai-compatible";
 }
 
 function extractTextFromResponse(data, apiType) {
     if (apiType === "google") {
-        return data && data.candidates && data.candidates[0] && data.candidates[0].content
-            ? data.candidates[0].content.parts[0].text
-            : "";
+        const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content
+            ? data.candidates[0].content.parts : [];
+        return (parts || []).filter(part => part && !part.thought && typeof part.text === "string")
+            .map(part => part.text).join("");
     }
     if (apiType === "anthropic") {
-        const textBlock = data && Array.isArray(data.content)
-            ? data.content.find(part => part && part.type === "text" && part.text)
-            : null;
-        return textBlock ? textBlock.text : "";
+        return data && Array.isArray(data.content)
+            ? data.content.filter(part => part && part.type === "text" && part.text).map(part => part.text).join("")
+            : "";
     }
     return data && data.choices && data.choices[0] && data.choices[0].message
         ? data.choices[0].message.content
@@ -200,9 +205,12 @@ function classifyApiError(status, data) {
     }
     // 明确提到"模型不存在"才归为模型名错误；普通 400（参数错误等）落到 service，
     // 避免把我们自己的请求体问题误导成"模型名可能错误"
-    if (status === 404 || lower.includes("not found") || lower.includes("not exist") ||
-        (status === 400 && lower.includes("model"))) {
+    if (status === 404 || lower.includes("model_not_found") ||
+        /model[^"\n]*(?:not found|not exist|does not exist|unavailable)/.test(lower)) {
         return makeError("model", "模型名可能错误", { status, data });
+    }
+    if (status === 400 && /parameter|temperature|max_tokens|max_completion_tokens|thinking|reasoning/.test(lower)) {
+        return makeError("parameter", "模型不接受此请求配置", { status, data });
     }
     return makeError("service", "网络或服务商异常", { status, data });
 }
@@ -234,9 +242,31 @@ function drainTranslationQueue() {
     }
 }
 
-function getRequestKey(text, config) {
+function getRequestKey(text, config, automatic) {
     config = config || {};
-    return [config.apiUrl || "", config.model || "", getTargetLanguageCode(config), text].join("\n");
+    // 测试新 Key 必须实际使用新凭证；测试请求也不能复用页面上的自动翻译。
+    // 该身份只用于内存中的进行中请求，不会记录或持久化。
+    return JSON.stringify([automatic ? "automatic" : "test", config.apiUrl || "", config.apiKey || "",
+        config.model || "", getTargetLanguageCode(config), text]);
+}
+
+function automaticTranslationStillAllowed(config) {
+    config = config || {};
+    return new Promise(resolve => {
+        chrome.storage.local.get(["enabled", "translationMode", "selectedProvider", "providerConfigs",
+            "customApiKey", "customApiUrl", "customModel", "targetLanguage"], stored => {
+            if (chrome.runtime.lastError || stored.enabled === false) { resolve(false); return; }
+            let active = stored.providerConfigs && stored.providerConfigs[stored.selectedProvider];
+            if (!stored.providerConfigs && stored.customApiKey) {
+                active = { apiKey:stored.customApiKey, apiUrl:stored.customApiUrl, model:stored.customModel };
+            }
+            const mode = ["local", "ai"].includes(stored.translationMode)
+                ? stored.translationMode : (active && active.apiKey ? "ai" : "local");
+            resolve(mode === "ai" && !!active && !!active.apiKey &&
+                ["apiKey", "apiUrl", "model"].every(key => (active[key] || "") === (config[key] || "")) &&
+                getTargetLanguageCode(stored) === getTargetLanguageCode(config));
+        });
+    });
 }
 
 function getTargetLanguageCode(config) {
@@ -281,22 +311,83 @@ function buildChatCompletionsBody(config, promptText, maxTokens, systemPrompt) {
         }]
     };
 
-    // OpenAI 官方接口：gpt-5/o 系列只认 max_completion_tokens（max_tokens 已废弃，
-    // 同发会直接 400），且 reasoning 模型拒绝自定义 temperature——两者都不发。
-    // 其他 OpenAI 兼容服务（DeepSeek/Kimi/OpenRouter 等）仍按老约定发 max_tokens + temperature。
-    if (config.apiUrl.includes("api.openai.com")) {
+    const host = getApiHost(config);
+    const model = config.model || "";
+    // 推理 token 和最终译文共享输出额度。能关闭推理的短标题请求直接回答；
+    // 强制推理的模型使用 low，并给最终 JSON 留出余量。
+    const reasoningBudget = Math.max(4096, maxTokens + 3072);
+    if (host === "api.openai.com") {
         body.max_completion_tokens = maxTokens;
+        if (model === "gpt-6-luna") {
+            body.reasoning_effort = "none";
+        } else if (/^(gpt-[56]|o[134])/.test(model)) {
+            body.reasoning_effort = "low";
+            body.max_completion_tokens = reasoningBudget;
+        }
     } else {
         body.temperature = 0.3;
         body.max_tokens = maxTokens;
-        // DeepSeek V4 思考模式默认开（effort=high），思维链计入 max_tokens，
-        // 会把 500/1200 的小额度吃光导致 JSON 截断、解析失败。翻译短标题不需要推理，
-        // 显式关闭（官方参数）；仅限官方域名，自定义端点不发未知参数。
-        if (config.apiUrl.includes("api.deepseek.com") && /^deepseek-v4/.test(config.model || "")) {
+        // 只向准确匹配的官方域名发送专属参数；自定义兼容接口保持通用请求体。
+        if (host === "api.deepseek.com" && /^deepseek-(v4|flash(?:$|-))/.test(model)) {
             body.thinking = { type: "disabled" };
+        }
+        if (["api.minimax.io", "api.minimaxi.com", "api.minimax.chat"].includes(host) && /^MiniMax-M[23]/.test(model)) {
+            body.reasoning_split = true;
+            if (model === "MiniMax-M3") {
+                body.thinking = { type: "disabled" };
+                body.max_completion_tokens = maxTokens;
+                delete body.max_tokens;
+            } else {
+                body.max_tokens = reasoningBudget;
+                if (model === "MiniMax-M3.1-Flash-Preview") body.reasoning_effort = "low";
+            }
+        }
+        if (["api.z.ai", "open.bigmodel.cn"].includes(host) && /^glm-(4\.[567]|5)/.test(model)) {
+            body.max_tokens = reasoningBudget;
+            if (/^glm-5\.[23](?:$|-)/.test(model)) {
+                body.thinking = { type: "enabled" };
+                body.reasoning_effort = "low";
+                body.temperature = 1;
+            }
+        }
+        if (["api.moonshot.ai", "api.moonshot.cn"].includes(host) && /^kimi-k/.test(model)) {
+            delete body.temperature;
+            if (model === "kimi-k2.6") body.thinking = { type: "disabled" };
+            else {
+                body.max_tokens = reasoningBudget;
+                if (model === "kimi-k3") body.reasoning_effort = "low";
+            }
         }
     }
 
+    return body;
+}
+
+function buildGeminiBody(config, promptText, maxTokens) {
+    const generationConfig = { maxOutputTokens: maxTokens, responseMimeType: "application/json" };
+    if (/^gemini-3(?:\.|-)/.test(config.model || "")) {
+        generationConfig.thinkingConfig = {
+            thinkingLevel: config.model === "gemini-3.5-flash-lite" ? "minimal" : "low"
+        };
+        generationConfig.maxOutputTokens = Math.max(4096, maxTokens + 3072);
+    } else {
+        generationConfig.temperature = 0.3;
+    }
+    return { contents: [{ parts: [{ text: promptText }] }], generationConfig };
+}
+
+function buildAnthropicBody(config, promptText, maxTokens) {
+    const body = {
+        model: config.model, system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: promptText }], max_tokens: maxTokens
+    };
+    if (/^claude-(sonnet|opus|fable)-5(?:-|$)/.test(config.model || "")) {
+        body.thinking = { type: "adaptive" };
+        body.output_config = { effort: "low" };
+        body.max_tokens = Math.max(4096, maxTokens + 3072);
+    } else if (!/^claude-opus-4-[78]/.test(config.model || "")) {
+        body.temperature = 0.3;
+    }
     return body;
 }
 
@@ -308,7 +399,7 @@ async function readJsonResponse(response) {
     }
 }
 
-async function fetchAiTranslation(text, config) {
+async function fetchAiTranslation(text, config, canRetry) {
     if (!config || !config.apiKey) {
         return { ok: false, error: makeError("auth", "Key 无效") };
     }
@@ -322,19 +413,11 @@ async function fetchAiTranslation(text, config) {
         const apiType = getApiType(config);
 
         if (apiType === "google") {
-            const urlWithKey = `${config.apiUrl}?key=${config.apiKey}`;
-            response = await fetchWithTimeout(urlWithKey, {
+            response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 500,
-                        responseMimeType: "application/json"
-                    }
-                })
-            });
+                headers: { "Content-Type": "application/json", "x-goog-api-key": config.apiKey },
+                body: JSON.stringify(buildGeminiBody(config, promptText, 500))
+            }, canRetry);
         } else if (apiType === "anthropic") {
             response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
@@ -343,17 +426,8 @@ async function fetchAiTranslation(text, config) {
                     "x-api-key": config.apiKey,
                     "anthropic-version": "2023-06-01"
                 },
-                body: JSON.stringify({
-                    model: config.model,
-                    system: SYSTEM_PROMPT,
-                    messages: [{
-                        role: "user",
-                        content: promptText
-                    }],
-                    temperature: 0.3,
-                    max_tokens: 500
-                })
-            });
+                body: JSON.stringify(buildAnthropicBody(config, promptText, 500))
+            }, canRetry);
         } else {
             response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
@@ -367,7 +441,7 @@ async function fetchAiTranslation(text, config) {
                     500,
                     SYSTEM_PROMPT
                 ))
-            });
+            }, canRetry);
         }
 
         const data = await readJsonResponse(response);
@@ -399,7 +473,7 @@ async function fetchAiTranslation(text, config) {
 // === 批量翻译：一次 prompt 翻多条，节省调用数和握手开销 ===
 // 让模型返回 {"items":[{"i":0,"tag":"..","translatedTitle":".."}, ...]}，按 i 字段对齐回原数组。
 // 这种"包一层 object"的设计比裸数组更稳健；解析器也兼容模型偶尔返回裸数组。
-async function fetchAiTranslationBatch(items, config) {
+async function fetchAiTranslationBatch(items, config, canRetry) {
     if (!config || !config.apiKey) {
         return { ok: false, results: items.map(() => null), error: makeError("auth", "Key 无效") };
     }
@@ -416,19 +490,11 @@ async function fetchAiTranslationBatch(items, config) {
         const apiType = getApiType(config);
 
         if (apiType === "google") {
-            const urlWithKey = `${config.apiUrl}?key=${config.apiKey}`;
-            response = await fetchWithTimeout(urlWithKey, {
+            response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: maxTokens,
-                        responseMimeType: "application/json"
-                    }
-                })
-            });
+                headers: { "Content-Type": "application/json", "x-goog-api-key": config.apiKey },
+                body: JSON.stringify(buildGeminiBody(config, promptText, maxTokens))
+            }, canRetry);
         } else if (apiType === "anthropic") {
             response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
@@ -437,17 +503,8 @@ async function fetchAiTranslationBatch(items, config) {
                     "x-api-key": config.apiKey,
                     "anthropic-version": "2023-06-01"
                 },
-                body: JSON.stringify({
-                    model: config.model,
-                    system: SYSTEM_PROMPT,
-                    messages: [{
-                        role: "user",
-                        content: promptText
-                    }],
-                    temperature: 0.3,
-                    max_tokens: maxTokens
-                })
-            });
+                body: JSON.stringify(buildAnthropicBody(config, promptText, maxTokens))
+            }, canRetry);
         } else {
             response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
@@ -461,7 +518,7 @@ async function fetchAiTranslationBatch(items, config) {
                     maxTokens,
                     SYSTEM_PROMPT
                 ))
-            });
+            }, canRetry);
         }
 
         const data = await readJsonResponse(response);
@@ -496,14 +553,14 @@ async function fetchAiTranslationBatch(items, config) {
     }
 }
 
-async function fetchAiTranslationBatchDedup(items, config) {
+async function fetchAiTranslationBatchDedup(items, config, automatic = false) {
     const promises = [];
     const uniqueItems = [];
     const uniqueKeys = [];
     const localSeen = new Map();
 
     items.forEach((text, index) => {
-        const key = getRequestKey(text, config);
+        const key = getRequestKey(text, config, automatic);
         if (localSeen.has(key)) {
             promises[index] = localSeen.get(key);
             return;
@@ -526,7 +583,17 @@ async function fetchAiTranslationBatchDedup(items, config) {
     if (uniqueItems.length > 0) {
         enqueueTranslation(async () => {
             try {
-                const batchReply = await fetchAiTranslationBatch(uniqueItems, config);
+                // 已发出的请求可以完成；尚未发出的任务需服从最新模式和配置。
+                if (automatic && !await automaticTranslationStillAllowed(config)) {
+                    const error = makeError("cancelled", "翻译设置已变更");
+                    uniqueKeys.forEach(entry => {
+                        entry.resolve({ result:null, error });
+                        inflightTextResults.delete(entry.key);
+                    });
+                    return { ok:false, error };
+                }
+                const canRetry = automatic ? () => automaticTranslationStillAllowed(config) : null;
+                const batchReply = await fetchAiTranslationBatch(uniqueItems, config, canRetry);
                 const resolvedItems = batchReply.results ? batchReply.results.slice() : uniqueItems.map(() => null);
                 const itemErrors = uniqueItems.map((_, i) => {
                     return resolvedItems[i] ? null : getFallbackErrorForMissingItem(batchReply);
@@ -539,10 +606,13 @@ async function fetchAiTranslationBatchDedup(items, config) {
                 // 瞬时错误（parse/empty/network）单条重试一次，单条批量也享受这次机会；
                 // auth/quota/model 重试也是白调，直接沿用原错误
                 const batchErrorType = batchReply.error && batchReply.error.type;
-                const retryable = !batchReply.error || ["parse", "empty", "network"].includes(batchErrorType);
+                let retryable = !batchReply.error || ["parse", "empty", "network"].includes(batchErrorType);
+                if (missingIndexes.length > 0 && retryable && automatic) {
+                    retryable = await automaticTranslationStillAllowed(config);
+                }
                 if (missingIndexes.length > 0 && retryable) {
                     await Promise.all(missingIndexes.map(async (i) => {
-                        const retry = await fetchAiTranslation(uniqueItems[i], config);
+                        const retry = await fetchAiTranslation(uniqueItems[i], config, canRetry);
                         if (retry && retry.ok && retry.result) {
                             resolvedItems[i] = retry.result;
                             itemErrors[i] = null;
@@ -594,8 +664,8 @@ async function fetchAiTranslationBatchDedup(items, config) {
     };
 }
 
-async function fetchAiTranslationQueued(text, config) {
-    const reply = await fetchAiTranslationBatchDedup([text], config);
+async function fetchAiTranslationQueued(text, config, automatic) {
+    const reply = await fetchAiTranslationBatchDedup([text], config, automatic);
     return {
         ok: !!(reply.results && reply.results[0]),
         result: reply.results ? reply.results[0] : null,
@@ -605,14 +675,14 @@ async function fetchAiTranslationQueued(text, config) {
 
 // === Message handler ===
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    if (msg && msg.type === 'translate') {
-        fetchAiTranslationQueued(msg.text, msg.config)
+    if (msg && (msg.type === 'translate' || msg.type === 'testTranslation')) {
+        fetchAiTranslationQueued(msg.text, msg.config, msg.type !== 'testTranslation')
             .then(reply => sendResponse(reply))
             .catch(e => sendResponse({ ok: false, error: String(e) }));
         return true;
     }
     if (msg && msg.type === 'translateBatch') {
-        fetchAiTranslationBatchDedup(msg.items, msg.config)
+        fetchAiTranslationBatchDedup(msg.items, msg.config, true)
             .then(reply => sendResponse(reply))
             .catch(e => sendResponse({ ok: false, error: String(e) }));
         return true;
@@ -633,6 +703,9 @@ if (typeof module !== "undefined" && module.exports) {
         normalizeTranslationResult,
         classifyApiError,
         buildChatCompletionsBody,
+        buildGeminiBody,
+        buildAnthropicBody,
+        extractTextFromResponse,
         buildSinglePrompt,
         buildBatchPrompt,
         enqueueTranslation,

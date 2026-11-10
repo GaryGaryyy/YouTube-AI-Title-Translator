@@ -104,16 +104,18 @@
 
 Nhấp vào biểu tượng của tiện ích trên thanh công cụ trình duyệt để mở bảng điều khiển:
 
-![Giao diện cài đặt](screenshots/v8.0.1/config-ui.png)
+![Giao diện cài đặt (v8.0.1)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Dùng Cơ Bản (Không Cần API Key)
-Khi không nhập Key, tính năng dịch tích hợp của Chrome 138+ sẽ tự động kích hoạt. Không cần thao tác gì thêm, chỉ cần mở YouTube là tiêu đề song ngữ sẽ xuất hiện ngay!
+Khi cài đặt mới, tiện ích dùng chế độ **Trên thiết bị**. Bạn có thể chọn và lưu chế độ này ngay cả khi đã có khóa AI. Cần có trình duyệt, thiết bị và cặp ngôn ngữ được hỗ trợ. Chrome có thể tải gói ngôn ngữ khi dùng lần đầu.
 
 ### 2. Cấu Hình AI Nâng Cao (Bật Hiểu Tiếng Lóng + Nhãn Phân Loại)
-Để nhận bản dịch thông minh và gắn nhãn thể loại:
-1. **Translate titles into**: Chọn ngôn ngữ đích (hỗ trợ 12 ngôn ngữ);
-2. **Choose AI provider**: Chọn nhà cung cấp AI yêu thích và dán API Key;
-3. Bấm **Save settings** và tải lại trang YouTube của bạn.
+
+1. Bật tự động dịch và chọn **Dịch bằng AI**.
+2. Chọn ngôn ngữ đích của tiêu đề, nhà cung cấp và mô hình, rồi nhập khóa API. Bạn có thể dùng mô hình được đề xuất hoặc nhập ID mô hình khác.
+3. Bấm **Kiểm tra và lưu**. Cài đặt chỉ được lưu nếu bản dịch mẫu thành công. Nếu kiểm tra thất bại, cài đặt trước đó vẫn được dùng. **Cài đặt khác → Lưu không qua kiểm tra** cho phép bỏ qua bước kiểm tra.
+
+Biểu tượng quả địa cầu đổi ngôn ngữ giao diện mà không đổi ngôn ngữ đích của tiêu đề. Khóa được lưu trên thiết bị và nhà phát triển không thu thập dữ liệu. Nút thông tin ở cuối cửa sổ giải thích cách sử dụng AI.
 
 ---
 

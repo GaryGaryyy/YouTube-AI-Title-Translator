@@ -104,16 +104,18 @@
 
 Klik ikon ekstensi di bilah alat peramban untuk membuka panel konfigurasi:
 
-![Panel Pengaturan](screenshots/v8.0.1/config-ui.png)
+![Panel Pengaturan (v8.0.1)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Penggunaan Dasar (Tanpa Kunci API)
-Bila tidak ada API Key yang disimpan, terjemahan bawaan perangkat Chrome 138+ akan aktif secara otomatis. Cukup buka YouTube dan judul bilingual akan langsung terlihat!
+Pemasangan baru menggunakan **Di perangkat**. Anda dapat memilih mode ini dan menyimpannya meskipun kunci AI sudah tersimpan. Mode ini memerlukan browser, perangkat, dan pasangan bahasa yang didukung. Chrome mungkin mengunduh paket bahasa saat pertama kali digunakan.
 
 ### 2. Pengaturan AI Tingkat Lanjut (Terjemahan Gaul + Label Kategori)
-Untuk menikmati terjemahan yang lebih luwes dan klasifikasi otomatis:
-1. **Translate titles into**: Pilih bahasa tujuan (tersedia 12 bahasa);
-2. **Choose AI provider**: Pilih penyedia AI yang Anda inginkan dan tempelkan API Key;
-3. Klik **Save settings** lalu muat ulang halaman YouTube Anda.
+
+1. Aktifkan terjemahan otomatis dan pilih **Terjemahan AI**.
+2. Pilih bahasa tujuan untuk judul, penyedia, dan model, lalu masukkan kunci API. Gunakan model yang direkomendasikan setiap penyedia atau masukkan ID model lain secara manual.
+3. Klik **Verifikasi dan simpan**. Pengaturan hanya disimpan jika terjemahan contoh berhasil. Jika gagal, pengaturan sebelumnya tetap digunakan. **Pengaturan lainnya → Simpan tanpa verifikasi** memungkinkan Anda melewati pengujian.
+
+Ikon globe mengubah teks tampilan tanpa mengubah bahasa tujuan judul. Kunci disimpan secara lokal dan pengembang tidak mengumpulkan data. Tombol informasi di bagian bawah menjelaskan penggunaan AI.
 
 ---
 

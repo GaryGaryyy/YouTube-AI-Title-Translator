@@ -2,1058 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- 核心SEO标签 -->
-  <title>AI Title Translator - Multilingual YouTube titles</title>
-  <meta name="description" content="Translate YouTube titles into multiple target languages with AI. Settings and API keys are stored only in your local browser.">
-  
-  <!-- Open Graph标签 (社交媒体优化) -->
-  <meta property="og:title" content="AI Title Translator - Multilingual YouTube titles">
-  <meta property="og:description" content="Translate YouTube titles into multiple target languages with AI while keeping bilingual context.">
-  <meta property="og:image" content="https://github.com/garygaryandfree/YouTube-AI-Title-Translator/raw/main/icon/icon128.png">
-  <meta property="og:url" content="https://github.com/garygaryandfree/YouTube-AI-Title-Translator">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="AI Title Translator - AI Bilingual">
-  
-  <!-- Twitter Card标签 -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="AI Title Translator - Multilingual YouTube titles">
-  <meta name="twitter:description" content="Translate YouTube titles into multiple target languages with AI.">
-  <meta name="twitter:image" content="https://github.com/garygaryandfree/YouTube-AI-Title-Translator/raw/main/icon/icon128.png">
-  <meta name="twitter:creator" content="@garygaryandfree">
-  
-  <!-- 结构化数据 (Schema.org) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "AI Title Translator - AI Bilingual",
-    "alternateName": "AI Title Translator - AI Bilingual",
-    "description": "Chrome extension that translates YouTube titles into multiple target languages with AI",
-    "applicationCategory": "BrowserExtension",
-    "operatingSystem": "Chrome",
-    "author": {
-      "@type": "Person",
-      "name": "Gary"
-    },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "softwareVersion": "8.0.3"
-  }
-  </script>
-  
-  <!-- 规范URL -->
-  <link rel="canonical" href="https://github.com/garygaryandfree/YouTube-AI-Title-Translator">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YouTube Title Translator</title>
   <style>
-    :root {
-      --bg: #f7f8fb;
-      --surface: #ffffff;
-      --surface-soft: #f9fafc;
-      --text: #16181d;
-      --muted: #69717f;
-      --subtle: #8a93a3;
-      --line: #dfe3ea;
-      --line-strong: #cbd2dc;
-      --red: #ff0033;
-      --red-dark: #d9002b;
-      --blue: #2868f0;
-      --violet: #7657ff;
-      --green: #1d9a57;
-      --shadow: 0 14px 36px rgba(20, 24, 33, 0.10);
-    }
-
-    * { box-sizing: border-box; }
-
-    html {
-      scrollbar-width: none;
-    }
-
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
-      width: 0;
-      height: 0;
-      display: none;
-    }
-
-    body {
-      width: 390px;
-      margin: 0;
-      padding: 0;
-      font-family: Inter, "SF Pro Display", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      letter-spacing: 0;
-      overflow-y: auto;
-      scrollbar-width: none;
-    }
-
-    button, input, select {
-      font: inherit;
-    }
-
-    .app-shell {
-      min-height: 100vh;
-      background:
-        linear-gradient(160deg, rgba(255, 0, 51, 0.08), rgba(40, 104, 240, 0.06) 38%, rgba(255,255,255,0) 72%),
-        var(--bg);
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 14px 18px 12px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .brand-mark {
-      width: 48px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      flex: 0 0 auto;
-      color: #fff;
-      background: linear-gradient(135deg, var(--red), var(--blue));
-      border-radius: 8px;
-      box-shadow: 0 10px 24px rgba(255, 0, 51, 0.20);
-    }
-
-    .brand-mark svg {
-      width: 22px;
-      height: 22px;
-      fill: currentColor;
-      transform: translateX(1px);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 17px;
-      line-height: 1.15;
-      font-weight: 760;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .brand-subtitle {
-      margin-top: 4px;
-      font-size: 12px;
-      line-height: 1.25;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 0 0 auto;
-    }
-
-    .interface-language {
-      position: relative;
-      width: 124px;
-      height: 34px;
-      flex: 0 0 auto;
-    }
-
-    .interface-language::before {
-      content: "🌐";
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      z-index: 1;
-      font-size: 13px;
-      line-height: 1;
-      pointer-events: none;
-      transform: translateY(-50%);
-    }
-
-    .interface-language select.select-control {
-      width: 100%;
-      min-height: 34px;
-      height: 34px;
-      padding: 7px 26px 7px 30px;
-      color: #303640;
-      font-size: 12px;
-      font-weight: 680;
-      text-align: left;
-      text-align-last: left;
-      background-color: var(--surface);
-      background-position: right 8px center;
-      background-size: 14px 14px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      cursor: pointer;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      transition: transform .16s ease, border-color .16s ease, background .16s ease;
-    }
-
-    .interface-language select.select-control:hover {
-      transform: translateY(-1px);
-      border-color: var(--line-strong);
-      background-color: #fdfdfe;
-    }
-
-    main {
-      padding: 14px 18px 12px;
-    }
-
-    .master-switch {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 16px;
-      padding: 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 10px 24px rgba(20, 24, 33, 0.06);
-    }
-
-    .master-switch-copy {
-      min-width: 0;
-    }
-
-    .master-switch-label {
-      display: block;
-      font-size: 17px;
-      line-height: 1.2;
-      font-weight: 760;
-      color: var(--text);
-    }
-
-    .master-switch-desc {
-      display: block;
-      margin-top: 5px;
-      font-size: 11px;
-      line-height: 1.35;
-      color: var(--muted);
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 58px;
-      height: 32px;
-      flex: 0 0 auto;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      cursor: pointer;
-      background: #b7beca;
-      border-radius: 999px;
-      transition: background .18s ease;
-    }
-
-    .slider:before {
-      content: "";
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      left: 4px;
-      top: 50%;
-      background: #fff;
-      border-radius: 50%;
-      transform: translateY(-50%);
-      transition: transform .18s ease;
-      border: 1px solid rgba(20, 24, 33, 0.08);
-    }
-
-    input:checked + .slider {
-      background: linear-gradient(135deg, var(--red), var(--blue));
-    }
-
-    input:checked + .slider:before {
-      transform: translate(26px, -50%);
-    }
-
-    .trust-strip {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 7px 10px;
-      margin: -4px 0 16px;
-      padding: 0 2px;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.3;
-      font-weight: 650;
-      cursor: default;
-    }
-
-    .trust-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
-
-    .trust-item::before {
-      content: "";
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--red), var(--blue));
-      flex: 0 0 auto;
-    }
-
-    .section {
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin: 0 0 10px;
-      font-size: 17px;
-      line-height: 1.25;
-      font-weight: 760;
-      color: var(--text);
-    }
-
-    .section-title span {
-      font-size: 12px;
-      font-weight: 650;
-      color: var(--subtle);
-    }
-
-    label, .field-label, .mini-label {
-      display: block;
-      margin: 0 0 8px;
-      font-size: 13px;
-      line-height: 1.25;
-      font-weight: 650;
-      color: #4d5562;
-    }
-
-    .provider-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 0;
-    }
-
-    .provider-card {
-      position: relative;
-      min-height: 72px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 4px;
-      text-align: center;
-      color: #49515d;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
-    }
-
-    .provider-card:hover {
-      color: var(--text);
-      background: var(--surface-soft);
-      transform: translateY(-1px);
-    }
-
-    .provider-card.active {
-      color: var(--red);
-      background: #fff;
-      border-color: rgba(255, 0, 51, 0.38);
-      box-shadow: inset 0 0 0 2px var(--red), 0 8px 22px rgba(255, 0, 51, 0.10);
-      z-index: 1;
-    }
-
-    .provider-card.active::after {
-      content: "";
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--red);
-    }
-
-    .provider-card.active::before {
-      content: "";
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 7px;
-      height: 4px;
-      border-left: 2px solid #fff;
-      border-bottom: 2px solid #fff;
-      transform: rotate(-45deg);
-      z-index: 2;
-    }
-
-    .provider-card.provider-recommended.active::before,
-    .provider-card.provider-recommended.active::after {
-      display: none;
-    }
-
-    /* 已保存 Key 的 provider：右下角绿色小圆点（active 时已有红色勾选，不重复标） */
-    .provider-card.provider-configured:not(.active)::after {
-      content: "";
-      position: absolute;
-      right: 8px;
-      bottom: 8px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-    }
-
-    .provider-card:focus-visible {
-      outline: 2px solid var(--blue);
-      outline-offset: 2px;
-    }
-
-    .provider-badge {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      max-width: calc(100% - 10px);
-      padding: 2px 5px;
-      color: #fff;
-      background: var(--red);
-      border-radius: 999px;
-      font-size: 9px;
-      line-height: 1.1;
-      font-weight: 760;
-      letter-spacing: 0;
-      box-shadow: 0 3px 8px rgba(255, 0, 51, 0.18);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .p-icon {
-      width: 28px;
-      height: 24px;
-      display: grid;
-      place-items: center;
-      color: currentColor;
-      font-size: 0;
-    }
-
-    .p-icon svg {
-      width: 24px;
-      height: 24px;
-      stroke: currentColor;
-      stroke-width: 2.1;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .brand-logo {
-      display: block;
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-    }
-
-    #card-openai .brand-logo {
-      width: 30px;
-      object-fit: cover;
-      object-position: left center;
-    }
-
-    .p-icon .filled,
-    .p-icon .brand-fill {
-      fill: currentColor;
-      stroke: none;
-    }
-
-    #card-deepseek .p-icon {
-      color: #2563eb;
-    }
-
-    #card-openai .p-icon {
-      color: #20242a;
-    }
-
-    #card-google .p-icon {
-      color: #4f46e5;
-    }
-
-    #card-anthropic .p-icon {
-      color: #2d241f;
-    }
-
-    #card-minimax .p-icon {
-      color: var(--red);
-    }
-
-    #card-zhipu .p-icon {
-      color: #2563eb;
-    }
-
-    #card-kimi .p-icon {
-      color: #111827;
-    }
-
-    #card-custom .p-icon {
-      color: #4d5562;
-    }
-
-    .p-name {
-      display: block;
-      width: 100%;
-      font-size: 12px;
-      line-height: 1.15;
-      font-weight: 680;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .input-section, .custom-main-settings {
-      margin-bottom: 14px;
-    }
-
-    #manualModelSection {
-      display: none;
-    }
-
-    .custom-main-settings {
-      display: none;
-      padding: 14px;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-    }
-
-    .custom-main-settings .mini-group:last-child {
-      margin-bottom: 0;
-    }
-
-    select.select-control,
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      min-height: 46px;
-      padding: 12px 14px;
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      outline: none;
-      font-size: 14px;
-      line-height: 1.35;
-      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
-    }
-
-    select.select-control {
-      appearance: none;
-      cursor: pointer;
-      padding-right: 42px;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2369717f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-    }
-
-    input[type="password"],
-    .api-key-field input[type="text"] {
-      padding-right: 52px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      letter-spacing: .02em;
-    }
-
-    input::placeholder {
-      color: #9aa3b1;
-      letter-spacing: 0;
-      font-family: inherit;
-    }
-
-    select.select-control:focus,
-    input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(40, 104, 240, 0.12);
-      background-color: #fff;
-    }
-
-    .api-key-field {
-      position: relative;
-    }
-
-    .visibility-toggle {
-      position: absolute;
-      top: 7px;
-      right: 7px;
-      width: 34px;
-      height: 34px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: #4d5562;
-      background: #f7f8fb;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background .16s ease, color .16s ease, border-color .16s ease;
-    }
-
-    .visibility-toggle:hover {
-      color: var(--text);
-      background: #fff;
-      border-color: var(--line-strong);
-    }
-
-    .visibility-toggle svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      stroke-width: 2;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .help-link {
-      margin-top: 8px;
-      font-size: 12px;
-      line-height: 1.35;
-      color: var(--muted);
-      text-align: right;
-    }
-
-    .help-link a {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 650;
-    }
-
-    .help-link a:hover {
-      text-decoration: underline;
-    }
-
-    .mini-group {
-      margin-bottom: 14px;
-    }
-
-    .mini-input {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 12px;
-      color: #3e4652;
-      background: #fbfcfe;
-    }
-
-    button#saveBtn {
-      width: 100%;
-      min-height: 38px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px;
-      color: #fff;
-      background: linear-gradient(135deg, var(--red), var(--red-dark));
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      line-height: 1.2;
-      font-weight: 760;
-      transition: transform .16s ease, filter .16s ease;
-    }
-
-    button#saveBtn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.02);
-    }
-
-    button#saveBtn:active {
-      transform: translateY(1px);
-    }
-
-    button#saveBtn svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-      stroke-width: 2.2;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .action-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 2px;
-    }
-
-    .secondary-btn {
-      min-height: 38px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px;
-      color: #1d3f95;
-      background: #eef4ff;
-      border: 1px solid rgba(40, 104, 240, 0.28);
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      line-height: 1.2;
-      font-weight: 760;
-      transition: transform .16s ease, background .16s ease, border-color .16s ease;
-    }
-
-    .secondary-btn:hover {
-      transform: translateY(-1px);
-      background: #e6efff;
-      border-color: rgba(40, 104, 240, 0.42);
-    }
-
-    .secondary-btn:disabled {
-      cursor: wait;
-      color: var(--subtle);
-      background: #f4f6fa;
-      transform: none;
-    }
-
-    .secondary-btn svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-      stroke-width: 2.1;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    #status {
-      min-height: 40px;
-      margin-top: 10px;
-      padding: 0 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-size: 13px;
-      line-height: 1.35;
-      font-weight: 650;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.65);
-      border: 1px solid transparent;
-      border-radius: 8px;
-    }
-
-    #status:empty {
-      display: none;
-    }
-
-    .ghost-btn {
-      width: 100%;
-      margin-top: 8px;
-      padding: 8px;
-      color: var(--muted);
-      background: transparent;
-      border: 1px dashed var(--line-strong);
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      line-height: 1.2;
-      font-weight: 650;
-      transition: color .16s ease, border-color .16s ease;
-    }
-
-    .ghost-btn:hover {
-      color: var(--text);
-      border-color: var(--muted);
-    }
-
-    .footer {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      padding: 12px 18px 12px;
-      background: var(--surface);
-      border-top: 1px solid var(--line);
-    }
-
-    .footer-link {
-      min-height: 38px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px;
-      text-decoration: none;
-      font-size: 13px;
-      line-height: 1.2;
-      font-weight: 680;
-      color: #3f4753;
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease;
-    }
-
-    .footer-link:hover {
-      transform: translateY(-1px);
-      border-color: var(--line-strong);
-      background: #fbfcfe;
-    }
-
-    .link-feedback {
-      color: #185bc9;
-    }
-
-    .link-donate {
-      color: var(--red-dark);
-      background: #fff1f3;
-      border-color: rgba(255, 0, 51, 0.24);
-    }
-
-    .link-donate:hover {
-      color: var(--red-dark);
-      background: #ffe3e8;
-      border-color: rgba(255, 0, 51, 0.36);
-    }
-
-    .footer-link svg {
-      width: 17px;
-      height: 17px;
-      stroke: currentColor;
-      stroke-width: 2;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      flex: 0 0 auto;
-    }
-
-    .link-donate svg {
-      fill: rgba(255, 0, 51, 0.12);
-    }
-
-    .privacy-note {
-      padding: 0 18px 14px;
-      margin: 0;
-      font-size: 10px;
-      line-height: 1.35;
-      text-align: center;
-      color: var(--subtle);
-      background: var(--surface);
-    }
-
-    @media (max-width: 360px) {
-      body { width: 360px; }
-      header, main { padding-left: 14px; padding-right: 14px; }
-      h1 { font-size: 15px; }
-      .provider-card { min-height: 78px; }
-      .p-name { font-size: 11px; }
-      .action-row { grid-template-columns: 1fr; }
-    }
+    :root { color-scheme:light; --bg:#fff; --surface:#fff; --soft:#f6f7f9; --text:#18202b; --muted:#636b79; --border:#dce0e7; --accent:#d9153c; --tint:#fff1f4; --success:#18764a; --success-bg:#edf8f1; --error:#a52335; --error-bg:#fff2f3; --draft:#8a5800; }
+    * { box-sizing:border-box; } [hidden] { display:none !important; }
+    body { margin:0; width:440px; background:var(--bg); color:var(--text); font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; overflow:hidden; }
+    button,input,select { font:inherit; } button { cursor:pointer; } button:disabled,fieldset:disabled button { cursor:wait; opacity:.6; }
+    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+    a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+    .app-shell { display:flex; flex-direction:column; max-height:600px; }
+    header { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:66px; padding:14px 20px; border-bottom:1px solid var(--border); }
+    .brand { display:flex; align-items:center; gap:10px; flex:1; min-width:0; } .brand-mark { width:32px; height:32px; flex-shrink:0; object-fit:contain; }
+    h1 { margin:0; font-size:15px; line-height:1.25; font-weight:700; overflow-wrap:anywhere; }
+    .brand-subtitle { margin-top:4px; color:var(--muted); font-size:10.5px; line-height:1.3; }
+    .interface-select { position:relative; flex-shrink:0; }
+    .interface-select .globe { position:absolute; inset-inline-start:10px; top:8px; width:17px; height:17px; pointer-events:none; }
+    .interface-select .chevron { position:absolute; inset-inline-end:9px; top:10px; width:13px; height:13px; pointer-events:none; }
+    #uiLanguageSelect { width:auto; field-sizing:content; min-width:136px; max-width:188px; height:33px; padding:5px 25px 5px 33px; padding-inline:33px 25px; font-size:12px; appearance:none; }
+    main { min-height:0; overflow-y:auto; padding:12px 20px 8px; scrollbar-width:thin; }
+    .mode-toolbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .master-control { display:flex; align-items:center; gap:10px; flex:0 1 auto; min-width:124px; } .basic-label { font-size:12px; }
+    .switch { position:relative; display:block; flex-shrink:0; width:34px; height:20px; margin:0; }
+    .switch input { width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
+    .slider { position:absolute; inset:0; background:#a5aab4; border-radius:20px; pointer-events:none; }
+    .slider::before { content:""; position:absolute; top:3px; inset-inline-start:3px; width:14px; height:14px; border-radius:50%; background:#fff; transition:transform .15s; }
+    .switch input:checked + .slider { background:var(--accent); } .switch input:checked + .slider::before { transform:translateX(14px); }
+    [dir="rtl"] .switch input:checked + .slider::before { transform:translateX(-14px); }
+    .switch input:focus-visible + .slider { outline:3px solid var(--accent); outline-offset:3px; }
+    .mode-grid { display:grid; grid-template-columns:1fr 1fr; flex:1; min-width:220px; gap:3px; padding:3px; border-radius:8px; background:#f1f3f5; }
+    .mode-card { min-height:30px; padding:4px 7px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--muted); text-align:center; line-height:1.3; }
+    .mode-card strong { font-size:12px; font-weight:500; }
+    .mode-card[aria-pressed="true"] { border-color:#e9acba; background:var(--tint); color:var(--accent); } .mode-card[aria-pressed="true"] strong { font-weight:650; }
+    .target-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding:5px 10px 5px 12px; background:var(--soft); border-radius:9px; }
+    .target-copy { min-width:0; } .target-copy label { margin:0; font-size:13px; } .target-hint { margin-top:2px; color:var(--muted); font-size:10.5px; line-height:1.25; }
+    #targetLanguageSelect { width:auto; field-sizing:content; min-width:138px; max-width:190px; flex-shrink:0; }
+    .notice { margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.65; }
+    h2 { margin:0; font-size:13px; font-weight:650; } fieldset { margin:0; padding:0; border:0; min-width:0; }
+    .provider-section { margin-top:10px; padding-top:6px; border-top:1px solid var(--border); }
+    .provider-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:6px; }
+    .provider-card { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:56px; padding:4px 3px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:var(--surface); }
+    .provider-card:hover { border-color:var(--muted); } .provider-card.active { border-color:var(--accent); background:var(--tint); box-shadow:inset 0 0 0 .5px var(--accent); }
+    .provider-card.active .p-name { color:var(--accent); font-weight:650; } .p-icon { height:30px; display:grid; place-items:center; }
+    .p-icon img { width:30px; height:30px; object-fit:contain; } .logo-openai,.logo-deepseek { width:34px !important; height:34px !important; }
+    .p-name { font-size:11.5px; line-height:1.25; white-space:nowrap; direction:ltr; unicode-bidi:isolate; }
+    .provider-card.provider-configured::after,.provider-card.provider-draft::after { content:""; position:absolute; inset-inline-end:5px; top:5px; width:5px; height:5px; border-radius:50%; background:#89929f; }
+    .provider-card.provider-verified::after { background:var(--success); } .provider-card.provider-draft::after { background:var(--draft); }
+    .model-card { margin-top:8px; } .input-section:not([hidden]) ~ .input-section:not([hidden]) { margin-top:8px; }
+    label { display:block; margin-bottom:5px; font-weight:600; line-height:1.25; }
+    .field-label { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:5px; } .field-label label { margin:0; } .field-label a { font-size:11px; font-weight:500; text-align:end; }
+    input[type="text"],input[type="url"],input[type="password"],select { width:100%; min-width:0; height:36px; padding:6px 10px; border:1px solid var(--border); border-radius:7px; color:var(--text); background:var(--surface); }
+    input::placeholder { color:var(--muted); opacity:.85; }
+    .api-key-field { display:flex; align-items:center; border:1px solid var(--border); border-radius:7px; background:var(--surface); }
+    .api-key-field input { border:0; min-width:0; flex:1; background:transparent; } .api-key-field:focus-within { outline:3px solid var(--accent); outline-offset:2px; } .api-key-field input:focus-visible { outline:0; }
+    .visibility-toggle { display:grid; place-items:center; flex-shrink:0; width:36px; height:34px; padding:0; border:0; border-radius:7px; background:transparent; } .visibility-toggle img { width:17px; height:17px; }
+    #advancedSettings { margin-top:6px; font-size:12px; color:var(--muted); } summary { cursor:pointer; padding:2px 0; } .advanced-content { padding:4px 0 2px; }
+    .model-id { margin:2px 0 8px; font-size:11px; overflow-wrap:anywhere; } .model-id code { font:inherit; }
+    .utility-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+    .ghost-btn { min-height:32px; border:1px solid var(--border); border-radius:7px; background:var(--surface); color:var(--text); padding:5px 9px; font-size:11px; }
+    .skip-save { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); } .skip-save p { margin:5px 0 0; font-size:11px; }
+    .status-panel { margin-top:9px; padding:8px 10px; border-radius:8px; color:var(--muted); background:var(--soft); font-size:11px; }
+    .status-panel[data-kind="success"] { color:var(--success); background:var(--success-bg); } .status-panel[data-kind="error"] { color:var(--error); background:var(--error-bg); }
+    #status { margin:0; white-space:pre-line; overflow-wrap:anywhere; } #statusDetails { margin-top:4px; }
+    .diagnostic-grid { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:5px 0 0; } .diagnostic-grid dt,.diagnostic-grid dd { margin:0; } .diagnostic-grid code { font:inherit; }
+    .action-panel { flex-shrink:0; padding:7px 20px; border-top:1px solid var(--border); background:var(--surface); }
+    .state-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:5px; color:var(--muted); font-size:11px; line-height:1.3; }
+    .state-copy { display:flex; align-items:center; gap:5px; min-width:0; } #stateIcon { width:14px; height:14px; }
+    #configState[data-kind="draft"] { color:var(--draft); } #configState[data-kind="success"] { color:var(--success); } #versionLabel { font-size:10px; flex-shrink:0; direction:ltr; }
+    .primary-btn { width:100%; min-height:40px; padding:9px 12px; border:1px solid var(--accent); border-radius:8px; background:var(--accent); color:#fff; font-weight:650; }
+    .footer-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; margin-top:6px; color:var(--muted); }
+    .privacy-summary { margin:0; font-size:10px; line-height:1.45; }
+    .privacy-info { display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; width:16px; height:18px; padding:0; margin-inline-start:4px; border:0; background:transparent; } .privacy-info img { width:13px; height:13px; }
+    .footer-links { display:flex; gap:8px; flex-shrink:0; font-size:10px; margin-inline-start:auto; } .footer-links a { color:var(--muted); }
+    #privacyInfo { position:fixed; inset:auto 20px 92px; width:auto; max-width:400px; margin:0; padding:14px 16px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:12px; box-shadow:0 4px 16px #0002; }
+    #privacyInfo p { margin:6px 0 0; line-height:1.6; } #privacyInfo::backdrop { background:transparent; }
+    @media (prefers-reduced-motion:reduce) { .slider::before { transition:none; } }
+    @media (prefers-color-scheme:dark) { :root { color-scheme:dark; --bg:#1e2229; --surface:#1e2229; --soft:#292e37; --text:#f0f2f6; --muted:#b5bdca; --border:#3c4451; --accent:#ff5478; --tint:#39202a; --success:#72daa4; --success-bg:#173729; --error:#ff9ca6; --error-bg:#402329; --draft:#f5c76c; } .mode-grid { background:#292e37; } .mode-card[aria-pressed="true"] { border-color:#9c4a60; } .primary-btn { background:#d9153c; border-color:#d9153c; } .ui-icon { filter:brightness(1.9); } .logo-openai { filter:invert(1); } }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <header>
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M9.6 7.4v9.2l7.1-4.6-7.1-4.6z"/></svg>
-        </div>
-        <div>
-          <h1 data-i18n="appTitle">AI Title Translator</h1>
-          <div class="brand-subtitle" data-i18n="brandSubtitle">AI model settings</div>
-        </div>
-      </div>
-      <div class="header-actions" aria-label="Quick actions" data-i18n-attr="aria-label:quickActions">
-        <div class="interface-language">
-          <select id="uiLanguageSelect" class="select-control" title="Interface language" aria-label="Interface language" data-i18n-attr="title:uiLanguageLabel;aria-label:uiLanguageLabel"></select>
-        </div>
-      </div>
+      <div class="brand"><img class="brand-mark" src="icon/icon128.png" alt=""><div><h1 data-i18n="appTitle">YouTube Title Translator</h1><div class="brand-subtitle" data-i18n="brandSubtitle">Bilingual titles · Explore more</div></div></div>
+      <div class="interface-select"><img class="globe ui-icon" src="assets/icons/globe.svg" alt=""><select id="uiLanguageSelect" aria-label="Switch interface text" data-i18n-attr="aria-label:uiLanguageLabel;title:uiLanguageLabel"></select><img class="chevron ui-icon" src="assets/icons/chevron-down.svg" alt=""></div>
     </header>
-
     <main>
-      <div class="master-switch">
-          <span class="master-switch-copy">
-          <span class="master-switch-label" data-i18n="masterLabel">Translation</span>
-          <span class="master-switch-desc" data-i18n="masterDesc">Automatically translate YouTube video titles</span>
-        </span>
-        <label class="switch" aria-label="Translation" data-i18n-attr="aria-label:masterLabel">
-          <input type="checkbox" id="masterToggle" checked>
-          <span class="slider"></span>
-        </label>
+      <div class="mode-toolbar">
+        <div class="master-control"><span class="basic-label" data-i18n="masterLabel">Translate</span><label class="switch"><input id="masterToggle" type="checkbox" role="switch" checked aria-label="Automatic translation" data-i18n-attr="aria-label:masterDesc;title:masterDesc"><span class="slider"></span></label></div>
+        <div class="mode-grid" role="group" data-i18n-attr="aria-label:modeTitle"><button type="button" class="mode-card" id="modeLocal" aria-pressed="true" data-i18n-attr="title:modeLocalDesc"><strong data-i18n="modeLocal">On-device</strong></button><button type="button" class="mode-card" id="modeAi" aria-pressed="false" data-i18n-attr="title:modeAiDesc"><strong data-i18n="modeAi">AI translation</strong></button></div>
       </div>
-
-      <div class="trust-strip" aria-label="Privacy and browsing benefits">
-        <span class="trust-item">
-          <span data-i18n="localKeyChip">Local key</span>
-        </span>
-        <span class="trust-item">
-          <span data-i18n="originalChip">Original kept</span>
-        </span>
-        <span class="trust-item">
-          <span data-i18n="customAiChip">Custom AI</span>
-        </span>
-      </div>
-
-      <section class="section" aria-labelledby="languageTitle">
-        <h2 class="section-title" id="languageTitle" data-i18n="languageTitle">1. Translation language</h2>
-        <div class="input-section">
-          <label for="targetLanguageSelect" data-i18n="targetLanguageLabel">Translate titles into</label>
-          <select id="targetLanguageSelect" class="select-control"></select>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="providerTitle">
-        <h2 class="section-title" id="providerTitle" data-i18n="providerTitle">2. Choose AI provider</h2>
-        <div class="provider-grid">
-          <div class="provider-card" id="card-openai" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/openai.svg" alt="">
-            </span>
-            <span class="p-name">OpenAI</span>
-          </div>
-          <div class="provider-card" id="card-google" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/google-gemini.svg" alt="">
-            </span>
-            <span class="p-name">Gemini</span>
-          </div>
-          <div class="provider-card" id="card-anthropic" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/claude.svg" alt="">
-            </span>
-            <span class="p-name">Claude</span>
-          </div>
-          <div class="provider-card provider-recommended" id="card-deepseek" role="button" tabindex="0">
-            <span class="provider-badge" data-i18n="deepseekRecommended">Recommended</span>
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/deepseek.svg" alt="">
-            </span>
-            <span class="p-name">DeepSeek</span>
-          </div>
-          <div class="provider-card" id="card-minimax" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/minimax.svg" alt="">
-            </span>
-            <span class="p-name">MiniMax</span>
-          </div>
-          <div class="provider-card" id="card-zhipu" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/zai.svg" alt="">
-            </span>
-            <span class="p-name">智谱</span>
-          </div>
-          <div class="provider-card" id="card-kimi" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <img class="brand-logo" src="assets/brands/kimi.png" alt="">
-            </span>
-            <span class="p-name">Kimi</span>
-          </div>
-          <div class="provider-card" id="card-custom" role="button" tabindex="0">
-            <span class="p-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"/><path d="m16 9 4 3-4 3"/><path d="m14 5-4 14"/></svg>
-            </span>
-            <span class="p-name" data-i18n="providerCustom">Custom</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" aria-labelledby="modelTitle">
-        <h2 class="section-title" id="modelTitle" data-i18n="modelTitle">3. Model settings</h2>
-        <div class="input-section" id="modelSection">
-          <label for="modelSelect" data-i18n="modelVersionLabel">Model version</label>
-          <select id="modelSelect" class="select-control"></select>
-        </div>
-        <div class="input-section" id="manualModelSection">
-          <div id="manualModelNameSlot"></div>
-        </div>
-
-        <div class="custom-main-settings" id="customMainSettings">
-          <label data-i18n="customEndpointLabel">Custom endpoint</label>
-          <div id="customApiUrlSlot">
-            <div class="mini-group" id="apiUrlGroup">
-              <span class="mini-label" data-i18n="apiEndpointLabel">API endpoint</span>
-              <input type="text" id="apiUrl" class="mini-input">
-            </div>
-          </div>
-          <div id="customModelNameSlot">
-            <div class="mini-group" id="modelNameGroup">
-              <span class="mini-label" data-i18n="modelNameLabel">Model name</span>
-              <input type="text" id="modelName" class="mini-input">
-            </div>
-          </div>
-        </div>
-
-        <div class="input-section">
-          <label for="apiKey">API Key</label>
-          <div class="api-key-field">
-            <input type="password" id="apiKey" placeholder="Paste your API key..." autocomplete="off" data-i18n-attr="placeholder:apiKeyPlaceholder">
-            <button type="button" class="visibility-toggle" id="apiKeyVisibility" title="Show or hide API Key" aria-label="Show or hide API Key" data-i18n-attr="title:toggleKey;aria-label:toggleKey">
-              <svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-          <div class="help-link" id="help-text">
-            <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">去 DeepSeek 官网申请 Key</a>
-          </div>
-        </div>
-      </section>
-
-      <div class="action-row">
-        <button id="saveBtn">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
-          <span data-i18n="saveSettings">Save settings</span>
-        </button>
-        <button type="button" id="testBtn" class="secondary-btn">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/><path d="M14 6h6v6"/></svg>
-          <span data-i18n="testConfig">Test configuration</span>
-        </button>
-      </div>
-      <div id="status"></div>
-      <button type="button" id="clearCacheBtn" class="ghost-btn">Clear translation cache</button>
+      <div class="target-row"><div class="target-copy"><label for="targetLanguageSelect" data-i18n="targetLanguageLabel">Translate titles into</label><div class="target-hint" data-i18n="targetLanguageHint">For YouTube video titles</div></div><select id="targetLanguageSelect"></select></div>
+      <p class="notice" id="localNotice" data-i18n="localNotice">Uses Chrome’s on-device translator. Supported browser and languages required.</p>
+      <fieldset id="aiSettings" hidden>
+        <section class="provider-section" aria-labelledby="providerTitle"><h2 id="providerTitle" data-i18n="providerTitle">AI provider</h2><div class="provider-grid">
+          <button type="button" class="provider-card" id="card-openai" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="logo-openai" src="assets/brands/openai-mark.svg" alt=""></span><span class="p-name">OpenAI</span></button>
+          <button type="button" class="provider-card" id="card-google" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/google-gemini.svg" alt=""></span><span class="p-name">Gemini</span></button>
+          <button type="button" class="provider-card" id="card-anthropic" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/claude.svg" alt=""></span><span class="p-name">Claude</span></button>
+          <button type="button" class="provider-card" id="card-deepseek" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="logo-deepseek" src="assets/brands/deepseek.svg" alt=""></span><span class="p-name">DeepSeek</span></button>
+          <button type="button" class="provider-card" id="card-minimax" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/minimax.svg" alt=""></span><span class="p-name">MiniMax</span></button>
+          <button type="button" class="provider-card" id="card-zhipu" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/zai.svg" alt=""></span><span class="p-name">Z.AI</span></button>
+          <button type="button" class="provider-card" id="card-kimi" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/kimi.png" alt=""></span><span class="p-name">Kimi</span></button>
+          <button type="button" class="provider-card" id="card-custom" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="ui-icon" src="assets/icons/code.svg" alt=""></span><span class="p-name">Custom</span></button>
+        </div></section>
+        <section class="model-card" data-i18n-attr="aria-label:modelTitle">
+          <div class="input-section" id="apiUrlGroup" hidden><label for="apiUrl" data-i18n="apiEndpointLabel">API endpoint</label><input type="url" id="apiUrl" dir="ltr" autocomplete="off" spellcheck="false"></div>
+          <div class="input-section" id="modelSection"><label for="modelSelect" data-i18n="modelVersionLabel">Model</label><select id="modelSelect" dir="ltr"></select></div>
+          <div class="input-section" id="manualModelSection" hidden><label for="modelName" data-i18n="modelNameLabel">Model name</label><input type="text" id="modelName" dir="ltr" autocomplete="off" spellcheck="false"><p class="notice" data-i18n="manualModelHint">Enter a model ID supported by this provider</p></div>
+          <div class="input-section"><div class="field-label"><label for="apiKey">API Key</label><a id="help-link" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">Get an API key</a></div><div class="api-key-field"><input type="password" id="apiKey" dir="ltr" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:apiKeyPlaceholder"><button type="button" class="visibility-toggle" id="apiKeyVisibility" aria-pressed="false" data-i18n-attr="aria-label:toggleKey;title:toggleKey"><img class="ui-icon" src="assets/icons/eye.svg" alt=""></button></div></div>
+        </section>
+      </fieldset>
+      <div id="statusPanel" class="status-panel" hidden><p id="status" role="status" aria-live="polite" aria-atomic="true" hidden></p><details id="statusDetails" hidden><summary data-i18n="diagnosticLabel">Diagnostic details</summary><dl class="diagnostic-grid"><dt data-i18n="diagnosticTypeLabel">Type</dt><dd><code id="diagnosticType" dir="ltr"></code></dd><dt id="diagnosticHttpLabel" data-i18n="diagnosticHttpLabel">HTTP status</dt><dd><code id="diagnosticHttp" dir="ltr"></code></dd></dl></details></div>
+      <details id="advancedSettings"><summary data-i18n="moreSettings">More settings</summary><div class="advanced-content"><p class="model-id" id="modelIdRow"><span data-i18n="modelIdLabel">API model ID</span>: <code id="modelIdValue" dir="ltr"></code></p><div class="utility-actions"><button type="button" id="clearCacheBtn" class="ghost-btn">Clear translation cache</button><a href="https://github.com/garygaryandfree/YouTube-AI-Title-Translator" target="_blank" rel="noopener noreferrer" data-i18n="openDocs">Open project docs</a></div><div class="skip-save" id="skipSaveSection"><button type="button" id="saveBtn" class="ghost-btn">Save without verification</button><p data-i18n="saveOnlyHint">Skips the test and applies this configuration.</p></div></div></details>
     </main>
-
-    <div class="footer">
-      <a href="https://github.com/garygaryandfree/YouTube-AI-Title-Translator" target="_blank" class="footer-link link-feedback" rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-        <span data-i18n="feedback">Feedback</span>
-      </a>
-
-      <a href="https://github.com/garygaryandfree/YouTube-AI-Title-Translator" target="_blank" class="footer-link link-donate" rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span data-i18n="supportDeveloper">Support developer</span>
-      </a>
+    <div class="action-panel">
+      <div class="state-row"><div class="state-copy"><img id="stateIcon" src="assets/icons/check.svg" alt="" hidden><span id="configState" aria-live="polite"></span></div><span id="versionLabel"></span></div>
+      <button type="button" id="testBtn" class="primary-btn">Verify &amp; save</button>
+      <div class="footer-meta"><p class="privacy-summary"><span class="privacy-note"></span><button type="button" class="privacy-info" popovertarget="privacyInfo" data-i18n-attr="aria-label:privacyTitle;title:privacyTitle"><img class="ui-icon" src="assets/icons/info.svg" alt=""></button></p><div class="footer-links"><a href="https://github.com/garygaryandfree/YouTube-AI-Title-Translator" target="_blank" rel="noopener noreferrer" data-i18n="feedback">Feedback</a><a href="https://github.com/garygaryandfree/YouTube-AI-Title-Translator" target="_blank" rel="noopener noreferrer" data-i18n="supportDeveloper">Support</a></div></div>
     </div>
-    <p class="privacy-note">Stored only in this browser. No data is uploaded to the developer.</p>
   </div>
-
+  <div id="privacyInfo" popover="auto"><strong data-i18n="privacyTitle">Privacy details</strong><p id="privacyBody"></p></div>
+  <script src="popup-locales.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

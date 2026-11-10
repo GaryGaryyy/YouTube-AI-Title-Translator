@@ -104,16 +104,18 @@
 
 Cliquez sur l'icône de l'extension dans la barre d'outils pour ouvrir le panneau :
 
-![Interface des paramètres](screenshots/v8.0.1/config-ui.png)
+![Interface des paramètres (v8.0.1)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Utilisation de Base (Aucune Clé Requise)
-Si aucune clé API n'est renseignée, la traduction sur l'appareil de Chrome 138+ prend le relais automatiquement. Ouvrez YouTube et profitez immédiatement des titres bilingues !
+Les nouvelles installations utilisent **Sur l’appareil**. Vous pouvez choisir ce mode et l’enregistrer même si une clé IA est déjà stockée. Un navigateur, un appareil et une paire de langues compatibles sont nécessaires. Chrome peut télécharger des packs linguistiques lors de la première utilisation.
 
 ### 2. Configuration IA Avancée (Mèmes + Badges Thématiques)
-Pour bénéficier des traductions fines et des catégories automatiques :
-1. **Translate titles into** : Choisissez la langue cible (12 langues disponibles) ;
-2. **Choose AI provider** : Sélectionnez votre fournisseur et collez votre clé API ;
-3. Cliquez sur **Save settings** et actualisez votre page YouTube.
+
+1. Activez la traduction automatique et choisissez **Traduction IA**.
+2. Choisissez la langue de destination des titres, le fournisseur et le modèle, puis collez votre clé API. Vous pouvez utiliser le modèle recommandé de chaque fournisseur ou saisir un autre ID.
+3. Cliquez sur **Vérifier et enregistrer**. Les paramètres sont enregistrés uniquement si la traduction de test réussit. En cas d’échec, les anciens paramètres restent actifs. **Plus de paramètres → Enregistrer sans vérifier** permet d’ignorer le test.
+
+Le globe change le texte de l’interface sans modifier la langue de destination des titres. La clé reste dans votre navigateur et le développeur ne collecte aucune donnée. Le bouton d’information en bas affiche les détails de l’utilisation de l’IA.
 
 ---
 

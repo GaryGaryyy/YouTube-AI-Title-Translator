@@ -104,16 +104,18 @@
 
 Clique no ícone da extensão na barra de ferramentas para abrir o painel:
 
-![Painel de configurações](screenshots/v8.0.1/config-ui.png)
+![Painel de configurações (v8.0.1)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Uso Básico (Sem Chave de API)
-Se você não configurar nenhuma chave, a tradução no dispositivo do Chrome 138+ é ativada automaticamente. Basta abrir o YouTube para ver os títulos bilíngues de imediato!
+Novas instalações usam **No dispositivo**. Você pode escolher esse modo e salvar mesmo que já tenha uma chave de IA. É necessário um navegador, um dispositivo e um par de idiomas compatíveis. O Chrome pode baixar pacotes de idiomas no primeiro uso.
 
 ### 2. Configuração Avançada de IA (Desbloqueie Memes + Etiquetas)
-Para obter traduções mais refinadas e classificação automática:
-1. **Translate titles into**: Escolha o idioma de destino (12 idiomas disponíveis);
-2. **Choose AI provider**: Escolha seu provedor favorito e insira sua API Key;
-3. Clique em **Save settings** e recarregue a página do YouTube.
+
+1. Ative a tradução automática e selecione **Tradução IA**.
+2. Escolha o idioma de destino dos títulos, o provedor e o modelo e cole sua chave API. Você pode usar o modelo recomendado de cada provedor ou digitar outro ID.
+3. Clique em **Verificar e salvar**. As configurações são salvas somente se a tradução de teste funcionar. Em caso de falha, as configurações anteriores continuam ativas. **Mais configurações → Salvar sem verificar** permite pular o teste.
+
+O ícone do globo altera o texto da interface sem mudar o idioma de destino dos títulos. A chave fica armazenada localmente e o desenvolvedor não coleta dados. O botão de informações no rodapé explica o uso de IA.
 
 ---
 

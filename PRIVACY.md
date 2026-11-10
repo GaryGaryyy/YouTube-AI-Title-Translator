@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: May 11, 2026
+Effective date: October 1, 2026
 
 YouTube Title Translator - AI Bilingual is a Chrome extension that translates YouTube video titles and shows bilingual title information on YouTube pages.
 
@@ -25,7 +25,9 @@ User data is used only to provide the extension's title translation features. We
 
 ## Third-Party AI Services
 
-When the user enables translation and configures an AI service, the extension sends video title text directly from the user's browser to the AI service endpoint selected by the user. The selected third-party service may process that text according to its own privacy policy and terms.
+When the user enables AI translation and saves an AI service configuration, the extension sends video title text and the credentials required for the API call directly from the user's browser to the selected endpoint. The selected third-party service may process that text according to its own privacy policy and terms. Clicking **Verify & save** explicitly sends one sample title to that endpoint to verify the configuration, including when automatic translation is paused or on-device mode is currently saved.
+
+On-device mode uses Chrome's built-in translator and does not send title text to an AI provider. The first use may download language packs from Chrome. Switching to on-device mode preserves saved provider credentials and prevents queued cloud requests and retries from starting; requests already sent may still finish.
 
 Users are responsible for choosing which AI service, model, API key, and endpoint they want to use.
 
@@ -39,7 +41,7 @@ Optional host permissions may be requested when a user configures a custom API e
 
 ## Chrome Web Store Privacy Disclosure Guidance
 
-For the Chrome Web Store privacy form, this extension's data use should be disclosed as handling website content, authentication information, and user settings/preferences. The data is used only for title translation, stored locally where possible, and sent to user-selected AI services only when translation is enabled.
+For the Chrome Web Store privacy form, this extension's data use should be disclosed as handling website content, authentication information, and user settings/preferences. The data is used only for title translation, stored locally where possible, and sent to user-selected AI services for enabled AI translation or an explicit configuration test.
 
 ## Data Retention and Control
 
@@ -59,7 +61,7 @@ https://github.com/garygaryandfree/YouTube-AI-Title-Translator/issues
 
 # 隐私政策
 
-生效日期：2026 年 5 月 11 日
+生效日期：2026 年 10 月 1 日
 
 YouTube 标题翻译 - AI双语标题 是一款 Chrome 扩展，用于翻译 YouTube 视频标题，并在 YouTube 页面中显示双语标题信息。
 
@@ -84,7 +86,9 @@ API Key、设置、偏好和缓存翻译结果会通过 Chrome 扩展存储保�
 
 ## 第三方 AI 服务
 
-当用户启用翻译并配置 AI 服务后，扩展会从用户浏览器直接向用户选择的 AI 服务接口发送视频标题文本。用户选择的第三方服务可能会根据其自身隐私政策和服务条款处理这些文本。
+当用户启用 AI 翻译并保存 AI 服务配置后，扩展会从用户浏览器直接向所选端点发送标题文本及 API 调用所需的凭证。第三方服务可能会根据其自身隐私政策和服务条款处理这些文本。点击“验证并保存”会向所选端点发送一条示例标题以验证配置，即使当前已保存的是本机模式或自动翻译已暂停。
+
+本机模式使用 Chrome 内置翻译，不向 AI 服务商发送标题文本；首次使用可能从 Chrome 下载语言包。切换到本机模式会保留已保存的服务商凭证，并阻止排队中的云端请求和重试继续发出；已经发出的请求仍可能完成。
 
 用户自行决定使用哪个 AI 服务、模型、API Key 和接口地址。
 
@@ -98,7 +102,7 @@ API Key、设置、偏好和缓存翻译结果会通过 Chrome 扩展存储保�
 
 ## Chrome 应用商店隐私披露建议
 
-在 Chrome 应用商店隐私表单中，本扩展应披露会处理网站内容、身份验证信息以及用户设置/偏好。相关数据仅用于标题翻译，尽可能保存在本地，并且只会在用户启用翻译时发送到用户自行选择的 AI 服务。
+在 Chrome 应用商店隐私表单中，本扩展应披露会处理网站内容、身份验证信息以及用户设置/偏好。相关数据仅用于标题翻译，尽可能保存在本地，并会在启用 AI 翻译或主动测试配置时发送到用户自行选择的 AI 服务。
 
 ## 数据保留和控制
 

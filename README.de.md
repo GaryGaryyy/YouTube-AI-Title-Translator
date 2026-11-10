@@ -104,16 +104,18 @@
 
 Klicken Sie auf das Erweiterungssymbol in der Symbolleiste, um das Menü zu öffnen:
 
-![Einstellungsansicht](screenshots/v8.0.1/config-ui.png)
+![Einstellungsansicht (v8.0.1)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Basisfunktion (Kein API-Key erforderlich)
-Ohne konfigurierten API-Key wird die On-Device-Übersetzung von Chrome 138+ automatisch aktiviert. Öffnen Sie einfach YouTube und sehen Sie sofort zweisprachige Titel!
+Neue Installationen verwenden **Auf dem Gerät**. Diesen Modus können Sie auch mit einem bereits gespeicherten KI-Schlüssel auswählen und speichern. Er erfordert einen unterstützten Browser, ein geeignetes Gerät und ein unterstütztes Sprachpaar. Bei der ersten Nutzung kann Chrome Sprachpakete herunterladen.
 
 ### 2. Erweiterter KI-Modus (Memes & Kategorie-Tags freischalten)
-Für nuancierte Übersetzungen und automatische Themen-Tags:
-1. **Translate titles into**: Zielsprache wählen (12 Sprachen verfügbar);
-2. **Choose AI provider**: Bevorzugten Anbieter wählen und API-Key eintragen;
-3. Auf **Save settings** klicken und die YouTube-Seite aktualisieren.
+
+1. Aktivieren Sie die automatische Übersetzung und wählen Sie **KI-Übersetzung**.
+2. Wählen Sie die Zielsprache der Titel, den Anbieter und das Modell und geben Sie Ihren API-Schlüssel ein. Sie können das empfohlene Modell des Anbieters verwenden oder eine andere Modell-ID eingeben.
+3. Klicken Sie auf **Prüfen und speichern**. Die Einstellungen werden erst nach einer erfolgreichen Beispielübersetzung gespeichert. Bei einem Fehler bleiben die bisherigen Einstellungen aktiv. **Weitere Einstellungen → Ohne Prüfung speichern** überspringt den Test.
+
+Das Globussymbol ändert die Oberflächentexte, ohne die Zielsprache der Titel zu ändern. Der Schlüssel bleibt lokal gespeichert; der Entwickler sammelt keine Daten. Die Infotaste unten erläutert die Datenverarbeitung bei der KI-Nutzung.
 
 ---
 

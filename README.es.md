@@ -104,16 +104,18 @@
 
 Haz clic en el icono de la extensión en la barra de herramientas para abrir el panel:
 
-![Panel de configuración](screenshots/v8.0.1/config-ui.png)
+![Panel de configuración (v8.0.1)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Uso Básico (Sin Necesidad de API Key)
-Si no configuras ninguna clave, la extensión activa de forma automática la traducción en el dispositivo de Chrome 138+. ¡Abre YouTube y verás los títulos bilingües de inmediato!
+Las nuevas instalaciones usan **En el dispositivo**. Puedes elegir este modo y guardarlo aunque ya tengas una clave de IA. Requiere un navegador, un dispositivo y un par de idiomas compatibles; Chrome puede descargar paquetes de idiomas la primera vez.
 
 ### 2. Configuración Avanzada de IA (Modo Memes + Etiquetas)
-Para disfrutar de traducciones con matices culturales y clasificación inteligente:
-1. **Translate titles into**: Elige el idioma de destino (12 idiomas disponibles);
-2. **Choose AI provider**: Selecciona tu proveedor preferido y pega tu API Key;
-3. Haz clic en **Save settings** y actualiza la página de YouTube.
+
+1. Activa la traducción automática y selecciona **Traducción IA**.
+2. Elige el idioma de destino de los títulos, el proveedor y el modelo, y pega la clave API. Puedes usar el modelo recomendado de cada proveedor o introducir otro ID manualmente.
+3. Pulsa **Verificar y guardar**. Los ajustes se guardan solo si la traducción de prueba funciona. Si falla, se conservan los ajustes anteriores. **Más ajustes → Guardar sin verificar** permite omitir la prueba.
+
+El icono del globo cambia el texto de la interfaz sin alterar el idioma de destino de los títulos. La clave se guarda localmente y el desarrollador no recopila datos. El botón de información del pie muestra los detalles del uso de IA.
 
 ---
 

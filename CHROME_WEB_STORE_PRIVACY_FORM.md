@@ -49,15 +49,15 @@ Use these statements where relevant:
 - The extension does not sell user data.
 - The extension does not use user data for advertising.
 - The extension does not use user data for creditworthiness, lending, or unrelated analytics.
-- When translation is enabled, visible YouTube title text is sent directly from the user's browser to the AI service endpoint selected by the user.
-- When no API key is configured, the extension may use Chrome's built-in on-device translation (Chrome 138+); in this mode title text is processed locally on the device and is not sent to any server.
+- When AI translation is enabled and configured, visible YouTube title text and the required API credentials are sent directly from the user's browser to the selected endpoint. An explicit Verify & save action sends one sample title to verify the configuration, even when automatic translation is paused or on-device mode is currently saved.
+- On-device mode uses Chrome's built-in translator on supported browsers, devices, and language pairs (Chrome 138+); title text is processed locally. First use may download language packs. Saved provider credentials are preserved without being used for on-device translation.
 
 ## Permissions Justification
 
 Paste-ready, storage (需请求 storage 的理由):
 
 ```
-The storage permission is used only to save the user's settings (API keys, provider, model, target language, UI language) and a local translation cache in the browser, so repeated titles are not re-requested. All data stays on the user's device and is never uploaded to the developer.
+The storage permission is used only to save the user's settings (API keys, provider, model, translation mode, target language, UI language, and last successful configuration test time) and a local translation cache in the browser. Stored settings and cache are never uploaded to the developer. AI translation and explicit configuration tests send title text and required API credentials directly to the user's selected endpoint.
 ```
 
 Paste-ready, host permissions (需请求主机权限的理由):
@@ -69,4 +69,3 @@ Host permissions serve the single purpose: (1) the youtube.com content script re
 ## Custom Endpoint Note
 
 Custom endpoints must use HTTPS. HTTP is allowed only for local development endpoints such as `localhost` or `127.0.0.1`.
-

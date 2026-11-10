@@ -2,7 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 // background.js 顶层会注册 chrome.runtime.onMessage，先打桩再 require
-globalThis.chrome = { runtime: { onMessage: { addListener() {} } } };
+let messageHandler;
+globalThis.chrome = { runtime: { onMessage: { addListener(handler) { messageHandler = handler; } } } };
 const bg = require('../background.js');
 
 // ---------- JSON 解析器（病态模型输出） ----------
@@ -84,7 +85,8 @@ test('classifyApiError: 状态码与正文优先级', () => {
 test('classifyApiError: 400 只有明确指向模型才归为模型错误', () => {
     assert.equal(bg.classifyApiError(400, { error: { message: 'Model Not Exist' } }).type, 'model');
     // 参数类 400（如 max_tokens 不被支持）不该误导成"模型名可能错误"
-    assert.equal(bg.classifyApiError(400, { error: { message: 'Unsupported parameter: max_tokens' } }).type, 'service');
+    assert.equal(bg.classifyApiError(400, { error: { message: 'Unsupported parameter: max_tokens' } }).type, 'parameter');
+    assert.equal(bg.classifyApiError(400, { error: { message: 'This model does not support temperature' } }).type, 'parameter');
 });
 
 // ---------- 请求体构造（OpenAI 兼容性回归） ----------
@@ -94,7 +96,8 @@ test('buildChatCompletionsBody: api.openai.com 只发 max_completion_tokens，�
         { apiUrl: 'https://api.openai.com/v1/chat/completions', model: 'gpt-5.5' },
         'prompt', 500, 'system'
     );
-    assert.equal(body.max_completion_tokens, 500);
+    assert.ok(body.max_completion_tokens >= 4096, '为推理和最终译文保留共同输出额度');
+    assert.equal(body.reasoning_effort, 'low');
     assert.ok(!('max_tokens' in body), 'gpt-5/o 系列对 max_tokens 直接 400');
     assert.ok(!('temperature' in body), 'reasoning 模型拒绝自定义 temperature');
 });
@@ -126,6 +129,74 @@ test('buildChatCompletionsBody: DeepSeek V4 官方接口关闭思考模式', () 
         'prompt', 500, 'system'
     );
     assert.ok(!('thinking' in custom));
+});
+
+test('新预设的推理参数按官方服务商分别处理，不影响自定义网关', () => {
+    const build = (apiUrl, model) => bg.buildChatCompletionsBody({ apiUrl, model }, 'prompt', 500, 'system');
+    const luna = build('https://api.openai.com/v1/chat/completions', 'gpt-6-luna');
+    assert.equal(luna.reasoning_effort, 'none');
+    assert.equal(luna.max_completion_tokens, 500);
+    for (const model of ['gpt-6.1-sol', 'gpt-6-astra']) {
+        const body = build('https://api.openai.com/v1/chat/completions', model);
+        assert.equal(body.reasoning_effort, 'low');
+        assert.ok(body.max_completion_tokens >= 4096);
+    }
+    assert.deepEqual(build('https://api.deepseek.com/chat/completions', 'deepseek-flash').thinking, {type:'disabled'});
+    const m3 = build('https://api.minimax.io/v1/chat/completions', 'MiniMax-M3');
+    assert.deepEqual(m3.thinking, {type:'disabled'});
+    assert.equal(m3.reasoning_split, true);
+    assert.equal(m3.max_completion_tokens, 500);
+    assert.ok(!('max_tokens' in m3));
+    const m2 = build('https://api.minimax.io/v1/chat/completions', 'MiniMax-M2.7-highspeed');
+    assert.ok(m2.max_tokens >= 4096);
+    assert.ok(!('thinking' in m2));
+    for (const model of ['glm-5.3-flash', 'glm-5.3-flashx', 'glm-5.3']) {
+        const body = build('https://api.z.ai/api/paas/v4/chat/completions', model);
+        assert.deepEqual(body.thinking,{type:'enabled'});
+        assert.equal(body.reasoning_effort,'low');
+        assert.ok(body.max_tokens >= 4096);
+    }
+    const k26 = build('https://api.moonshot.ai/v1/chat/completions', 'kimi-k2.6');
+    assert.deepEqual(k26.thinking,{type:'disabled'});
+    assert.ok(!('temperature' in k26));
+    const k3 = build('https://api.moonshot.ai/v1/chat/completions', 'kimi-k3');
+    assert.equal(k3.reasoning_effort,'low');
+    assert.ok(!('thinking' in k3));
+    assert.ok(!('temperature' in k3));
+    assert.ok(k3.max_tokens >= 4096);
+    const gateway = build('https://api.openai.com.example.org/v1/chat/completions', 'gpt-6-luna');
+    assert.equal(gateway.max_tokens, 500);
+    assert.ok(!('reasoning_effort' in gateway));
+    assert.ok(!('max_completion_tokens' in gateway));
+});
+
+test('Gemini 3 与 Claude 5 不复用旧采样参数，预留推理输出预算', () => {
+    for (const model of ['gemini-3.5-flash-lite','gemini-3.8-flash','gemini-3.1-pro-preview']) {
+        const { generationConfig } = bg.buildGeminiBody({model}, 'prompt', 500);
+        assert.equal(generationConfig.thinkingConfig.thinkingLevel, model.includes('flash-lite') ? 'minimal' : 'low');
+        assert.ok(!('temperature' in generationConfig));
+        assert.ok(generationConfig.maxOutputTokens >= 4096);
+        assert.equal(generationConfig.responseMimeType, 'application/json');
+    }
+    for (const model of ['claude-sonnet-5-5','claude-opus-5-5','claude-fable-5-1']) {
+        const body = bg.buildAnthropicBody({model},'prompt',500);
+        assert.deepEqual(body.thinking,{type:'adaptive'});
+        assert.deepEqual(body.output_config,{effort:'low'});
+        assert.ok(!('temperature' in body));
+        assert.ok(body.max_tokens >= 4096);
+    }
+    const haiku = bg.buildAnthropicBody({model:'claude-haiku-4-5-20251001'},'prompt',500);
+    assert.ok(!('thinking' in haiku));
+    assert.equal(haiku.max_tokens,500);
+});
+
+test('响应解析只拼接最终文本，不把 Gemini thought 或 Claude thinking 当作译文', () => {
+    assert.equal(bg.extractTextFromResponse({candidates:[{content:{parts:[
+        {thought:true,text:'reasoning'}, {text:'{"tag":"科技",'}, {text:'"translatedTitle":"你好"}'}
+    ]}}]},'google'), '{"tag":"科技","translatedTitle":"你好"}');
+    assert.equal(bg.extractTextFromResponse({content:[
+        {type:'thinking',thinking:'reasoning'}, {type:'text',text:'{"tag":"科技",'}, {type:'text',text:'"translatedTitle":"你好"}'}
+    ]},'anthropic'), '{"tag":"科技","translatedTitle":"你好"}');
 });
 
 // ---------- 并发队列 ----------
@@ -242,4 +313,131 @@ test('fetchAiTranslationBatchDedup: 缺 apiKey 直接 auth 错误，不发请求
     const reply = await bg.fetchAiTranslationBatchDedup(['Title A'], { model: 'm' });
     assert.equal(calls.length, 0);
     assert.equal(reply.error.type, 'auth');
+});
+
+test('Gemini / Claude 批量请求实际使用各自请求体和鉴权，不把 Key 放在 URL 中', async (t) => {
+    const original = globalThis.fetch;
+    const calls = [];
+    globalThis.fetch = async (url, options) => {
+        calls.push({url,options,body:JSON.parse(options.body)});
+        const text = JSON.stringify({items:[{i:0,tag:'科技',translatedTitle:'译文'}]});
+        return {ok:true,status:200,json:async()=>url.includes('googleapis.com')
+            ? {candidates:[{content:{parts:[{thought:true,text:'reasoning'},{text}]}}]}
+            : {content:[{type:'thinking',thinking:'reasoning'},{type:'text',text}]}};
+    };
+    t.after(()=>{globalThis.fetch=original;});
+    const gemini = await bg.fetchAiTranslationBatchDedup(['Gemini request'],{
+        apiUrl:'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
+        apiKey:'test-only-key',model:'gemini-3.8-flash',targetLanguage:'zh-Hans'
+    });
+    assert.equal(gemini.results[0].translatedTitle,'译文');
+    assert.ok(!calls[0].url.includes('test-only-key'));
+    assert.equal(calls[0].options.headers['x-goog-api-key'],'test-only-key');
+    assert.equal(calls[0].body.generationConfig.thinkingConfig.thinkingLevel,'low');
+    const claude = await bg.fetchAiTranslationBatchDedup(['Claude request'],{
+        apiUrl:'https://api.anthropic.com/v1/messages',apiKey:'test-only-key',
+        model:'claude-opus-5-5',targetLanguage:'zh-Hans'
+    });
+    assert.equal(claude.results[0].translatedTitle,'译文');
+    assert.equal(calls[1].body.output_config.effort,'low');
+    assert.equal(calls[1].options.headers['x-api-key'],'test-only-key');
+});
+
+function stubSettings(t, data) {
+    const original = globalThis.chrome.storage;
+    globalThis.chrome.storage = { local:{ get(keys, callback) {
+        callback(Object.fromEntries(keys.map(key => [key, data[key]])));
+    } } };
+    t.after(() => { globalThis.chrome.storage = original; });
+}
+
+function activeSettings() {
+    return { enabled:true, translationMode:'ai', selectedProvider:'deepseek', targetLanguage:'zh-Hans',
+        providerConfigs:{deepseek:{...TEST_CONFIG}} };
+}
+
+function send(message) {
+    return new Promise(resolve => {
+        assert.equal(messageHandler(message, {}, resolve), true);
+    });
+}
+
+test('切换本机模式后，后台排队的自动翻译取消且完整回复；显式配置测试仍可调用', async (t) => {
+    const settings = activeSettings();
+    stubSettings(t, settings);
+    const calls = stubFetch(t, () => chatReply('{"items":[{"i":0,"translatedTitle":"测试译文"}]}'));
+    const releases = [];
+    const blockers = Array.from({length:3}, () => bg.enqueueTranslation(() => new Promise(resolve => releases.push(resolve))));
+    const pending = send({type:'translateBatch',items:['Queued title','Queued title'],config:TEST_CONFIG});
+    settings.translationMode = 'local';
+    releases.forEach(resolve => resolve({ok:true}));
+    await Promise.all(blockers);
+    const cancelled = await pending;
+    assert.equal(calls.length,0);
+    assert.deepEqual(cancelled.results,[null,null]);
+    assert.equal(cancelled.error.type,'cancelled');
+    const tested = await send({type:'testTranslation',text:'Queued title',config:TEST_CONFIG});
+    assert.equal(tested.ok,true);
+    assert.equal(calls.length,1);
+});
+
+test('自动翻译只使用当前启用的模型、Key 和目标语言；旧配置任务不发请求', async (t) => {
+    const settings = activeSettings();
+    stubSettings(t,settings);
+    const calls = stubFetch(t, () => chatReply('{"items":[{"i":0,"translatedTitle":"译文"}]}'));
+    assert.equal((await send({type:'translate',text:'Current config',config:TEST_CONFIG})).ok,true);
+    for (const config of [{...TEST_CONFIG,apiKey:'old-test-key'}, {...TEST_CONFIG,model:'old-model'}, {...TEST_CONFIG,targetLanguage:'en'}]) {
+        const reply = await send({type:'translateBatch',items:['Stale config'],config});
+        assert.equal(reply.error.type,'cancelled');
+    }
+    settings.enabled = false;
+    assert.equal((await send({type:'translate',text:'Paused',config:TEST_CONFIG})).error.type,'cancelled');
+    assert.equal(calls.length,1);
+});
+
+test('测试不同 Key 的同名模型与标题必须分别发请求，不能误报新 Key 测试通过', async (t) => {
+    let release;
+    const gate = new Promise(resolve => { release=resolve; });
+    const calls = stubFetch(t, async () => {
+        await gate;
+        return chatReply('{"items":[{"i":0,"translatedTitle":"译文"}]}');
+    });
+    const first = bg.fetchAiTranslationBatchDedup(['Same title'],TEST_CONFIG);
+    const second = bg.fetchAiTranslationBatchDedup(['Same title'],{...TEST_CONFIG,apiKey:'new-test-key'});
+    release();
+    const replies = await Promise.all([first,second]);
+    assert.ok(replies.every(reply=>reply.ok));
+    assert.equal(calls.length,2);
+    assert.deepEqual(calls.map(call=>call.options.headers.Authorization),['Bearer test-key','Bearer new-test-key']);
+});
+
+test('配置测试和页面自动翻译即使同文同 Key 也分别调用，验证不会借用页面结果', async (t) => {
+    stubSettings(t,activeSettings());
+    let release, started;
+    const gate=new Promise(resolve=>{release=resolve;});
+    const firstStarted=new Promise(resolve=>{started=resolve;});
+    const calls=stubFetch(t,async()=>{
+        started();
+        await gate;
+        return chatReply('{"items":[{"i":0,"translatedTitle":"译文"}]}');
+    });
+    const automatic=send({type:'translateBatch',items:['Same scope title'],config:TEST_CONFIG});
+    await firstStarted;
+    const explicit=send({type:'testTranslation',text:'Same scope title',config:TEST_CONFIG});
+    release();
+    const replies=await Promise.all([automatic,explicit]);
+    assert.ok(replies.every(reply=>reply.ok));
+    assert.equal(calls.length,2);
+});
+
+test('本机模式切换也停止网络失败后的重试与单条补齐请求', async (t) => {
+    const settings=activeSettings();
+    stubSettings(t,settings);
+    const calls=stubFetch(t,()=>{
+        settings.translationMode='local';
+        throw new Error('test network failure after mode switch');
+    });
+    const reply=await send({type:'translateBatch',items:['Network mode switch'],config:TEST_CONFIG});
+    assert.equal(reply.ok,false);
+    assert.equal(calls.length,1);
 });

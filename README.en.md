@@ -36,19 +36,22 @@
 - 🎯 **True Bilingual In-Place Display**: The translation replaces the title prominently, with the original kept below. Scan foreign feeds naturally while picking up authentic expressions in context.
 - 🧠 **Context & Meme-Aware AI**: Say goodbye to rigid, word-by-word machine translation. Accurately understands internet slang, cultural memes, humor, abbreviations, and YouTube clickbait phrasing.
 - 🏷️ **Smart Video Topic Badges**: Automatically identifies video domains and attaches tags like [Tech], [News], [Music], [Finance], [Gaming], and more, helping you filter noise at a glance.
-- ⚡ **Zero Setup! Works Without API Keys**: Leverages Chrome 138+ on-device translation (Chrome Translator). Works out of the box with zero configuration, completely free and offline.
+- ⚡ **On-Device Translation Without API Keys**: Uses Chrome 138+ Translator. Requires a supported browser, device, and language pair; the first use may download language packs. Title text is processed on your device.
 - 🌐 **Universal AI & Local Model Support**: Built-in support for leading cloud AI providers, plus full compatibility with custom OpenAI-compatible endpoints (e.g., local models via Ollama or LM Studio).
 - 🚀 **Local Caching & One-Click Retry**: Persistent browser cache eliminates duplicate requests and saves quota. If a network hiccup occurs, simply click the red failed badge to retry.
 
 ---
 
-## 📌 Recent Updates (v8.0.3)
+## 📌 Recent Updates (v8.0.4)
 
-- **Works without an API key**: when no key is configured, it automatically falls back to the on-device translation built into Chrome 138+, so you can get started at zero cost
-- **Click to retry failed translations**: failed titles show a red indicator; click once to translate again
-- **Fixed "malformed model response" caused by DeepSeek V4 thinking mode**: the V4 series enables thinking by default, and the chain of thought could exhaust the output budget and truncate the JSON; thinking is now disabled for V4 models
-- The popup adds a Clear translation cache button (with entry count); provider cards with a saved key show a green dot; Test configuration now displays a sample translation directly
-- Added 12 new localization languages, bringing the interface to 14 languages
+- Refreshed presets for seven providers, with at most four models and one recommended model per provider; manual model IDs remain available. Provider brands use English names, including **Z.AI**
+- Explicit **On-device** and **AI translation** modes. On-device mode preserves saved keys, cancels cloud work that has not started, and uses a separate translation cache
+- Compact red-and-white popup with a fixed action area, collapsed extra settings, dark mode, and keyboard focus styles. Switching providers or modes preserves drafts within the current popup
+- The globe changes interface text and shows the full locale name. Choose the translation mode before the title target. Larger provider logos, a fixed save area, and privacy details keep the settings compact
+- **Verify & save** saves only after receiving a sample translation. **More settings → Save without verification** skips the test. A gray dot means a key is saved, green means the current configuration is verified, and orange means unsaved changes
+- Provider-specific reasoning parameters and output budgets, clearer parameter/auth/quota/model errors, and localized settings and error messages in all 14 UI languages
+
+Exact model IDs, official references, and verification limits are recorded in the [8.0.4 release notes](RELEASE_NOTES_v8.0.4.md).
 
 ---
 
@@ -104,16 +107,18 @@
 
 Click the extension icon in the toolbar to open the control panel:
 
-![Settings UI](screenshots/v8.0.1/config-ui.png)
+![Settings UI (historical v8.0.1 screenshot)](screenshots/v8.0.1/config-ui.png)
 
 ### 1. Basic Mode (No API Key Required)
-When no API key is configured, the extension automatically activates Chrome 138+ on-device translation. No setup needed — open YouTube and see bilingual titles instantly!
+New installations default to **On-device**. You can also select this mode and save it even when an AI key is already stored. A supported browser, device, and language pair are required; the first use may download language packs. Unsupported pairs display a configuration prompt.
 
 ### 2. Advanced AI Mode (Unlocks Meme Understanding + Topic Badges)
 To enjoy idiomatic, meme-aware translations and intelligent topic classification:
-1. **Translate titles into**: Choose your target language (12 supported);
-2. **Choose AI provider**: Select your preferred provider and paste your API key;
-3. Click **Save settings** and refresh your YouTube page.
+1. Turn on automatic translation and select **AI translation**;
+2. Choose a target under **Translate titles into**, select a provider and model, and paste your API key. Recommended models suit short titles; **Other model (enter manually)** accepts another supported ID;
+3. Click **Verify & save**. A real API request translates one sample title, and the configuration is saved only on success. Failed tests keep your draft and previous configuration and explain the cause. **More settings → Save without verification** applies the configuration without marking an untested configuration as verified.
+
+Saved settings apply to open YouTube pages. Drafts last only for the current popup session, so save before closing it. Upgrades preserve saved keys and existing model IDs; older IDs absent from the presets remain available as manual entries.
 
 ---
 
@@ -121,9 +126,9 @@ To enjoy idiomatic, meme-aware translations and intelligent topic classification
 
 | Provider | Where to Get an API Key |
 | :--- | :--- |
-| **DeepSeek (Recommended)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
+| **DeepSeek** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| **Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
 | **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
 | **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
@@ -134,6 +139,8 @@ Select **Custom** to connect to any endpoint that follows the OpenAI Chat Comple
 - **API Endpoint**: Full endpoint URL (e.g., `http://localhost:11434/v1/chat/completions` or OpenRouter);
 - **Model name**: Exact model ID to call (e.g., `llama3.3`, `qwen2.5`);
 - **API Key**: Corresponding API key (can be arbitrary for local unauthenticated models).
+
+Remote endpoints require HTTPS. `localhost`, `127.0.0.1`, and `[::1]` may use HTTP. Saving requests the necessary host permission for your endpoint.
 
 ---
 
@@ -149,7 +156,7 @@ Select **Custom** to connect to any endpoint that follows the OpenAI Chat Comple
 
 - **Zero Data Collection**: We do not track browsing activity or collect any personal information.
 - **Local Storage Only**: API keys, preferences, and cache live entirely in your browser's `chrome.storage.local`.
-- **No Middleman Servers**: Requests travel directly to your chosen AI provider or stay on-device. No proxy servers involved.
+- **Mode-Specific Processing**: On-device mode processes titles locally. AI mode sends title text and the required API credentials directly to your selected provider or custom endpoint. The developer collects no data. **Verify & save** sends one sample title to the chosen endpoint. The info button in the footer opens the full privacy explanation.
 
 ---
 
@@ -162,7 +169,7 @@ Yes! The extension is completely free and open-source under the MIT license. Bui
 
 <details>
 <summary><b>Q2: Will refreshing YouTube consume additional API tokens?</b></summary>
-No. The extension features a persistent local cache. Once a title is translated, it is served instantly from local storage without duplicate network requests. Caches are partitioned by target language.
+While an entry remains cached, its translation is served from local storage without another API request. Caches are partitioned by target language and on-device/AI mode. Clearing the cache or evicting an entry due to the size limit causes a new translation.
 </details>
 
 <details>
@@ -193,4 +200,4 @@ npm test
 - **License**: Released under the [MIT License](LICENSE).
 - **Feedback**: Issues and pull requests are warmly welcomed via [GitHub Issues](https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues), or reach out via email: `garyzhang345@gmail.com`.
 
-*Last updated: September 2026*
+*Last updated: October 2026*
