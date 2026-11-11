@@ -1,5 +1,7 @@
 /* 通用容器 */
 .gary-cn-box {
+    text-decoration: none;
+    color: inherit;
     display: block;
     margin-bottom: 4px;
     cursor: pointer;
@@ -8,6 +10,7 @@
 }
 
 .gary-cn-box:hover {
+    text-decoration: none;
     opacity: 0.8;
 }
 

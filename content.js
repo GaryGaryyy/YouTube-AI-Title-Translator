@@ -1,3 +1,21 @@
+// 用户从未保存过语言时，跟随浏览器界面语言；识别不了的语言回落英文。
+function getBrowserDefaultLanguages(browserLanguage) {
+    const raw = String(browserLanguage || "").toLowerCase().replace(/_/g, "-");
+    const base = raw.split("-")[0];
+    if (base === "zh") {
+        return { uiLanguage: "zh-Hans", targetLanguage: /-(hant|tw|hk|mo)(-|$)/.test(raw) ? "zh-Hant" : "zh-Hans" };
+    }
+    const targets = ["en", "ja", "ko", "th", "es", "fr", "de", "pt", "id", "vi"];
+    return {
+        uiLanguage: targets.concat(["ru", "ar", "hi"]).includes(base) ? base : "en",
+        targetLanguage: targets.includes(base) ? base : "en"
+    };
+}
+
+function getBrowserLanguage() {
+    try { return chrome.i18n.getUILanguage(); } catch (e) { return ""; }
+}
+
 // ================= 配置区 =================
 let USER_CONFIG = { apiUrl: "", apiKey: "", model: "" };
 let TARGET_LANGUAGE = "en";
@@ -283,13 +301,16 @@ console.log("🚀 Gary插件 v8.0.4 已启动");
 
 // ================= 持久化翻译缓存 =================
 // 设计：目标语言 + 原文 → {tag, translatedTitle, ts} 的 Map，启动时一次从 chrome.storage 加载，
-// 命中直接渲染（0 token、0 网络）；写入时 debounce 500ms 落盘。
+// 命中直接渲染（0 token、0 网络）；增量 debounce 500ms 后交给后台落盘。
 // LRU：插入时如已存在先 delete 再 set，把最近用的放到 Map 末尾；
 // 超过 10000 条时弹出最早的 entry。
 const CACHE_LIMIT = 10000;
-const CACHE_SCHEMA_VERSION = 2;
 const translationCache = new Map();
 let cacheSaveTimer = null;
+const pendingCacheEntries = new Map();
+// 命中过的 key：随下一次写入一并告诉后台，让后台按“最近使用”而不是“最早写入”淘汰。
+const touchedCacheKeys = new Set();
+let cacheClearedAt = 0;   // 本页最近一次收到“清缓存”的时刻；更早的条目不再合并、不再重发
 let cacheReadyResolve;
 const cacheReady = new Promise(resolve => { cacheReadyResolve = resolve; });
 
@@ -337,6 +358,7 @@ function cacheGet(text) {
         // LRU touch：移到末尾
         translationCache.delete(key);
         translationCache.set(key, v);
+        touchedCacheKeys.add(key);
     }
     return v;
 }
@@ -350,26 +372,48 @@ function cacheSet(text, result, lang) {
         const oldest = translationCache.keys().next().value;
         translationCache.delete(oldest);
     }
+    pendingCacheEntries.set(key, translationCache.get(key));
     scheduleCacheSave();
+}
+
+async function flushCacheWrites() {
+    if (cacheSaveTimer) clearTimeout(cacheSaveTimer);
+    cacheSaveTimer = null;
+    if (!pendingCacheEntries.size) return;
+    // 命中记录只搭这次写入的便车，不单独触发落盘；排在新条目之前，新条目仍是最近使用。
+    // 只发 key：后台据此调整已有条目的顺序，不会凭它新建条目（否则清缓存后可能把旧译文带回来）。
+    const touched = [...touchedCacheKeys].filter(key => !pendingCacheEntries.has(key)).slice(0, 300);
+    touchedCacheKeys.clear();
+    const fresh = Array.from(pendingCacheEntries);
+    pendingCacheEntries.clear();
+    let reply = null;
+    try { reply = await chrome.runtime.sendMessage({ type: "cachePut", entries: fresh, touched }); } catch (e) { /* 上下文失效 */ }
+    if (reply && reply.ok) return;
+    // 后台没确认落盘：留到下一次写入时一起重发。不单独起定时器，避免后台持续失败时空转；
+    // 期间被清掉的缓存不重发，积压上限 500 条。
+    for (const [key, value] of fresh) {
+        if (value.ts >= cacheClearedAt && !pendingCacheEntries.has(key)) pendingCacheEntries.set(key, value);
+    }
+    while (pendingCacheEntries.size > 500) pendingCacheEntries.delete(pendingCacheEntries.keys().next().value);
 }
 
 function scheduleCacheSave() {
     if (cacheSaveTimer) clearTimeout(cacheSaveTimer);
-    cacheSaveTimer = setTimeout(() => {
-        cacheSaveTimer = null;
-        const payload = { v: CACHE_SCHEMA_VERSION, entries: Array.from(translationCache.entries()) };
-        chrome.storage.local.set({ translationCache: payload }, () => {
-            if (chrome.runtime.lastError) {
-                // 大概率是 storage.local 配额写满：砍掉一半最旧条目自救，下次 cacheSet 再落盘
-                console.warn("[Gary] 缓存落盘失败:", chrome.runtime.lastError.message);
-                let drop = Math.floor(translationCache.size / 2);
-                for (const key of translationCache.keys()) {
-                    if (drop-- <= 0) break;
-                    translationCache.delete(key);
-                }
-            }
-        });
-    }, 500);
+    cacheSaveTimer = setTimeout(flushCacheWrites, 500);
+}
+
+function mergeCache(raw) {
+    const entries = Array.isArray(raw) ? raw : raw && raw.entries;
+    if (!Array.isArray(entries)) return;
+    for (const entry of entries) {
+        if (!Array.isArray(entry) || typeof entry[0] !== "string" || !entry[1] || typeof entry[1] !== "object") continue;
+        // 用户清过缓存后，清除前的条目可能随一次迟到的写入再广播过来，不能合并回内存。
+        if (cacheClearedAt && !(entry[1].ts >= cacheClearedAt)) continue;
+        const key = /^(ai|local)\n/.test(entry[0]) ? entry[0]
+            : (entry[1].tag === "__builtin__" ? "local\n" : "ai\n") + entry[0];
+        if (!translationCache.has(key)) translationCache.set(key, entry[1]);
+    }
+    while (translationCache.size > CACHE_LIMIT) translationCache.delete(translationCache.keys().next().value);
 }
 
 loadCache();
@@ -397,8 +441,9 @@ function getActiveTranslationConfig(result) {
 function applyConfigFromStorage(result) {
     const previous = JSON.stringify([ENABLED, TARGET_LANGUAGE, TRANSLATION_MODE, USER_CONFIG]);
     ENABLED = result.enabled !== false;   // undefined 视为开启
-    TARGET_LANGUAGE = SUPPORTED_TARGET_LANGUAGES.has(result.targetLanguage) ? result.targetLanguage : "en";
-    UI_LANGUAGE = SUPPORTED_UI_LANGUAGES.has(result.uiLanguage) ? result.uiLanguage : "en";
+    const defaults = getBrowserDefaultLanguages(getBrowserLanguage());
+    TARGET_LANGUAGE = SUPPORTED_TARGET_LANGUAGES.has(result.targetLanguage) ? result.targetLanguage : defaults.targetLanguage;
+    UI_LANGUAGE = SUPPORTED_UI_LANGUAGES.has(result.uiLanguage) ? result.uiLanguage : defaults.uiLanguage;
 
     const active = getActiveTranslationConfig(result);
     TRANSLATION_MODE = active.mode;
@@ -421,8 +466,12 @@ function initConfig() {
         // popup 清除缓存：同步清空内存并取消待落盘，否则 debounce 保存会把旧缓存写回去
         if (changes.translationCache && changes.translationCache.newValue === undefined) {
             translationCache.clear();
+            pendingCacheEntries.clear();
+            touchedCacheKeys.clear();
+            cacheClearedAt = Date.now();
             if (cacheSaveTimer) { clearTimeout(cacheSaveTimer); cacheSaveTimer = null; }
         }
+        if (changes.translationCache && changes.translationCache.newValue !== undefined) mergeCache(changes.translationCache.newValue);
         // 缓存落盘等无关 key 不触发重读
         if (!Object.keys(changes).some(key => CONFIG_STORAGE_KEYS.includes(key))) return;
         const shouldResetRenderedTitles = Object.keys(changes).some(key => key !== "enabled" && CONFIG_STORAGE_KEYS.includes(key));
@@ -456,8 +505,11 @@ function setBoxTooltip(box, originalText, statusText) {
     box.title = buildTooltip(originalText, statusText);
 }
 
-function createSafeBadge(tagText, translatedText, isMainTitle = false, originalText = "", statusText = "", state = "") {
-    const container = document.createElement('div');
+function createSafeBadge(tagText, translatedText, isMainTitle = false, originalText = "", statusText = "", state = "", targetElement = null) {
+    const linked = !isMainTitle && targetElement && targetElement.tagName === "A" && targetElement.hasAttribute("href") &&
+        targetElement.parentElement && !targetElement.parentElement.closest("a");
+    const container = document.createElement(linked ? "a" : "div");
+    if (linked) { container.href = targetElement.href; container.tabIndex = -1; }
     container.className = 'gary-cn-box';
     container.dataset.garyRole = "translation";
     // pending / done / error：驱动点击行为（error → 重试）与排队/翻译中的呼吸动画
@@ -630,17 +682,26 @@ function attachTitleBadge(el, targetElement, isMainTitle, box, text) {
         else el.classList.add('gary-en-sub');
     } catch (e) { return false; }
 
+    if (box.tagName === "A") {
+        const refreshHref = () => { box.href = targetElement.href; };
+        for (const event of ["pointerdown", "mousedown", "auxclick", "contextmenu"]) box.addEventListener(event, refreshHref);
+    }
     box.onclick = (e) => {
-        e.preventDefault();
         // 失败状态：点击 = 重试翻译（灰色的原文链接仍可正常点击跳转）
         if (box.dataset.garyState === "error") {
-            if (USER_CONFIG.apiKey) translateChunk([{ text, box }]);
+            e.preventDefault();
+            if (USER_CONFIG.apiKey) translateChunk([{ text, box, el, targetElement }]);
             else translateBuiltinIntoBox(text, box, TARGET_LANGUAGE);
             return;
         }
+        if (box.tagName === 'A' && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || (e.button != null && e.button !== 0))) return;
+        e.preventDefault();
         if (!isMainTitle && targetElement.tagName === 'A') targetElement.click();
         else el.click();
     };
+    if (box.tagName === "A") box.addEventListener("auxclick", e => {
+        if (box.dataset.garyState === "error") box.onclick(e);
+    });
     return true;
 }
 
@@ -671,11 +732,11 @@ async function processBuiltinCandidate({ text, el, targetElement, isMainTitle })
     if (generation !== translationGeneration || !ENABLED) return;
     if (availability === "unavailable") {
         // 设备端不支持该语言对：回落到"请配置插件"引导
-        const box = createSafeBadge(getText("unconfiguredTag"), getText("unconfiguredTitle"), isMainTitle, text, getText("unconfiguredStatus"), "");
+        const box = createSafeBadge(getText("unconfiguredTag"), getText("unconfiguredTitle"), isMainTitle, text, getText("unconfiguredStatus"), "", targetElement);
         attachTitleBadge(el, targetElement, isMainTitle, box, text);
         return;
     }
-    const box = createSafeBadge(localizeTag(BUILTIN_TAG), getText("translatingTitle"), isMainTitle, text, getText("translatingStatus"), "pending");
+    const box = createSafeBadge(localizeTag(BUILTIN_TAG), getText("translatingTitle"), isMainTitle, text, getText("translatingStatus"), "pending", targetElement);
     if (!attachTitleBadge(el, targetElement, isMainTitle, box, text)) return;
     translateBuiltinIntoBox(text, box, requestLanguage);
 }
@@ -823,14 +884,67 @@ function isChineseTitleForTarget(languages) {
         !languages.has("hi");
 }
 
+function needsAiLanguageDetection(text) {
+    const languages = getDetectedLanguages(text);
+    return ["en", "es", "fr", "de", "pt", "id", "vi"].includes(TARGET_LANGUAGE) &&
+        languages.size > 0 && [...languages].every(code => code === "en" || code === "latin");
+}
+
+async function detectAiSourceLanguage(text) {
+    try {
+        if (typeof LanguageDetector !== "undefined") {
+            const detector = await getBuiltinDetector();
+            const results = detector && await detector.detect(text);
+            if (results && results[0] && results[0].confidence >= 0.6) return results[0].detectedLanguage;
+        }
+    } catch (e) { /* 尝试 Chrome i18n 检测 */ }
+    try {
+        if (typeof chrome.i18n?.detectLanguage !== "function") return null;
+        return await new Promise(resolve => {
+            chrome.i18n.detectLanguage(text, result => {
+                if (chrome.runtime.lastError) { resolve(null); return; }
+                const first = result && result.languages && result.languages[0];
+                resolve(result && result.isReliable && first && first.percentage >= 80 ? first.language : null);
+            });
+        });
+    } catch (e) { return null; }
+}
+
+// 检测只是省 token 的优化：超时就当作未知、照常翻译，不能让它拖住页面扫描
+// （LanguageDetector 首次创建可能要等模型下载）。
+const AI_LANGUAGE_DETECTION_TIMEOUT_MS = 800;
+function detectAiSourceLanguageWithTimeout(text) {
+    return new Promise(resolve => {
+        const timer = setTimeout(() => resolve(null), AI_LANGUAGE_DETECTION_TIMEOUT_MS);
+        detectAiSourceLanguage(text).then(source => { clearTimeout(timer); resolve(source); });
+    });
+}
+
+function isUnchangedTranslation(original, translated) {
+    const normalize = value => String(value).trim().replace(/\s+/g, " ").toLowerCase();
+    return normalize(original) === normalize(translated);
+}
+
+function skipDuplicateTranslation({ box, el, targetElement }) {
+    if (box) box.remove();
+    if (el) {
+        el.classList.remove("gary-en-sub");
+        el.setAttribute("data-gary-done", "skip");
+    }
+    if (targetElement) targetElement.classList.remove("gary-original-source-hidden");
+}
+
 async function process() {
     if (!CONFIG_READY || !ENABLED) return;
     const titles = document.querySelectorAll('#video-title, #video-title-link, h3 a, ytd-watch-metadata h1 yt-formatted-string');
 
     const pendingBatch = [];        // 缓存未命中、需要发 API 的项 [{text, box}]
+    const aiDetections = [];
     const builtinCandidates = [];   // 未配置 Key 且浏览器支持内置翻译的项
 
     for (const el of titles) {
+        // 译文 badge 自己是 <a>，会命中上面的 h3 a 选择器；不排除就会把译文当成新标题再翻一遍。
+        if (el.dataset.garyRole === "translation" || el.closest('.gary-cn-box')) continue;
         if (el.closest('ytd-comments') || el.closest('ytd-comment-renderer') || el.closest('#comments')) continue;
 
         const text = getTitleText(el);
@@ -864,7 +978,7 @@ async function process() {
         el.setAttribute('data-gary-done', 'true');
         el.dataset.garyOriginal = text;
 
-        const cached = cacheGet(text);
+        let cached = cacheGet(text);
 
         // 未配置 Key 但浏览器有内置翻译能力：先不渲染，异步判定语言对后再决定
         if (!cached && TRANSLATION_MODE === "local" && builtinApiExists()) {
@@ -872,42 +986,86 @@ async function process() {
             continue;
         }
 
-        let tag = getText("unconfiguredTag");
-        let translatedText = getText("unconfiguredTitle");
-        let statusText = getText("unconfiguredStatus");
-        let state = "";
-        if (cached) {
-            tag = localizeTag(cached.tag);
-            translatedText = cached.translatedTitle;
-            statusText = getText("cachedStatus");
-            state = "done";
-        } else if (USER_CONFIG.apiKey) {
-            tag = getText("queuedTag");
-            translatedText = getText("queuedTitle");
-            statusText = getText("queuedStatus");
-            state = "pending";
-        }
+        const renderCandidate = () => {
+            if (cached && TRANSLATION_MODE === "ai" && isUnchangedTranslation(text, cached.translatedTitle)) {
+                skipDuplicateTranslation({ el, targetElement });
+                return;
+            }
+            let tag = getText("unconfiguredTag");
+            let translatedText = getText("unconfiguredTitle");
+            let statusText = getText("unconfiguredStatus");
+            let state = "";
+            if (cached) {
+                tag = localizeTag(cached.tag);
+                translatedText = cached.translatedTitle;
+                statusText = getText("cachedStatus");
+                state = "done";
+            } else if (USER_CONFIG.apiKey) {
+                tag = getText("queuedTag");
+                translatedText = getText("queuedTitle");
+                statusText = getText("queuedStatus");
+                state = "pending";
+            }
 
-        const box = createSafeBadge(tag, translatedText, isMainTitle, text, statusText, state);
-        if (!attachTitleBadge(el, targetElement, isMainTitle, box, text)) continue;
+            const box = createSafeBadge(tag, translatedText, isMainTitle, text, statusText, state, targetElement);
+            if (!attachTitleBadge(el, targetElement, isMainTitle, box, text)) return;
 
-        if (cached) continue;                  // 命中缓存：已渲染好
-        if (!USER_CONFIG.apiKey) continue;     // 没配置 Key 且无内置翻译：渲染"未配置"badge 后停下
+            if (cached) return;                  // 命中缓存：已渲染好
+            if (!USER_CONFIG.apiKey) return;     // 没配置 Key 且无内置翻译：渲染"未配置"badge 后停下
 
-        pendingBatch.push({ text, box });
+            pendingBatch.push({ text, box, el, targetElement, generation: translationGeneration });
+        };
+        if (!cached && TRANSLATION_MODE === "ai" && needsAiLanguageDetection(text)) {
+            const generation = translationGeneration;
+            const target = TARGET_LANGUAGE;
+            aiDetections.push((async () => {
+                const source = await detectAiSourceLanguageWithTimeout(text);
+                if (generation !== translationGeneration || !ENABLED || !el.isConnected || getTitleText(el) !== text) {
+                    el.removeAttribute("data-gary-done");
+                    delete el.dataset.garyOriginal;
+                    return;
+                }
+                // 这里的目标语言都是不带地区的拉丁语种，检测结果带地区（如 pt-BR）时按主语言比较。
+                if (source && isSameLanguage(String(source).split("-")[0], target)) {
+                    el.setAttribute("data-gary-done", "skip");
+                    return;
+                }
+                // 等待检测期间，别的标签页可能已经翻好同一标题并广播了缓存：重新查一次，命中就不再请求。
+                cached = cacheGet(text);
+                renderCandidate();
+            })());
+        } else renderCandidate();
     }
 
     builtinCandidates.forEach(processBuiltinCandidate);
 
-    if (pendingBatch.length === 0) return;
-
-    // 按模型动态切批，真正的并发限制在 background SW 统一处理。
-    const batchSize = getDynamicBatchSize();
-    const chunks = [];
-    for (let i = 0; i < pendingBatch.length; i += batchSize) {
-        chunks.push(pendingBatch.slice(i, i + batchSize));
-    }
-    chunks.forEach(translateChunk);
+    const dispatchPending = () => {
+        const batchSize = getDynamicBatchSize();
+        const ready = pendingBatch.splice(0).filter(item => {
+            // 其它标题的检测尚未结束时，较早完成的候选也可能已因配置变化失效。
+            if (item.generation === translationGeneration && ENABLED && item.box.isConnected &&
+                item.el.isConnected && getTitleText(item.el) === item.text) {
+                // 排队等其它标题检测的这段时间里，别的标签页可能已翻好这一条：命中缓存就直接用，不再请求。
+                const hit = cacheGet(item.text);
+                if (!hit) return true;
+                if (isUnchangedTranslation(item.text, hit.translatedTitle)) skipDuplicateTranslation(item);
+                else renderSuccess(item.box, hit);
+                return false;
+            }
+            // 不管卡片此刻在不在文档里都要复位：YouTube 会把节点移出再插回，留着标记会永久卡在“排队中”。
+            item.box.remove();
+            item.el.removeAttribute("data-gary-done");
+            delete item.el.dataset.garyOriginal;
+            item.el.classList.remove("gary-en-sub");
+            item.targetElement.classList.remove("gary-original-source-hidden");
+            return false;
+        });
+        for (let i = 0; i < ready.length; i += batchSize) translateChunk(ready.slice(i, i + batchSize));
+    };
+    // 非拉丁和缓存命中的标题先处理，不等待异步语言检测。
+    dispatchPending();
+    await Promise.all(aiDetections);
+    dispatchPending();
 }
 
 // --- 🤖 AI 调用：通过 background SW ---
@@ -953,7 +1111,10 @@ async function translateChunk(chunk) {
     chunk.forEach((p, i) => {
         const result = reply.results[i];
         if (result && result.tag && result.translatedTitle) {
-            if (generation === translationGeneration && ENABLED && p.box.isConnected) renderSuccess(p.box, result);
+            if (generation === translationGeneration && ENABLED && p.box.isConnected) {
+                if (isUnchangedTranslation(p.text, result.translatedTitle)) skipDuplicateTranslation(p);
+                else renderSuccess(p.box, result);
+            }
             cacheSet(p.text, result, requestLanguage);
         } else {
             const itemError = Array.isArray(reply.errors) ? reply.errors[i] : null;
@@ -968,14 +1129,23 @@ async function translateChunk(chunk) {
 // 这样：(1) 只在真有新视频卡片插入时才触发；(2) 触发更快，不用等下一次 1 秒轮询。
 let processScheduled = false;
 let processInFlight = false;
+let processRerunRequested = false;
 function scheduleProcess() {
-    if (processScheduled || processInFlight) return;
+    // process() 现在会等待语言检测；期间到来的滚动/DOM 变化不能丢，记下来等它结束后补扫一次。
+    if (processInFlight) { processRerunRequested = true; return; }
+    if (processScheduled) return;
     processScheduled = true;
     setTimeout(async () => {
         processScheduled = false;
         processInFlight = true;
         try { await process(); }
-        finally { processInFlight = false; }
+        finally {
+            processInFlight = false;
+            if (processRerunRequested) {
+                processRerunRequested = false;
+                scheduleProcess();
+            }
+        }
     }, 200);
 }
 
@@ -1008,6 +1178,9 @@ if (document.readyState === 'loading') {
 // 仅供 node:test 引用；扩展运行时没有 module 对象，这段不会执行
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
+        getBrowserDefaultLanguages, getBrowserLanguage, flushCacheWrites, mergeCache,
+        createSafeBadge, attachTitleBadge, detectAiSourceLanguage, needsAiLanguageDetection, isUnchangedTranslation,
+        getConfig: () => ({ targetLanguage: TARGET_LANGUAGE, uiLanguage: UI_LANGUAGE }),
         getDetectedLanguages,
         isLikelyEnglishTitle,
         shouldTranslateTitle,

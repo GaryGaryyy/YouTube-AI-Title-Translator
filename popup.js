@@ -1,3 +1,21 @@
+// 用户从未保存过语言时，跟随浏览器界面语言；识别不了的语言回落英文。
+function getBrowserDefaultLanguages(browserLanguage) {
+    const raw = String(browserLanguage || "").toLowerCase().replace(/_/g, "-");
+    const base = raw.split("-")[0];
+    if (base === "zh") {
+        return { uiLanguage: "zh-Hans", targetLanguage: /-(hant|tw|hk|mo)(-|$)/.test(raw) ? "zh-Hant" : "zh-Hans" };
+    }
+    const targets = ["en", "ja", "ko", "th", "es", "fr", "de", "pt", "id", "vi"];
+    return {
+        uiLanguage: targets.concat(["ru", "ar", "hi"]).includes(base) ? base : "en",
+        targetLanguage: targets.includes(base) ? base : "en"
+    };
+}
+
+function getBrowserLanguage() {
+    try { return chrome.i18n.getUILanguage(); } catch (e) { return ""; }
+}
+
 if (!globalThis.chrome || !globalThis.chrome.storage || !globalThis.chrome.storage.local) {
     const previewStore = {};
     globalThis.chrome = {
@@ -43,8 +61,8 @@ if (!globalThis.chrome || !globalThis.chrome.storage || !globalThis.chrome.stora
 }
 
 const CUSTOM_MODEL_VALUE = "__custom_model__";
-const DEFAULT_UI_LANGUAGE = "en";
-const DEFAULT_TARGET_LANGUAGE = "en";
+const DEFAULT_UI_LANGUAGE = getBrowserDefaultLanguages(getBrowserLanguage()).uiLanguage;
+const DEFAULT_TARGET_LANGUAGE = getBrowserDefaultLanguages(getBrowserLanguage()).targetLanguage;
 
 const UI_LANGUAGES = [
     { code: "zh-Hans", nativeName: "简体中文", shortName: "ZH", htmlLang: "zh-CN", dir: "ltr" },
@@ -913,6 +931,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { UI_TEXT, UI_LANGUAGES, TARGET_LANGUAGES, PRESETS, SETTINGS_TEXT_KEYS, SETTINGS_TEXT,
+    module.exports = { getBrowserDefaultLanguages, getBrowserLanguage, DEFAULT_UI_LANGUAGE, DEFAULT_TARGET_LANGUAGE, UI_TEXT, UI_LANGUAGES, TARGET_LANGUAGES, PRESETS, SETTINGS_TEXT_KEYS, SETTINGS_TEXT,
         sameProviderConfig, normalizeStoredSettings, createProviderDrafts, makeSavedProviderConfig, validateCustomEndpoint, getSafeDiagnostic };
 }

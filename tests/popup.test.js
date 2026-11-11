@@ -39,7 +39,7 @@ class Element {
     focus() { this.focused = true; }
     async fire(event) { for (const handler of this.listeners[event] || []) await handler({key:'',preventDefault(){}}); }
 }
-function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',translatedTitle:'示例译文'} }) {
+function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',translatedTitle:'示例译文'} }, browserLanguage = '') {
     const elements = [], ids = {};
     for (const [,tag,raw] of html.matchAll(/<([a-z][a-z0-9-]*)([^<>]*?)>/gi)) {
         const attrs = {};
@@ -63,7 +63,7 @@ function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',tr
     };
     const data = structuredClone(initial), messages = [], permissions = [];
     let setError = false, grant = true, messagingError = false, messagingThrows = false;
-    const chrome = { runtime:{lastError:null,getManifest(){return {version:'8.0.4'};},sendMessage(message,callback){
+    const chrome = { i18n:{getUILanguage:()=>browserLanguage}, runtime:{lastError:null,getManifest(){return {version:'8.0.4'};},sendMessage(message,callback){
         messages.push(structuredClone(message));
         if (messagingThrows) throw new Error('Extension context invalidated');
         if (messagingError) {
@@ -272,4 +272,14 @@ test('全部界面语言使用新增本地化文案，切换文字不修改标�
         assert.equal(ui.elements.testBtn.textContent,pack.testAndSave);
         assert.equal(ui.elements.uiLanguageSelect.getAttribute('aria-label'),pack.uiLanguageLabel);
     }
+});
+
+test('中文浏览器的 popup 默认中文，显式保存 en 时保持英文', () => {
+    const fresh = createPopup({}, undefined, 'zh-CN');
+    assert.equal(fresh.elements.uiLanguageSelect.value,'zh-Hans');
+    assert.equal(fresh.elements.targetLanguageSelect.value,'zh-Hans');
+    assert.equal(Object.keys(fresh.data).length,0,'打开弹窗不应保存默认值');
+    const saved = createPopup({uiLanguage:'en',targetLanguage:'en'}, undefined, 'zh-CN');
+    assert.equal(saved.elements.uiLanguageSelect.value,'en');
+    assert.equal(saved.elements.targetLanguageSelect.value,'en');
 });

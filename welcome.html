@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YouTube Title Translator</title>
+  <style>
+    :root { color-scheme:light; --bg:#fff; --surface:#f6f7f9; --text:#18202b; --muted:#636b79; --border:#dce0e7; --accent:#d9153c; --tint:#fff1f4; --error:#a52335; }
+    * { box-sizing:border-box; } [hidden] { display:none !important; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+    main { max-width:560px; margin:64px auto; padding:0 24px; }
+    img { width:64px; height:64px; } h1 { font-size:28px; line-height:1.3; margin:24px 0 12px; }
+    p { margin:16px 0; } #subtitle,#pinTip,#privacy { color:var(--muted); }
+    .language { margin:28px 0; padding:20px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+    label { display:block; font-weight:600; margin-bottom:10px; }
+    select { width:100%; padding:10px; font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--border); border-radius:6px; }
+    #saveStatus { min-height:1.65em; margin:8px 0 0; font-size:14px; } .error { color:var(--error); }
+    #localUnsupported { padding:16px; background:var(--tint); color:var(--error); border-inline-start:4px solid var(--accent); border-radius:6px; }
+    a { display:inline-block; color:#fff; background:var(--accent); border-radius:8px; padding:10px 20px; text-decoration:none; margin:12px 0; font-weight:600; }
+    a:hover { opacity:.9; } a:focus-visible,select:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+    #privacy { font-size:13px; border-top:1px solid var(--border); padding-top:20px; }
+    @media (prefers-color-scheme:dark) { :root { color-scheme:dark; --bg:#17191e; --surface:#22252c; --text:#edf0f5; --muted:#aeb6c3; --border:#3a404b; --tint:#371e26; --error:#ffadb9; } }
+    @media (max-width:600px) { main { margin:32px auto; } }
+  </style>
+  <script src="welcome-locales.js" defer></script>
+  <script src="welcome.js" defer></script>
+</head>
+<body>
+  <main>
+    <img src="icon/icon128.png" alt="">
+    <h1 id="title"></h1>
+    <p id="subtitle"></p>
+    <div class="language">
+      <label id="targetLabel" for="targetLanguage"></label>
+      <select id="targetLanguage"></select>
+      <p id="saveStatus" role="status" aria-live="polite"></p>
+    </div>
+    <p id="localNote" hidden></p>
+    <p id="localUnsupported" role="note" hidden></p>
+    <p id="aiNote"></p>
+    <p id="pinTip"></p>
+    <a id="openYouTube" href="https://www.youtube.com/" target="_blank" rel="noopener"></a>
+    <p id="privacy"></p>
+  </main>
+</body>
+</html>

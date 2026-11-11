@@ -1,3 +1,21 @@
+// 用户从未保存过语言时，跟随浏览器界面语言；识别不了的语言回落英文。
+function getBrowserDefaultLanguages(browserLanguage) {
+    const raw = String(browserLanguage || "").toLowerCase().replace(/_/g, "-");
+    const base = raw.split("-")[0];
+    if (base === "zh") {
+        return { uiLanguage: "zh-Hans", targetLanguage: /-(hant|tw|hk|mo)(-|$)/.test(raw) ? "zh-Hant" : "zh-Hans" };
+    }
+    const targets = ["en", "ja", "ko", "th", "es", "fr", "de", "pt", "id", "vi"];
+    return {
+        uiLanguage: targets.concat(["ru", "ar", "hi"]).includes(base) ? base : "en",
+        targetLanguage: targets.includes(base) ? base : "en"
+    };
+}
+
+function getBrowserLanguage() {
+    try { return chrome.i18n.getUILanguage(); } catch (e) { return ""; }
+}
+
 // === Background Service Worker ===
 // 负责发起 AI 翻译请求。content script 通过 sendMessage 把要翻译的文本和配置
 // 传过来，SW 完成 HTTP 调用 + JSON 解析后回传结果。
@@ -27,7 +45,7 @@ const MAX_CONCURRENT_TRANSLATIONS = 3;
 const translationQueue = [];
 let activeTranslations = 0;
 const inflightTextResults = new Map();
-const DEFAULT_TARGET_LANGUAGE = "en";
+const DEFAULT_TARGET_LANGUAGE = getBrowserDefaultLanguages(getBrowserLanguage()).targetLanguage;
 const TARGET_LANGUAGE_NAMES = {
     "zh-Hans": "Simplified Chinese",
     "zh-Hant": "Traditional Chinese",
@@ -271,7 +289,7 @@ function automaticTranslationStillAllowed(config) {
 
 function getTargetLanguageCode(config) {
     const code = config && config.targetLanguage ? config.targetLanguage : DEFAULT_TARGET_LANGUAGE;
-    return TARGET_LANGUAGE_NAMES[code] ? code : DEFAULT_TARGET_LANGUAGE;
+    return Object.prototype.hasOwnProperty.call(TARGET_LANGUAGE_NAMES, code) ? code : DEFAULT_TARGET_LANGUAGE;
 }
 
 function getTargetLanguageName(config) {
@@ -674,7 +692,116 @@ async function fetchAiTranslationQueued(text, config, automatic) {
 }
 
 // === Message handler ===
+// 缓存只由 SW 写入；读取、合并和落盘共享同一条串行链。
+const CACHE_LIMIT = 10000;
+const backgroundCache = new Map();
+let cacheLoaded = false;
+let cacheEpoch = 0;
+let cacheClearedAt = 0;
+let cacheChain = Promise.resolve();
+
+function cacheStorageCall(method, value) {
+    return new Promise((resolve, reject) => {
+        try {
+            const local = chrome.storage && chrome.storage.local;
+            if (!local || typeof local[method] !== "function") { reject(new Error("Storage unavailable")); return; }
+            const pending = local[method](value, result => {
+                if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+                else resolve(result);
+            });
+            if (pending && typeof pending.then === "function") pending.then(resolve, reject);
+        } catch (e) { reject(e); }
+    });
+}
+
+function validCacheEntry(entry, migrate = false) {
+    if (!Array.isArray(entry) || typeof entry[0] !== "string") return null;
+    let [key, value] = entry;
+    if (!value || typeof value !== "object" || typeof value.translatedTitle !== "string" ||
+        !value.translatedTitle.trim() || value.translatedTitle.length > 1000 || typeof value.tag !== "string") return null;
+    if (migrate && !/^(ai|local)\n/.test(key)) key = (value.tag === "__builtin__" ? "local\n" : "ai\n") + key;
+    if (!/^(ai|local)\n/.test(key) || key.length > 2000) return null;
+    return [key, { tag: value.tag, translatedTitle: value.translatedTitle,
+        ts: Number.isFinite(value.ts) ? value.ts : Date.now() }];
+}
+
+function trimBackgroundCache(limit) {
+    while (backgroundCache.size > limit) backgroundCache.delete(backgroundCache.keys().next().value);
+}
+
+function cachePut(entries, touched) {
+    const epoch = cacheEpoch;
+    const operation = cacheChain.then(async () => {
+        try {
+            if (epoch !== cacheEpoch) return { ok: true };
+            if (!cacheLoaded) {
+                const stored = await cacheStorageCall("get", ["translationCache"]);
+                if (epoch !== cacheEpoch) return { ok: true };
+                const raw = stored && stored.translationCache;
+                const oldEntries = Array.isArray(raw) ? raw : raw && raw.entries;
+                if (Array.isArray(oldEntries)) for (const entry of oldEntries) {
+                    const valid = validCacheEntry(entry, true);
+                    if (valid) { backgroundCache.delete(valid[0]); backgroundCache.set(...valid); }
+                }
+                trimBackgroundCache(CACHE_LIMIT);
+                cacheLoaded = true;
+            }
+            if (!Array.isArray(entries)) return { ok: false };
+            // 页面命中过的 key：只把已有条目移到末尾（最近使用），不存在的忽略。
+            if (Array.isArray(touched)) for (const key of touched.slice(0, 300)) {
+                if (typeof key === "string" && backgroundCache.has(key)) {
+                    const value = backgroundCache.get(key);
+                    backgroundCache.delete(key);
+                    backgroundCache.set(key, value);
+                }
+            }
+            for (const entry of entries) {
+                const valid = validCacheEntry(entry);
+                // 清缓存之前翻译出来、之后才送达的条目不再收：否则迟到的消息会让旧条目复活。
+                if (valid && valid[1].ts >= cacheClearedAt) { backgroundCache.delete(valid[0]); backgroundCache.set(...valid); }
+            }
+            trimBackgroundCache(CACHE_LIMIT);
+            const persist = () => cacheStorageCall("set", { translationCache: { v: 2, entries: Array.from(backgroundCache) } });
+            if (epoch !== cacheEpoch) return { ok: true };
+            try { await persist(); }
+            catch (e) {
+                if (epoch !== cacheEpoch) return { ok: true };
+                trimBackgroundCache(Math.floor(backgroundCache.size / 2));
+                await persist();
+            }
+            // 落盘途中用户清了缓存：这次写入可能晚于清除到达存储。按清除后的内存状态重写一次，
+            // 避免旧条目复活。不用 remove：它会再触发一次“清除”事件，把清除后排队的新条目也作废。
+            if (epoch !== cacheEpoch) await persist();
+            return { ok: true };
+        } catch (e) { return { ok: false }; }
+    });
+    cacheChain = operation.catch(() => {});
+    return operation;
+}
+
+if (chrome.storage && chrome.storage.onChanged && chrome.storage.onChanged.addListener) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== "local" || !changes.translationCache || changes.translationCache.newValue !== undefined) return;
+        cacheEpoch++;
+        cacheClearedAt = Date.now();
+        backgroundCache.clear();
+        cacheLoaded = true;
+    });
+}
+
+if (chrome.runtime.onInstalled && chrome.runtime.onInstalled.addListener) {
+    chrome.runtime.onInstalled.addListener(details => {
+        if (details.reason === "install" && chrome.tabs && chrome.tabs.create && chrome.runtime.getURL) {
+            chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+        }
+    });
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg && msg.type === 'cachePut') {
+        cachePut(msg.entries, msg.touched).then(sendResponse, () => sendResponse({ ok: false }));
+        return true;
+    }
     if (msg && (msg.type === 'translate' || msg.type === 'testTranslation')) {
         fetchAiTranslationQueued(msg.text, msg.config, msg.type !== 'testTranslation')
             .then(reply => sendResponse(reply))
@@ -695,6 +822,7 @@ console.log("🚀 Gary BG SW 启动");
 // 仅供 node:test 引用；扩展运行时没有 module 对象，这段不会执行
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
+        getBrowserDefaultLanguages, getBrowserLanguage, getTargetLanguageCode, automaticTranslationStillAllowed, cachePut,
         extractJsonValueCandidates,
         parseSingleTranslationFromText,
         parseBatchTranslationsFromText,
