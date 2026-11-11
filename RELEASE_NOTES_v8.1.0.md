@@ -19,3 +19,8 @@
 - First installation opens a welcome page to confirm the target language; localized documentation and project links are updated.
 
 Validation scope: the new OpenAI / Claude model parameters have not been tested with real API keys; only DeepSeek has been tested with a real key.
+
+## 已知限制 / Known limitation
+
+- 原 Gemini、MiniMax、Z.AI、Kimi 用户会被转为“自定义端点”，Key 会保留。自定义端点只发送通用的 OpenAI 兼容参数，不再包含这些服务商的专属参数适配，个别模型（例如 Kimi K2.6）可能因此验证失败，需要改用 OpenAI、Claude、DeepSeek 或其它兼容端点。
+- Former Gemini, MiniMax, Z.AI and Kimi users are moved to "Custom endpoint" with their key kept. Custom endpoints only receive generic OpenAI-compatible parameters; provider-specific tuning was removed, so some models (for example Kimi K2.6) may fail verification. Switch to OpenAI, Claude, DeepSeek or another compatible endpoint.
