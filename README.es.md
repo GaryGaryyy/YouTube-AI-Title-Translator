@@ -102,6 +102,8 @@
 
 ## 🛠️ Uso y Configuración
 
+La primera instalación abre una página de bienvenida para confirmar el idioma de destino.
+
 Haz clic en el icono de la extensión en la barra de herramientas para abrir el panel:
 
 ![Panel de configuración (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@ El icono del globo cambia el texto de la interfaz sin alterar el idioma de desti
 | :--- | :--- |
 | **DeepSeek (Recomendado)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Punto de conexión personalizado compatible con OpenAI |
 
 ### 🔌 Endpoints Personalizados Compatibles con OpenAI
 Selecciona **Custom** para conectar cualquier servicio compatible con el estándar Chat Completions de OpenAI:
@@ -148,6 +147,8 @@ Selecciona **Custom** para conectar cualquier servicio compatible con el estánd
 ---
 
 ## 🔒 Privacidad y Seguridad
+
+Los proveedores de IA predefinidos son OpenAI / Claude / DeepSeek; también se admiten puntos de conexión personalizados compatibles con OpenAI. La inyección y el acceso a páginas se limitan a `https://www.youtube.com/*` y `https://m.youtube.com/*`; el acceso a las API predefinidas se limita a `https://api.openai.com/*`, `https://api.anthropic.com/*` y `https://api.deepseek.com/*`; los permisos opcionales para un punto de conexión personalizado se solicitan al guardarlo.
 
 - **Cero Recopilación de Datos**: No rastreamos tu actividad ni guardamos información personal.
 - **Almacenamiento 100% Local**: Las claves, configuraciones y la caché se almacenan únicamente en tu navegador (`chrome.storage.local`).

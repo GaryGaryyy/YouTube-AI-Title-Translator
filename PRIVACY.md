@@ -29,13 +29,13 @@ When the user enables AI translation and saves an AI service configuration, the 
 
 On-device mode uses Chrome's built-in translator and does not send title text to an AI provider. The first use may download language packs from Chrome. Switching to on-device mode preserves saved provider credentials and prevents queued cloud requests and retries from starting; requests already sent may still finish.
 
-Users are responsible for choosing which AI service, model, API key, and endpoint they want to use.
+Built-in AI providers are limited to OpenAI / Claude / DeepSeek, with custom OpenAI-compatible endpoints also supported. Users are responsible for choosing which AI service, model, API key, and endpoint they want to use. API keys are read by the background service worker for translation; content scripts send only title text and the target language.
 
 Custom endpoints must use HTTPS. HTTP is allowed only for local development endpoints such as localhost or 127.0.0.1.
 
 ## Permissions
 
-The extension requests access to YouTube pages so it can read visible video titles and display translated titles on the page. It uses storage permission to save settings locally in the browser.
+Page injection and access are limited to `https://www.youtube.com/*` and `https://m.youtube.com/*`; built-in API access is limited to `https://api.openai.com/*`, `https://api.anthropic.com/*`, and `https://api.deepseek.com/*`; optional host access for a custom endpoint is requested when saving it. The storage permission saves settings locally in the browser. The first installation opens a welcome page to confirm the target language.
 
 Optional host permissions may be requested when a user configures a custom API endpoint, so the extension can send translation requests to that endpoint.
 
@@ -55,7 +55,7 @@ This policy may be updated when the extension's features or data practices chang
 
 For privacy questions, please open an issue in this GitHub repository:
 
-https://github.com/garygaryandfree/YouTube-AI-Title-Translator/issues
+https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues
 
 ---
 
@@ -90,13 +90,13 @@ API Key、设置、偏好和缓存翻译结果会通过 Chrome 扩展存储保�
 
 本机模式使用 Chrome 内置翻译，不向 AI 服务商发送标题文本；首次使用可能从 Chrome 下载语言包。切换到本机模式会保留已保存的服务商凭证，并阻止排队中的云端请求和重试继续发出；已经发出的请求仍可能完成。
 
-用户自行决定使用哪个 AI 服务、模型、API Key 和接口地址。
+内置 AI 服务商仅保留 OpenAI / Claude / DeepSeek，并支持自定义 OpenAI 兼容端点。用户自行决定使用哪个 AI 服务、模型、API Key 和接口地址。翻译时由后台读取 API Key，content script 仅发送标题文本与目标语言。
 
 自定义接口必须使用 HTTPS。本机开发接口（例如 localhost 或 127.0.0.1）可使用 HTTP。
 
 ## 权限说明
 
-扩展请求访问 YouTube 页面，是为了读取页面中可见的视频标题并显示翻译结果。扩展使用 storage 权限在本地浏览器保存设置。
+注入与页面访问仅限 `https://www.youtube.com/*` 和 `https://m.youtube.com/*`；内置 API 权限仅限 `https://api.openai.com/*`、`https://api.anthropic.com/*`、`https://api.deepseek.com/*`；自定义端点在保存时按需申请可选主机权限。扩展使用 storage 权限在本地浏览器保存设置。首次安装会打开引导页确认目标语言。
 
 当用户配置自定义 API 接口时，扩展可能会请求可选主机权限，以便向该接口发送翻译请求。
 
@@ -116,4 +116,4 @@ API Key、设置、偏好和缓存翻译结果会通过 Chrome 扩展存储保�
 
 如有隐私相关问题，请在本 GitHub 仓库提交 issue：
 
-https://github.com/garygaryandfree/YouTube-AI-Title-Translator/issues
+https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues

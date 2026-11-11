@@ -102,6 +102,8 @@
 
 ## 🛠️ Использование и настройка
 
+При первой установке открывается страница приветствия для подтверждения языка перевода.
+
 Нажмите на значок расширения на панели инструментов браузера, чтобы открыть меню:
 
 ![Панель настроек (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@
 | :--- | :--- |
 | **DeepSeek (Рекомендуется)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Собственный API, совместимый с OpenAI |
 
 ### 🔌 Пользовательские OpenAI-совместимые endpoint
 Выберите пункт **Custom** для подключения любого сервиса по стандарту OpenAI Chat Completions:
@@ -148,6 +147,8 @@
 ---
 
 ## 🔒 Конфиденциальность и безопасность
+
+Встроенные провайдеры ИИ — OpenAI / Claude / DeepSeek; также поддерживаются собственные адреса API, совместимые с OpenAI. Внедрение скрипта и доступ к страницам ограничены `https://www.youtube.com/*` и `https://m.youtube.com/*`; встроенные API — `https://api.openai.com/*`, `https://api.anthropic.com/*`, `https://api.deepseek.com/*`; дополнительные разрешения для собственного адреса API запрашиваются при сохранении.
 
 - **Никакого сбора данных**: Мы не ведем историю посещений и не собираем личную информацию.
 - **Только локальное хранение**: Ключи, настройки и кэш хранятся исключительно в вашем браузере (`chrome.storage.local`).

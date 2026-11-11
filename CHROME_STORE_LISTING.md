@@ -121,3 +121,9 @@ Designed specifically for YouTube, this extension brings you seamless bilingual 
 ✔ 100% Private & Open Source: Zero data collection, no tracking, and no middleman servers. All settings stay in your browser. MIT licensed.
 ✔ Pricing: Completely free and open-source. On-device translation is 100% free; cloud AI APIs follow their respective provider's terms.
 ✔ Languages: Supports 12 target languages (English, Chinese, Japanese, Korean, Spanish, French, German, Portuguese, Thai, Vietnamese, etc.) with automatic source language detection.
+
+### 8.1.0：服务商与权限 / Providers and permissions
+
+首次安装会打开引导页确认目标语言。内置 AI 服务商仅保留 OpenAI / Claude / DeepSeek，并支持自定义 OpenAI 兼容端点。注入与页面访问仅限 `https://www.youtube.com/*` 和 `https://m.youtube.com/*`；内置 API 权限仅限 `https://api.openai.com/*`、`https://api.anthropic.com/*`、`https://api.deepseek.com/*`；自定义端点在保存时按需申请可选主机权限。
+
+The first installation opens a welcome page to confirm the target language. Built-in AI providers are limited to OpenAI / Claude / DeepSeek, with custom OpenAI-compatible endpoints also supported. Page injection and access are limited to `https://www.youtube.com/*` and `https://m.youtube.com/*`; built-in API access is limited to `https://api.openai.com/*`, `https://api.anthropic.com/*`, and `https://api.deepseek.com/*`; optional host access for a custom endpoint is requested when saving it.

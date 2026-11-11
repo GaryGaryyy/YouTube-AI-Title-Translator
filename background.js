@@ -17,8 +17,8 @@ function getBrowserLanguage() {
 }
 
 // === Background Service Worker ===
-// 负责发起 AI 翻译请求。content script 通过 sendMessage 把要翻译的文本和配置
-// 传过来，SW 完成 HTTP 调用 + JSON 解析后回传结果。
+// 负责发起 AI 翻译请求。content script 通过 sendMessage 把要翻译的文本
+// 传过来，配置由后台从 storage 读取，SW 完成 HTTP 调用 + JSON 解析后回传结果。
 //
 // 为什么挪到 SW：
 // 1) MV3 推荐做法，避免被 YouTube 页面 CSP 拦截 fetch
@@ -108,18 +108,11 @@ function getApiHost(config) {
 
 function getApiType(config) {
     const host = getApiHost(config);
-    if (host === "generativelanguage.googleapis.com") return "google";
     if (host === "api.anthropic.com") return "anthropic";
     return "openai-compatible";
 }
 
 function extractTextFromResponse(data, apiType) {
-    if (apiType === "google") {
-        const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content
-            ? data.candidates[0].content.parts : [];
-        return (parts || []).filter(part => part && !part.thought && typeof part.text === "string")
-            .map(part => part.text).join("");
-    }
     if (apiType === "anthropic") {
         return data && Array.isArray(data.content)
             ? data.content.filter(part => part && part.type === "text" && part.text).map(part => part.text).join("")
@@ -268,23 +261,84 @@ function getRequestKey(text, config, automatic) {
         config.model || "", getTargetLanguageCode(config), text]);
 }
 
-function automaticTranslationStillAllowed(config) {
-    config = config || {};
-    return new Promise(resolve => {
+// Keep this storage migration identical in popup.js and background.js (no shared runtime script).
+function migrateProviderSettings(result) {
+    const retired = ["google", "minimax", "zhipu", "kimi"];
+    const models = {
+        openai: ["gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol"],
+        anthropic: ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"],
+        deepseek: ["deepseek-flash", "deepseek-v4-pro"]
+    };
+    const stored = Object.assign({}, result);
+    const configs = Object.fromEntries(Object.entries(result.providerConfigs || {}).map(([id, cfg]) => [id, Object.assign({}, cfg)]));
+    let provider = result.selectedProvider || "deepseek";
+    if (!result.providerConfigs && result.customApiKey) {
+        configs[provider] = { apiKey:result.customApiKey, apiUrl:result.customApiUrl, model:result.customModel };
+    }
+    const updates = {};
+    if (retired.includes(provider)) {
+        if (!Object.prototype.hasOwnProperty.call(configs, "custom")) {
+            const old = configs[provider] || {};
+            configs.custom = { apiKey:old.apiKey || "", apiUrl:provider === "google" ? "" : old.apiUrl || "", model:old.model || "" };
+        }
+        provider = "custom";
+        Object.assign(updates, { selectedProvider:provider, providerMigrationPending:true,
+            customApiKey:configs.custom.apiKey || "", customApiUrl:configs.custom.apiUrl || "", customModel:configs.custom.model || "" });
+    }
+    for (const id of retired) delete configs[id];
+    for (const [id, ids] of Object.entries(models)) {
+        if (configs[id] && !ids.includes(configs[id].model)) {
+            configs[id].model = ids[0];
+            delete configs[id].testedAt;
+            if (id === provider) updates.customModel = ids[0];
+        }
+    }
+    if (JSON.stringify(configs) !== JSON.stringify(result.providerConfigs || {}) || updates.selectedProvider) updates.providerConfigs = configs;
+    Object.assign(stored, updates);
+    return { stored, updates };
+}
+
+// Read on every automatic request and retry: no credentials survive storage changes or SW restarts.
+function readTranslationSettings() {
+    return new Promise((resolve, reject) => {
         chrome.storage.local.get(["enabled", "translationMode", "selectedProvider", "providerConfigs",
-            "customApiKey", "customApiUrl", "customModel", "targetLanguage"], stored => {
-            if (chrome.runtime.lastError || stored.enabled === false) { resolve(false); return; }
-            let active = stored.providerConfigs && stored.providerConfigs[stored.selectedProvider];
-            if (!stored.providerConfigs && stored.customApiKey) {
-                active = { apiKey:stored.customApiKey, apiUrl:stored.customApiUrl, model:stored.customModel };
-            }
-            const mode = ["local", "ai"].includes(stored.translationMode)
-                ? stored.translationMode : (active && active.apiKey ? "ai" : "local");
-            resolve(mode === "ai" && !!active && !!active.apiKey &&
-                ["apiKey", "apiUrl", "model"].every(key => (active[key] || "") === (config[key] || "")) &&
-                getTargetLanguageCode(stored) === getTargetLanguageCode(config));
+            "customApiKey", "customApiUrl", "customModel", "targetLanguage", "providerMigrationPending"], result => {
+            if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
+            const { stored, updates } = migrateProviderSettings(result);
+            const finish = () => {
+                if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+                else resolve(stored);
+            };
+            if (Object.keys(updates).length) chrome.storage.local.set(updates, finish);
+            else finish();
         });
     });
+}
+
+function activeTranslationConfig(stored) {
+    const active = stored.providerConfigs && stored.providerConfigs[stored.selectedProvider || "deepseek"];
+    const mode = ["local", "ai"].includes(stored.translationMode) ? stored.translationMode : (active && active.apiKey ? "ai" : "local");
+    if (stored.enabled === false || mode !== "ai" || !active || !active.apiKey || !active.apiUrl || !active.model) return null;
+    return Object.assign({}, active, { targetLanguage:getTargetLanguageCode(stored) });
+}
+
+async function automaticTranslationStillAllowed(config) {
+    try {
+        const active = activeTranslationConfig(await readTranslationSettings());
+        return !!active && ["apiKey", "apiUrl", "model", "targetLanguage"].every(key => (active[key] || "") === (config[key] || ""));
+    } catch (e) { return false; }
+}
+
+async function translateFromStorage(items, targetLanguage) {
+    try {
+        const config = activeTranslationConfig(await readTranslationSettings());
+        if (!config || (targetLanguage && targetLanguage !== config.targetLanguage)) {
+            return { ok:false, results:items.map(() => null), error:makeError("cancelled", "翻译设置已变更") };
+        }
+        return await fetchAiTranslationBatchDedup(items, config, true);
+    } catch (e) {
+        return { ok:false, results:items.map(() => null), error:makeError("network", "网络或服务商异常") };
+    }
 }
 
 function getTargetLanguageCode(config) {
@@ -336,7 +390,7 @@ function buildChatCompletionsBody(config, promptText, maxTokens, systemPrompt) {
     const reasoningBudget = Math.max(4096, maxTokens + 3072);
     if (host === "api.openai.com") {
         body.max_completion_tokens = maxTokens;
-        if (model === "gpt-6-luna") {
+        if (["gpt-6-luna", "gpt-6.1-terra"].includes(model)) {
             body.reasoning_effort = "none";
         } else if (/^(gpt-[56]|o[134])/.test(model)) {
             body.reasoning_effort = "low";
@@ -349,49 +403,9 @@ function buildChatCompletionsBody(config, promptText, maxTokens, systemPrompt) {
         if (host === "api.deepseek.com" && /^deepseek-(v4|flash(?:$|-))/.test(model)) {
             body.thinking = { type: "disabled" };
         }
-        if (["api.minimax.io", "api.minimaxi.com", "api.minimax.chat"].includes(host) && /^MiniMax-M[23]/.test(model)) {
-            body.reasoning_split = true;
-            if (model === "MiniMax-M3") {
-                body.thinking = { type: "disabled" };
-                body.max_completion_tokens = maxTokens;
-                delete body.max_tokens;
-            } else {
-                body.max_tokens = reasoningBudget;
-                if (model === "MiniMax-M3.1-Flash-Preview") body.reasoning_effort = "low";
-            }
-        }
-        if (["api.z.ai", "open.bigmodel.cn"].includes(host) && /^glm-(4\.[567]|5)/.test(model)) {
-            body.max_tokens = reasoningBudget;
-            if (/^glm-5\.[23](?:$|-)/.test(model)) {
-                body.thinking = { type: "enabled" };
-                body.reasoning_effort = "low";
-                body.temperature = 1;
-            }
-        }
-        if (["api.moonshot.ai", "api.moonshot.cn"].includes(host) && /^kimi-k/.test(model)) {
-            delete body.temperature;
-            if (model === "kimi-k2.6") body.thinking = { type: "disabled" };
-            else {
-                body.max_tokens = reasoningBudget;
-                if (model === "kimi-k3") body.reasoning_effort = "low";
-            }
-        }
     }
 
     return body;
-}
-
-function buildGeminiBody(config, promptText, maxTokens) {
-    const generationConfig = { maxOutputTokens: maxTokens, responseMimeType: "application/json" };
-    if (/^gemini-3(?:\.|-)/.test(config.model || "")) {
-        generationConfig.thinkingConfig = {
-            thinkingLevel: config.model === "gemini-3.5-flash-lite" ? "minimal" : "low"
-        };
-        generationConfig.maxOutputTokens = Math.max(4096, maxTokens + 3072);
-    } else {
-        generationConfig.temperature = 0.3;
-    }
-    return { contents: [{ parts: [{ text: promptText }] }], generationConfig };
 }
 
 function buildAnthropicBody(config, promptText, maxTokens) {
@@ -399,7 +413,7 @@ function buildAnthropicBody(config, promptText, maxTokens) {
         model: config.model, system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: promptText }], max_tokens: maxTokens
     };
-    if (/^claude-(sonnet|opus|fable)-5(?:-|$)/.test(config.model || "")) {
+    if (/^claude-(haiku|sonnet|opus|fable)-5(?:-|$)/.test(config.model || "")) {
         body.thinking = { type: "adaptive" };
         body.output_config = { effort: "low" };
         body.max_tokens = Math.max(4096, maxTokens + 3072);
@@ -430,19 +444,14 @@ async function fetchAiTranslation(text, config, canRetry) {
     try {
         const apiType = getApiType(config);
 
-        if (apiType === "google") {
-            response = await fetchWithTimeout(config.apiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "x-goog-api-key": config.apiKey },
-                body: JSON.stringify(buildGeminiBody(config, promptText, 500))
-            }, canRetry);
-        } else if (apiType === "anthropic") {
+        if (apiType === "anthropic") {
             response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "x-api-key": config.apiKey,
-                    "anthropic-version": "2023-06-01"
+                    "anthropic-version": "2023-06-01",
+                    "anthropic-dangerous-direct-browser-access": "true"
                 },
                 body: JSON.stringify(buildAnthropicBody(config, promptText, 500))
             }, canRetry);
@@ -507,19 +516,14 @@ async function fetchAiTranslationBatch(items, config, canRetry) {
     try {
         const apiType = getApiType(config);
 
-        if (apiType === "google") {
-            response = await fetchWithTimeout(config.apiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "x-goog-api-key": config.apiKey },
-                body: JSON.stringify(buildGeminiBody(config, promptText, maxTokens))
-            }, canRetry);
-        } else if (apiType === "anthropic") {
+        if (apiType === "anthropic") {
             response = await fetchWithTimeout(config.apiUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "x-api-key": config.apiKey,
-                    "anthropic-version": "2023-06-01"
+                    "anthropic-version": "2023-06-01",
+                    "anthropic-dangerous-direct-browser-access": "true"
                 },
                 body: JSON.stringify(buildAnthropicBody(config, promptText, maxTokens))
             }, canRetry);
@@ -798,18 +802,23 @@ if (chrome.runtime.onInstalled && chrome.runtime.onInstalled.addListener) {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg && msg.type === 'migrateSettings') {
+        readTranslationSettings().then(() => sendResponse({ ok:true }), () => sendResponse({ ok:false }));
+        return true;
+    }
     if (msg && msg.type === 'cachePut') {
         cachePut(msg.entries, msg.touched).then(sendResponse, () => sendResponse({ ok: false }));
         return true;
     }
-    if (msg && (msg.type === 'translate' || msg.type === 'testTranslation')) {
-        fetchAiTranslationQueued(msg.text, msg.config, msg.type !== 'testTranslation')
+    if (msg && msg.type === 'testTranslation') {
+        fetchAiTranslationQueued(msg.text, msg.config, false)
             .then(reply => sendResponse(reply))
             .catch(e => sendResponse({ ok: false, error: String(e) }));
         return true;
     }
-    if (msg && msg.type === 'translateBatch') {
-        fetchAiTranslationBatchDedup(msg.items, msg.config, true)
+    if (msg && (msg.type === 'translateBatch' || msg.type === 'translate')) {
+        translateFromStorage(msg.type === 'translate' ? [msg.text] : msg.items, msg.targetLanguage || (msg.config && msg.config.targetLanguage))
+            .then(reply => msg.type === 'translate' ? { ok:reply.ok, result:reply.results[0], error:reply.error } : reply)
             .then(reply => sendResponse(reply))
             .catch(e => sendResponse({ ok: false, error: String(e) }));
         return true;
@@ -822,6 +831,7 @@ console.log("🚀 Gary BG SW 启动");
 // 仅供 node:test 引用；扩展运行时没有 module 对象，这段不会执行
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
+        migrateProviderSettings, readTranslationSettings,
         getBrowserDefaultLanguages, getBrowserLanguage, getTargetLanguageCode, automaticTranslationStillAllowed, cachePut,
         extractJsonValueCandidates,
         parseSingleTranslationFromText,
@@ -831,7 +841,6 @@ if (typeof module !== "undefined" && module.exports) {
         normalizeTranslationResult,
         classifyApiError,
         buildChatCompletionsBody,
-        buildGeminiBody,
         buildAnthropicBody,
         extractTextFromResponse,
         buildSinglePrompt,

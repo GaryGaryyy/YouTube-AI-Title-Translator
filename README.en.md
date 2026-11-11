@@ -42,16 +42,16 @@
 
 ---
 
-## 📌 Recent Updates (v8.0.4)
+## 📌 Recent Updates (v8.1.0)
 
-- Refreshed presets for seven providers, with at most four models and one recommended model per provider; manual model IDs remain available. Provider brands use English names, including **Z.AI**
+- Retained OpenAI / Claude / DeepSeek / custom OpenAI-compatible endpoints and refreshed models; retired presets migrate to custom endpoints and require saving to authorize access again
 - Explicit **On-device** and **AI translation** modes. On-device mode preserves saved keys, cancels cloud work that has not started, and uses a separate translation cache
 - Compact red-and-white popup with a fixed action area, collapsed extra settings, dark mode, and keyboard focus styles. Switching providers or modes preserves drafts within the current popup
 - The globe changes interface text and shows the full locale name. Choose the translation mode before the title target. Larger provider logos, a fixed save area, and privacy details keep the settings compact
 - **Verify & save** saves only after receiving a sample translation. **More settings → Save without verification** skips the test. A gray dot means a key is saved, green means the current configuration is verified, and orange means unsaved changes
 - Provider-specific reasoning parameters and output budgets, clearer parameter/auth/quota/model errors, and localized settings and error messages in all 14 UI languages
 
-Exact model IDs, official references, and verification limits are recorded in the [8.0.4 release notes](RELEASE_NOTES_v8.0.4.md).
+Changes and verification limits are recorded in the [8.1.0 release notes](RELEASE_NOTES_v8.1.0.md).
 
 ---
 
@@ -105,6 +105,8 @@ Exact model IDs, official references, and verification limits are recorded in th
 
 ## 🛠️ Usage & Settings
 
+The first installation opens a welcome page to confirm the target language.
+
 Click the extension icon in the toolbar to open the control panel:
 
 ![Settings UI (historical v8.0.1 screenshot)](screenshots/v8.0.1/config-ui.png)
@@ -118,7 +120,7 @@ To enjoy idiomatic, meme-aware translations and intelligent topic classification
 2. Choose a target under **Translate titles into**, select a provider and model, and paste your API key. Recommended models suit short titles; **Other model (enter manually)** accepts another supported ID;
 3. Click **Verify & save**. A real API request translates one sample title, and the configuration is saved only on success. Failed tests keep your draft and previous configuration and explain the cause. **More settings → Save without verification** applies the configuration without marking an untested configuration as verified.
 
-Saved settings apply to open YouTube pages. Drafts last only for the current popup session, so save before closing it. Upgrades preserve saved keys and existing model IDs; older IDs absent from the presets remain available as manual entries.
+Saved settings apply to open YouTube pages. Drafts last only for the current popup session, so save before closing it. Upgrades preserve saved keys; saved models absent from a provider’s presets fall back to its recommended model, while custom endpoints keep their model IDs.
 
 ---
 
@@ -128,11 +130,8 @@ Saved settings apply to open YouTube pages. Drafts last only for the current pop
 | :--- | :--- |
 | **DeepSeek** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Custom OpenAI-compatible endpoint |
 
 ### 🔌 Custom OpenAI-Compatible Endpoints (Local & Gateway Models)
 Select **Custom** to connect to any endpoint that follows the OpenAI Chat Completions standard:
@@ -153,6 +152,8 @@ Remote endpoints require HTTPS. `localhost`, `127.0.0.1`, and `[::1]` may use HT
 ---
 
 ## 🔒 Privacy & Data Security
+
+Built-in AI providers are limited to OpenAI / Claude / DeepSeek, with custom OpenAI-compatible endpoints also supported. Page injection and access are limited to `https://www.youtube.com/*` and `https://m.youtube.com/*`; built-in API access is limited to `https://api.openai.com/*`, `https://api.anthropic.com/*`, and `https://api.deepseek.com/*`; optional host access for a custom endpoint is requested when saving it.
 
 - **Zero Data Collection**: We do not track browsing activity or collect any personal information.
 - **Local Storage Only**: API keys, preferences, and cache live entirely in your browser's `chrome.storage.local`.

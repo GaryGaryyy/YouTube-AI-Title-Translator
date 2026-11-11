@@ -102,6 +102,8 @@
 
 ## 🛠️ उपयोग और सेटिंग्स
 
+पहली स्थापना पर लक्ष्य भाषा की पुष्टि के लिए स्वागत पृष्ठ खुलता है।
+
 सेटिंग्स पैनल खोलने के लिए ब्राउज़र टूलबार में एक्सटेंशन आइकन पर क्लिक करें:
 
 ![सेटिंग्स विंडो (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@
 | :--- | :--- |
 | **DeepSeek (अनुशंसित)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | OpenAI-संगत कस्टम API पता |
 
 ### 🔌 कस्टम OpenAI-संगत एंडपॉइंट्स
 OpenAI Chat Completions मानक का पालन करने वाले किसी भी एंडपॉइंट को जोड़ने के लिए **Custom** चुनें:
@@ -148,6 +147,8 @@ OpenAI Chat Completions मानक का पालन करने वाल�
 ---
 
 ## 🔒 गोपनीयता और सुरक्षा
+
+अंतर्निहित AI प्रदाता केवल OpenAI / Claude / DeepSeek हैं; OpenAI-संगत कस्टम API पते भी समर्थित हैं। पृष्ठ पर स्क्रिप्ट और पहुँच केवल `https://www.youtube.com/*` और `https://m.youtube.com/*` तक, अंतर्निहित API पहुँच `https://api.openai.com/*`, `https://api.anthropic.com/*`, `https://api.deepseek.com/*` तक सीमित है; कस्टम API के लिए वैकल्पिक होस्ट अनुमति सहेजते समय माँगी जाती है।
 
 - **शून्य डेटा संग्रह**: हम ब्राउज़िंग गतिविधि को ट्रैक नहीं करते हैं और कोई व्यक्तिगत डेटा एकत्र नहीं करते हैं।
 - **केवल स्थानीय संग्रहण**: API Keys, प्राथमिकताएं और कैश केवल आपके ब्राउज़र के `chrome.storage.local` में रहते हैं।

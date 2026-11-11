@@ -1,6 +1,6 @@
 {
   "name": "youtube-ai-title-translator",
-  "version": "8.0.4",
+  "version": "8.1.0",
   "private": true,
   "description": "Chrome extension: translate YouTube titles with AI",
   "scripts": {

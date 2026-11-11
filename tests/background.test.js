@@ -133,52 +133,26 @@ test('buildChatCompletionsBody: DeepSeek V4 官方接口关闭思考模式', () 
 
 test('新预设的推理参数按官方服务商分别处理，不影响自定义网关', () => {
     const build = (apiUrl, model) => bg.buildChatCompletionsBody({ apiUrl, model }, 'prompt', 500, 'system');
-    const luna = build('https://api.openai.com/v1/chat/completions', 'gpt-6-luna');
-    assert.equal(luna.reasoning_effort, 'none');
-    assert.equal(luna.max_completion_tokens, 500);
+    for (const model of ['gpt-6-luna','gpt-6.1-terra']) {
+        const body=build('https://api.openai.com/v1/chat/completions',model);
+        assert.equal(body.reasoning_effort,'none');
+        assert.equal(body.max_completion_tokens,500);
+        assert.ok(!('temperature' in body));
+    }
     for (const model of ['gpt-6.1-sol', 'gpt-6-astra']) {
         const body = build('https://api.openai.com/v1/chat/completions', model);
         assert.equal(body.reasoning_effort, 'low');
         assert.ok(body.max_completion_tokens >= 4096);
     }
     assert.deepEqual(build('https://api.deepseek.com/chat/completions', 'deepseek-flash').thinking, {type:'disabled'});
-    const m3 = build('https://api.minimax.io/v1/chat/completions', 'MiniMax-M3');
-    assert.deepEqual(m3.thinking, {type:'disabled'});
-    assert.equal(m3.reasoning_split, true);
-    assert.equal(m3.max_completion_tokens, 500);
-    assert.ok(!('max_tokens' in m3));
-    const m2 = build('https://api.minimax.io/v1/chat/completions', 'MiniMax-M2.7-highspeed');
-    assert.ok(m2.max_tokens >= 4096);
-    assert.ok(!('thinking' in m2));
-    for (const model of ['glm-5.3-flash', 'glm-5.3-flashx', 'glm-5.3']) {
-        const body = build('https://api.z.ai/api/paas/v4/chat/completions', model);
-        assert.deepEqual(body.thinking,{type:'enabled'});
-        assert.equal(body.reasoning_effort,'low');
-        assert.ok(body.max_tokens >= 4096);
-    }
-    const k26 = build('https://api.moonshot.ai/v1/chat/completions', 'kimi-k2.6');
-    assert.deepEqual(k26.thinking,{type:'disabled'});
-    assert.ok(!('temperature' in k26));
-    const k3 = build('https://api.moonshot.ai/v1/chat/completions', 'kimi-k3');
-    assert.equal(k3.reasoning_effort,'low');
-    assert.ok(!('thinking' in k3));
-    assert.ok(!('temperature' in k3));
-    assert.ok(k3.max_tokens >= 4096);
     const gateway = build('https://api.openai.com.example.org/v1/chat/completions', 'gpt-6-luna');
     assert.equal(gateway.max_tokens, 500);
     assert.ok(!('reasoning_effort' in gateway));
     assert.ok(!('max_completion_tokens' in gateway));
 });
 
-test('Gemini 3 与 Claude 5 不复用旧采样参数，预留推理输出预算', () => {
-    for (const model of ['gemini-3.5-flash-lite','gemini-3.8-flash','gemini-3.1-pro-preview']) {
-        const { generationConfig } = bg.buildGeminiBody({model}, 'prompt', 500);
-        assert.equal(generationConfig.thinkingConfig.thinkingLevel, model.includes('flash-lite') ? 'minimal' : 'low');
-        assert.ok(!('temperature' in generationConfig));
-        assert.ok(generationConfig.maxOutputTokens >= 4096);
-        assert.equal(generationConfig.responseMimeType, 'application/json');
-    }
-    for (const model of ['claude-sonnet-5-5','claude-opus-5-5','claude-fable-5-1']) {
+test('Claude 5 不复用旧采样参数，预留推理输出预算', () => {
+    for (const model of ['claude-haiku-5-5','claude-sonnet-5-5','claude-opus-5-5','claude-fable-5-1']) {
         const body = bg.buildAnthropicBody({model},'prompt',500);
         assert.deepEqual(body.thinking,{type:'adaptive'});
         assert.deepEqual(body.output_config,{effort:'low'});
@@ -190,10 +164,7 @@ test('Gemini 3 与 Claude 5 不复用旧采样参数，预留推理输出预算'
     assert.equal(haiku.max_tokens,500);
 });
 
-test('响应解析只拼接最终文本，不把 Gemini thought 或 Claude thinking 当作译文', () => {
-    assert.equal(bg.extractTextFromResponse({candidates:[{content:{parts:[
-        {thought:true,text:'reasoning'}, {text:'{"tag":"科技",'}, {text:'"translatedTitle":"你好"}'}
-    ]}}]},'google'), '{"tag":"科技","translatedTitle":"你好"}');
+test('响应解析只拼接最终文本，不把 Claude thinking 当作译文', () => {
     assert.equal(bg.extractTextFromResponse({content:[
         {type:'thinking',thinking:'reasoning'}, {type:'text',text:'{"tag":"科技",'}, {type:'text',text:'"translatedTitle":"你好"}'}
     ]},'anthropic'), '{"tag":"科技","translatedTitle":"你好"}');
@@ -227,7 +198,7 @@ test('enqueueTranslation: 任务抛异常也会 resolve（不会挂起队列）'
 const TEST_CONFIG = {
     apiUrl: 'https://api.deepseek.com/chat/completions',
     apiKey: 'test-key',
-    model: 'deepseek-chat',
+    model: 'deepseek-flash',
     targetLanguage: 'zh-Hans'
 };
 
@@ -315,39 +286,27 @@ test('fetchAiTranslationBatchDedup: 缺 apiKey 直接 auth 错误，不发请求
     assert.equal(reply.error.type, 'auth');
 });
 
-test('Gemini / Claude 批量请求实际使用各自请求体和鉴权，不把 Key 放在 URL 中', async (t) => {
-    const original = globalThis.fetch;
-    const calls = [];
-    globalThis.fetch = async (url, options) => {
-        calls.push({url,options,body:JSON.parse(options.body)});
-        const text = JSON.stringify({items:[{i:0,tag:'科技',translatedTitle:'译文'}]});
-        return {ok:true,status:200,json:async()=>url.includes('googleapis.com')
-            ? {candidates:[{content:{parts:[{thought:true,text:'reasoning'},{text}]}}]}
-            : {content:[{type:'thinking',thinking:'reasoning'},{type:'text',text}]}};
-    };
-    t.after(()=>{globalThis.fetch=original;});
-    const gemini = await bg.fetchAiTranslationBatchDedup(['Gemini request'],{
-        apiUrl:'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
-        apiKey:'test-only-key',model:'gemini-3.8-flash',targetLanguage:'zh-Hans'
-    });
-    assert.equal(gemini.results[0].translatedTitle,'译文');
-    assert.ok(!calls[0].url.includes('test-only-key'));
-    assert.equal(calls[0].options.headers['x-goog-api-key'],'test-only-key');
-    assert.equal(calls[0].body.generationConfig.thinkingConfig.thinkingLevel,'low');
-    const claude = await bg.fetchAiTranslationBatchDedup(['Claude request'],{
-        apiUrl:'https://api.anthropic.com/v1/messages',apiKey:'test-only-key',
-        model:'claude-opus-5-5',targetLanguage:'zh-Hans'
-    });
-    assert.equal(claude.results[0].translatedTitle,'译文');
-    assert.equal(calls[1].body.output_config.effort,'low');
-    assert.equal(calls[1].options.headers['x-api-key'],'test-only-key');
+test('Claude 验证和批量请求使用浏览器访问头、adaptive thinking 和独立鉴权', async (t) => {
+    let count=0;
+    const calls = stubFetch(t, () => ({ok:true,status:200,json:async()=>({content:[{type:'text',text:++count===2 ? 'invalid JSON' : '{"items":[{"i":0,"translatedTitle":"译文"}],"translatedTitle":"译文"}'}]})}));
+    const config={apiUrl:'https://api.anthropic.com/v1/messages',apiKey:'test-only-key',model:'claude-haiku-5-5',targetLanguage:'zh-Hans'};
+    const batch=await bg.fetchAiTranslationBatchDedup(['Claude request'],config);
+    assert.equal(batch.results[0].translatedTitle,'译文');
+    await send({type:'testTranslation',text:'Claude test',config});
+    for (const call of calls) {
+        assert.equal(call.options.headers['anthropic-dangerous-direct-browser-access'],'true');
+        assert.equal(call.options.headers['x-api-key'],'test-only-key');
+        assert.equal(JSON.parse(call.options.body).thinking.type,'adaptive');
+        assert.ok(!('temperature' in JSON.parse(call.options.body)));
+    }
+    assert.equal(calls.length,3); // 批量验证解析失败后，单条重试路径也必须携带该头。
 });
 
 function stubSettings(t, data) {
     const original = globalThis.chrome.storage;
     globalThis.chrome.storage = { local:{ get(keys, callback) {
         callback(Object.fromEntries(keys.map(key => [key, data[key]])));
-    } } };
+    }, set(values, callback) { Object.assign(data, values); callback?.(); } } };
     t.after(() => { globalThis.chrome.storage = original; });
 }
 
@@ -387,7 +346,7 @@ test('自动翻译只使用当前启用的模型、Key 和目标语言；旧配�
     const calls = stubFetch(t, () => chatReply('{"items":[{"i":0,"translatedTitle":"译文"}]}'));
     assert.equal((await send({type:'translate',text:'Current config',config:TEST_CONFIG})).ok,true);
     for (const config of [{...TEST_CONFIG,apiKey:'old-test-key'}, {...TEST_CONFIG,model:'old-model'}, {...TEST_CONFIG,targetLanguage:'en'}]) {
-        const reply = await send({type:'translateBatch',items:['Stale config'],config});
+        const reply = await bg.fetchAiTranslationBatchDedup(['Stale config'],config,true);
         assert.equal(reply.error.type,'cancelled');
     }
     settings.enabled = false;

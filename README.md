@@ -42,15 +42,15 @@
 
 ---
 
-## 📌 近期更新（v8.0.4）
+## 📌 近期更新（v8.1.0）
 
-- 更新 7 家服务商的模型预设，每家最多 4 个，每家一个“推荐”模型，保留手动模型输入；服务商统一使用英文品牌名，智谱显示为 **Z.AI**
+- 仅保留 OpenAI / Claude / DeepSeek / 自定义 OpenAI 兼容端点，更新模型预设；下线预设自动迁移为自定义端点，保存后重新授权
 - 明确区分“本机翻译”和“AI 翻译”；本机模式保留已有 Key，停止尚未发出的云端任务，并与 AI 模式分别缓存译文
 - 紧凑的红白设置界面：先开翻译开关、选本机或 AI 模式，再选标题翻译目标；顶部地球图标切换界面文字，显示完整名称。提供大尺寸品牌图标、固定保存区、折叠更多设置和暗色主题
 - **验证并保存**成功后才保存配置并显示示例译文；**更多设置 → 跳过验证保存**可直接应用配置。灰点表示 Key 已保存，绿点表示当前配置已验证，橙点表示未保存更改
 - 按服务商调整推理参数和输出额度，区分扩展通信、网络、参数、认证、额度和模型错误；设置与错误提示均支持 14 种界面文字，阿拉伯语采用从右到左布局
 
-模型 ID、官方参考链接与验证范围见 [8.0.4 更新说明](RELEASE_NOTES_v8.0.4.md)。
+本版变化与验证范围见 [8.1.0 更新说明](RELEASE_NOTES_v8.1.0.md)。
 
 ---
 
@@ -104,6 +104,8 @@
 
 ## 🛠️ 使用与配置
 
+首次安装会打开引导页确认目标语言。
+
 安装后点击浏览器工具栏的插件图标打开控制面板：
 
 ![插件配置界面（v8.0.1 历史截图）](screenshots/v8.0.1/config-ui.png)
@@ -117,7 +119,7 @@
 2. 在 **标题翻译为** 中选择目标，选择服务商和模型，并粘贴对应平台的 API Key；推荐项适合短标题翻译，也可选择“其他（手动输入模型名）”；
 3. 点击 **验证并保存**。扩展会用一条示例标题进行真实 API 调用，成功后保存；失败会保留草稿和原配置并显示原因。**更多设置 → 跳过验证保存**可直接保存，此时不会把未经验证的配置标记为已验证。
 
-保存后的设置会应用到已打开的 YouTube 页面。草稿只在本次弹窗内保留，关闭弹窗前请保存。升级会保留已保存的 Key 和旧模型 ID；未列出的旧模型会显示为手动输入。
+保存后的设置会应用到已打开的 YouTube 页面。草稿只在本次弹窗内保留，关闭弹窗前请保存。升级保留已保存的 Key；预设服务商未列出的旧模型会回落到推荐模型，自定义端点保留模型 ID。
 
 ---
 
@@ -127,11 +129,8 @@
 | :--- | :--- |
 | **DeepSeek** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | 自定义 OpenAI 兼容端点 |
 
 ### 🔌 自定义 OpenAI 兼容端点（本地模型与中转）
 选择 **Custom** 可连接任意兼容 OpenAI Chat Completions 规范的接口：
@@ -152,6 +151,8 @@
 ---
 
 ## 🔒 隐私与数据安全
+
+内置 AI 服务商仅保留 OpenAI / Claude / DeepSeek，并支持自定义 OpenAI 兼容端点。 注入与页面访问仅限 `https://www.youtube.com/*` 和 `https://m.youtube.com/*`；内置 API 权限仅限 `https://api.openai.com/*`、`https://api.anthropic.com/*`、`https://api.deepseek.com/*`；自定义端点在保存时按需申请可选主机权限。
 
 - **0 数据收集**：扩展不追踪用户浏览历史，不收集任何个人敏感信息。
 - **纯本地存储**：API Key、偏好设置和翻译缓存完全保存在你当前浏览器的 `chrome.storage.local` 中。

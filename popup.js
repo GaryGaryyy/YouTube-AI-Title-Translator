@@ -136,12 +136,8 @@ const UI_TEXT = {
         privacyNote: "Stored only in this browser. No data is uploaded to the developer.",
         noKey: "No key?",
         helpOpenAI: "Get one from OpenAI",
-        helpGoogle: "Get one from Google AI Studio",
         helpAnthropic: "Get one from Claude Console",
         helpDeepSeek: "Get one from DeepSeek API Platform",
-        helpMiniMax: "Get one from MiniMax API Platform",
-        helpZhipu: "Get one from Z.AI",
-        helpKimi: "Get one from Kimi API Platform",
         helpCustom: "View custom endpoint guide",
         enabled: "Translation is on. Refresh YouTube to apply.",
         paused: "Translation paused",
@@ -160,7 +156,7 @@ const UI_TEXT = {
         savedRefresh: "Saved. Refresh YouTube to apply.",
         languageSaved: "Interface language saved",
         apiUrlPlaceholder: "Example: https://openrouter.ai/api/v1/chat/completions",
-        customModelPlaceholder: "Example: openai/gpt-5.4-mini or anthropic/claude-sonnet-4",
+        customModelPlaceholder: "Example: openai/gpt-6-luna or anthropic/claude-sonnet-5-5",
         manualModelPlaceholder: "Enter a supported model ID",
         tierFlagship: "flagship",
         tierRecommended: "recommended",
@@ -213,12 +209,8 @@ const UI_TEXT = {
         privacyNote: "仅在当前浏览器本地存储，不会上传任何数据。",
         noKey: "没有 Key?",
         helpOpenAI: "去 OpenAI 官网申请",
-        helpGoogle: "去 Google AI Studio 申请",
         helpAnthropic: "去 Claude Console 申请",
         helpDeepSeek: "去 DeepSeek API 平台申请",
-        helpMiniMax: "去 MiniMax 国际平台申请",
-        helpZhipu: "去 Z.AI 国际平台申请",
-        helpKimi: "去 Kimi 国际平台申请",
         helpCustom: "查看自定义端点说明",
         enabled: "翻译已开启，刷新 YouTube 后生效",
         paused: "翻译已暂停",
@@ -237,7 +229,7 @@ const UI_TEXT = {
         savedRefresh: "保存成功，请刷新 YouTube 页面",
         languageSaved: "界面语言已保存",
         apiUrlPlaceholder: "例如：https://openrouter.ai/api/v1/chat/completions",
-        customModelPlaceholder: "例如：openai/gpt-5.4-mini、anthropic/claude-sonnet-4",
+        customModelPlaceholder: "例如：openai/gpt-6-luna、anthropic/claude-sonnet-5-5",
         manualModelPlaceholder: "填写服务商支持的模型 ID",
         tierFlagship: "旗舰",
         tierRecommended: "推荐",
@@ -452,18 +444,8 @@ const PRESETS = {
         helpKey: "helpOpenAI",
         models: [
             { id: "gpt-6-luna", name: "GPT-6 Luna", tier: "tierRecommended" },
-            { id: "gpt-6.1-sol", name: "GPT-6.1 Sol", tier: "" },
-            { id: "gpt-6-astra", name: "GPT-6 Astra", tier: "" }
-        ]
-    },
-    google: {
-        url: "https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent",
-        helpUrl: "https://aistudio.google.com/app/apikey",
-        helpKey: "helpGoogle",
-        models: [
-            { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite", tier: "tierRecommended" },
-            { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", tier: "" },
-            { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro", tier: "tierPreview" }
+            { id: "gpt-6.1-terra", name: "GPT-6.1 Terra", tier: "" },
+            { id: "gpt-6.1-sol", name: "GPT-6.1 Sol", tier: "" }
         ]
     },
     anthropic: {
@@ -471,10 +453,9 @@ const PRESETS = {
         helpUrl: "https://console.anthropic.com/settings/keys",
         helpKey: "helpAnthropic",
         models: [
-            { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", tier: "tierRecommended" },
+            { id: "claude-haiku-5-5", name: "Claude Haiku 5.5", tier: "tierRecommended" },
             { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", tier: "" },
-            { id: "claude-opus-5-5", name: "Claude Opus 5.5", tier: "" },
-            { id: "claude-fable-5-1", name: "Claude Fable 5.1", tier: "" }
+            { id: "claude-opus-5-5", name: "Claude Opus 5.5", tier: "" }
         ]
     },
     deepseek: {
@@ -486,38 +467,9 @@ const PRESETS = {
             { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", tier: "" }
         ]
     },
-    minimax: {
-        url: "https://api.minimax.io/v1/chat/completions",
-        helpUrl: "https://platform.minimax.io/user-center/basic-information/interface-key",
-        helpKey: "helpMiniMax",
-        models: [
-            { id: "MiniMax-M3", name: "MiniMax M3", tier: "tierRecommended" },
-            { id: "MiniMax-M2.7-highspeed", name: "MiniMax M2.7 Highspeed", tier: "" }
-        ]
-    },
-    zhipu: {
-        url: "https://api.z.ai/api/paas/v4/chat/completions",
-        helpUrl: "https://z.ai/manage-apikey/apikey-list",
-        helpKey: "helpZhipu",
-        models: [
-            { id: "glm-5.3-flash", name: "GLM-5.3 Flash", tier: "tierRecommended" },
-            { id: "glm-5.3-flashx", name: "GLM-5.3 FlashX", tier: "" },
-            { id: "glm-5.3", name: "GLM-5.3", tier: "" },
-            { id: "glm-4.7-flash", name: "GLM-4.7 Flash", tier: "tierFree" }
-        ]
-    },
-    kimi: {
-        url: "https://api.moonshot.ai/v1/chat/completions",
-        helpUrl: "https://platform.kimi.ai/console/api-keys",
-        helpKey: "helpKimi",
-        models: [
-            { id: "kimi-k2.6", name: "Kimi K2.6", tier: "tierRecommended" },
-            { id: "kimi-k3", name: "Kimi K3", tier: "" }
-        ]
-    },
     custom: {
         url: "",
-        helpUrl: "https://github.com/garygaryandfree/YouTube-AI-Title-Translator#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AB%AF%E7%82%B9",
+        helpUrl: "https://github.com/GaryGaryyy/YouTube-AI-Title-Translator#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AB%AF%E7%82%B9",
         helpKey: "helpCustom",
         models: []
     }
@@ -572,7 +524,45 @@ function sameProviderConfig(a, b) {
     return ["apiKey", "apiUrl", "model"].every(key => String((a || {})[key] || "").trim() === String((b || {})[key] || "").trim());
 }
 
+// Keep this storage migration identical in popup.js and background.js (no shared runtime script).
+function migrateProviderSettings(result) {
+    const retired = ["google", "minimax", "zhipu", "kimi"];
+    const models = {
+        openai: ["gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol"],
+        anthropic: ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"],
+        deepseek: ["deepseek-flash", "deepseek-v4-pro"]
+    };
+    const stored = Object.assign({}, result);
+    const configs = Object.fromEntries(Object.entries(result.providerConfigs || {}).map(([id, cfg]) => [id, Object.assign({}, cfg)]));
+    let provider = result.selectedProvider || "deepseek";
+    if (!result.providerConfigs && result.customApiKey) {
+        configs[provider] = { apiKey:result.customApiKey, apiUrl:result.customApiUrl, model:result.customModel };
+    }
+    const updates = {};
+    if (retired.includes(provider)) {
+        if (!Object.prototype.hasOwnProperty.call(configs, "custom")) {
+            const old = configs[provider] || {};
+            configs.custom = { apiKey:old.apiKey || "", apiUrl:provider === "google" ? "" : old.apiUrl || "", model:old.model || "" };
+        }
+        provider = "custom";
+        Object.assign(updates, { selectedProvider:provider, providerMigrationPending:true,
+            customApiKey:configs.custom.apiKey || "", customApiUrl:configs.custom.apiUrl || "", customModel:configs.custom.model || "" });
+    }
+    for (const id of retired) delete configs[id];
+    for (const [id, ids] of Object.entries(models)) {
+        if (configs[id] && !ids.includes(configs[id].model)) {
+            configs[id].model = ids[0];
+            delete configs[id].testedAt;
+            if (id === provider) updates.customModel = ids[0];
+        }
+    }
+    if (JSON.stringify(configs) !== JSON.stringify(result.providerConfigs || {}) || updates.selectedProvider) updates.providerConfigs = configs;
+    Object.assign(stored, updates);
+    return { stored, updates };
+}
+
 function normalizeStoredSettings(result) {
+    result = migrateProviderSettings(result).stored;
     const provider = PRESETS[result.selectedProvider] ? result.selectedProvider : "deepseek";
     const configs = Object.assign({}, result.providerConfigs || {});
     if (!result.providerConfigs && result.customApiKey) {
@@ -588,7 +578,8 @@ function createProviderDrafts(configs) {
     const drafts = {};
     const defaults = provider => {
         const cfg = saved[provider] || {};
-        const model = cfg.model || (PRESETS[provider].models[0] || {}).id || "";
+        const model = provider === "custom" ? cfg.model || "" :
+            (PRESETS[provider].models.some(item => item.id === cfg.model) ? cfg.model : PRESETS[provider].models[0].id);
         return { apiKey: cfg.apiKey || "", apiUrl: cfg.apiUrl || buildUrl(provider, model), model,
             manual: provider === "custom" || !PRESETS[provider].models.some(item => item.id === model) };
     };
@@ -632,7 +623,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiUrlGroup = byId("apiUrlGroup"), apiKeyVisibility = byId("apiKeyVisibility"), clearCacheBtn = byId("clearCacheBtn");
     const modeLocal = byId("modeLocal"), modeAi = byId("modeAi"), localNotice = byId("localNotice");
     const cards = Object.fromEntries(Object.keys(PRESETS).map(provider => [provider, byId("card-" + provider)]));
-    const providerNames = { openai:"OpenAI", google:"Gemini", anthropic:"Claude", deepseek:"DeepSeek", minimax:"MiniMax", zhipu:"Z.AI", kimi:"Kimi", custom:"Custom" };
+    const providerNames = { openai:"OpenAI", anthropic:"Claude", deepseek:"DeepSeek", custom:"Custom" };
     const manualModels = {};
     let drafts = createProviderDrafts({});
     let translationMode = "local", savedMode = "local", savedProvider = "deepseek";
@@ -679,7 +670,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function refreshConfiguredIndicators() {
         Object.entries(cards).forEach(([provider, card]) => {
             const saved = drafts.saved(provider);
-            const configured = !!saved.apiKey;
+            const configured = !!(saved.apiKey && saved.apiUrl && saved.model);
             const dirty = drafts.isDirty(provider);
             const verified = configured && !!saved.testedAt && !dirty;
             card.classList.toggle("provider-configured", configured);
@@ -698,8 +689,9 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (translationMode === "local") key = "modeLocalDesc";
         else {
             const cfg = drafts.saved(currentProvider);
-            key = cfg.apiKey ? (cfg.testedAt ? "verifiedStatus" : "savedStatus") : "unconfiguredStatus";
-            if (cfg.testedAt) kind = "success";
+            const configured = !!(cfg.apiKey && cfg.apiUrl && cfg.model);
+            key = configured ? (cfg.testedAt ? "verifiedStatus" : "savedStatus") : "unconfiguredStatus";
+            if (configured && cfg.testedAt) kind = "success";
         }
         configState.textContent = (translationMode === "ai" ? providerNames[currentProvider] + " · " : "") + t(key);
         configState.dataset.kind = kind;
@@ -856,7 +848,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (saved) providerConfigs[provider] = saved;
             setBusy("save");
             await saveStorage({ providerConfigs, selectedProvider:provider, translationMode:mode, targetLanguage, uiLanguage,
-                customApiUrl:cfg.apiUrl, customApiKey:cfg.apiKey, customModel:cfg.model });
+                customApiUrl:cfg.apiUrl, customApiKey:cfg.apiKey, customModel:cfg.model,
+                ...((mode === "ai" && provider === "custom") ? { providerMigrationPending:false } : {}) });
             if (saved) drafts.commit(provider, saved);
             savedMode = mode; savedProvider = provider;
             setStatus(shouldTest && mode === "ai" ? "verifiedSaved" : "savedRefresh", "success", sample);
@@ -869,8 +862,13 @@ document.addEventListener("DOMContentLoaded", () => {
     populateLanguageSelect(targetLanguageSelect, TARGET_LANGUAGES, targetLanguage);
     setBusy("");
     chrome.storage.local.get({ enabled:true, providerConfigs:null, selectedProvider:"deepseek", translationMode:null,
-        customApiUrl:"", customApiKey:"", customModel:"", uiLanguage:DEFAULT_UI_LANGUAGE, targetLanguage:DEFAULT_TARGET_LANGUAGE, translationCache:null }, result => {
+        customApiUrl:"", customApiKey:"", customModel:"", uiLanguage:DEFAULT_UI_LANGUAGE, targetLanguage:DEFAULT_TARGET_LANGUAGE, translationCache:null, providerMigrationPending:false }, result => {
         if (chrome.runtime.lastError) { setStatus("saveFailed", "error"); return; }
+        const migration = migrateProviderSettings(result);
+        if (Object.keys(migration.updates).length) chrome.storage.local.set(migration.updates, () => {
+            if (chrome.runtime.lastError) setStatus("saveFailed", "error");
+        });
+        result = migration.stored;
         const stored = normalizeStoredSettings(result);
         drafts = createProviderDrafts(stored.configs);
         translationMode = savedMode = stored.mode; savedProvider = stored.provider;
@@ -883,6 +881,7 @@ document.addEventListener("DOMContentLoaded", () => {
         populateLanguageSelect(targetLanguageSelect, TARGET_LANGUAGES, targetLanguage);
         hydrateForm(stored.provider); applyI18n(); renderMode();
         ready = true; setBusy("");
+        if (result.providerMigrationPending) setStatus("providerRetired", "");
     });
 
     masterToggle.addEventListener("change", async () => {
@@ -931,6 +930,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { getBrowserDefaultLanguages, getBrowserLanguage, DEFAULT_UI_LANGUAGE, DEFAULT_TARGET_LANGUAGE, UI_TEXT, UI_LANGUAGES, TARGET_LANGUAGES, PRESETS, SETTINGS_TEXT_KEYS, SETTINGS_TEXT,
+    module.exports = { migrateProviderSettings, getBrowserDefaultLanguages, getBrowserLanguage, DEFAULT_UI_LANGUAGE, DEFAULT_TARGET_LANGUAGE, UI_TEXT, UI_LANGUAGES, TARGET_LANGUAGES, PRESETS, SETTINGS_TEXT_KEYS, SETTINGS_TEXT,
         sameProviderConfig, normalizeStoredSettings, createProviderDrafts, makeSavedProviderConfig, validateCustomEndpoint, getSafeDiagnostic };
 }

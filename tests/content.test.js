@@ -72,14 +72,6 @@ test('shouldTranslateTitle: 中文目标语言跳过中文标题', () => {
     assert.equal(content.shouldTranslateTitle('こんにちは世界'), true);
 });
 
-test('shouldBlockChineseTranslation: 仅中文目标时生效', () => {
-    content.applyConfigFromStorage({ targetLanguage: 'zh-Hans' });
-    assert.equal(content.shouldBlockChineseTranslation('Xi Jinping speech highlights'), true);
-    assert.equal(content.shouldBlockChineseTranslation('How to cook pasta'), false);
-    content.applyConfigFromStorage({ targetLanguage: 'en' });
-    assert.equal(content.shouldBlockChineseTranslation('Xi Jinping speech highlights'), false);
-});
-
 // ---------- 动态批量大小 ----------
 
 test('getDynamicBatchSize: 按模型名分档', () => {
@@ -88,13 +80,13 @@ test('getDynamicBatchSize: 按模型名分档', () => {
         providerConfigs: { test: { apiKey: 'k', apiUrl: 'https://example.com', model } }
     });
 
-    withModel('kimi-k2.6-thinking');
+    withModel('custom-m2.7');
     assert.equal(content.getDynamicBatchSize(), 4);
-    withModel('MiniMax-M2.7');
+    withModel('custom-thinking');
     assert.equal(content.getDynamicBatchSize(), 4);
     withModel('deepseek-chat');
     assert.equal(content.getDynamicBatchSize(), 8);
-    withModel('MiniMax-M2.7-highspeed');
+    withModel('custom-highspeed');
     assert.equal(content.getDynamicBatchSize(), 8);
     withModel('gpt-5.5');
     assert.equal(content.getDynamicBatchSize(), 6);
@@ -316,14 +308,14 @@ test('本机模式忽略现有云端 Key；现代配置不会意外回退到旧�
         providerConfigs:{openai:{apiKey:'saved-test-key',apiUrl:'https://api.openai.com/v1/chat/completions',model:'gpt-6-luna'}}};
     const active = content.getActiveTranslationConfig(stored);
     assert.equal(active.mode,'local');
-    assert.equal(active.config.apiKey,'');
+    assert.equal(active.config.configured,false);
     assert.equal(stored.providerConfigs.openai.apiKey,'saved-test-key');
-    const missing = content.getActiveTranslationConfig({selectedProvider:'google',providerConfigs:{},customApiKey:'legacy-test-key'});
+    const missing = content.getActiveTranslationConfig({selectedProvider:'openai',providerConfigs:{},customApiKey:'legacy-test-key'});
     assert.equal(missing.mode,'local');
-    assert.equal(missing.config.apiKey,'');
+    assert.equal(missing.config.configured,false);
     const legacy = content.getActiveTranslationConfig({customApiKey:'legacy-test-key',customApiUrl:'https://example.com',customModel:'manual'});
     assert.equal(legacy.mode,'ai');
-    assert.equal(legacy.config.apiKey,'legacy-test-key');
+    assert.equal(legacy.config.configured,true);
 });
 
 test('本机与云端缓存互不覆盖，旧本机缓存迁移后仍可读', () => {

@@ -102,6 +102,8 @@
 
 ## 🛠️ Uso e Configurações
 
+A primeira instalação abre uma página de boas-vindas para confirmar o idioma de destino.
+
 Clique no ícone da extensão na barra de ferramentas para abrir o painel:
 
 ![Painel de configurações (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@ O ícone do globo altera o texto da interface sem mudar o idioma de destino dos 
 | :--- | :--- |
 | **DeepSeek (Recomendado)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Endpoint personalizado compatível com OpenAI |
 
 ### 🔌 Endpoints Personalizados Compatíveis com OpenAI
 Selecione **Custom** para conectar qualquer serviço que siga o padrão OpenAI Chat Completions:
@@ -148,6 +147,8 @@ Selecione **Custom** para conectar qualquer serviço que siga o padrão OpenAI C
 ---
 
 ## 🔒 Privacidade e Segurança
+
+Os provedores de IA predefinidos são OpenAI / Claude / DeepSeek; endpoints personalizados compatíveis com OpenAI também são aceitos. A injeção e o acesso às páginas se limitam a `https://www.youtube.com/*` e `https://m.youtube.com/*`; as APIs predefinidas a `https://api.openai.com/*`, `https://api.anthropic.com/*` e `https://api.deepseek.com/*`; permissões opcionais para endpoints personalizados são solicitadas ao salvar.
 
 - **Zero Coleta de Dados**: Não rastreamos navegação e não recolhemos informações pessoais.
 - **Armazenamento 100% Local**: Chaves, preferências e cache residem exclusivamente em `chrome.storage.local` no seu navegador.

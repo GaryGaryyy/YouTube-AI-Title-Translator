@@ -102,6 +102,8 @@
 
 ## 🛠️ الاستخدام والإعدادات
 
+يفتح التثبيت الأول صفحة ترحيب لتأكيد لغة الترجمة المستهدفة.
+
 انقر على أيقونة الإضافة في شريط أدوات المتصفح لفتح لوحة التحكم:
 
 ![واجهة الإعدادات (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@
 | :--- | :--- |
 | **DeepSeek (موصى به)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | نقطة نهاية مخصصة متوافقة مع OpenAI |
 
 ### 🔌 الاتصال المخصص بنماذج متوافقة مع OpenAI
 اختر **Custom** للاتصال بأي خدمة تدعم معيار OpenAI Chat Completions:
@@ -148,6 +147,8 @@
 ---
 
 ## 🔒 الخصوصية والأمان
+
+مزوّدو الذكاء الاصطناعي المدمجون هم OpenAI / Claude / DeepSeek فقط، مع دعم نقاط نهاية مخصصة متوافقة مع OpenAI. يقتصر حقن النص البرمجي والوصول إلى الصفحات على `https://www.youtube.com/*` و`https://m.youtube.com/*`، وواجهات API المدمجة على `https://api.openai.com/*` و`https://api.anthropic.com/*` و`https://api.deepseek.com/*`، وتُطلب أذونات المضيف الاختيارية لنقطة النهاية المخصصة عند حفظها.
 
 - **لا نجمع أي بيانات**: نحن لا نتتبع سجل التصفح ولا نجمع أي معلومات شخصية.
 - **تخزين محلي بالكامل**: تُحفظ مفاتيح API والإعدادات والذاكرة المؤقتة فقط في `chrome.storage.local` داخل متصفحك.

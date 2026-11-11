@@ -102,6 +102,8 @@
 
 ## 🛠️ Penggunaan & Pengaturan
 
+Instalasi pertama membuka halaman sambutan untuk mengonfirmasi bahasa tujuan.
+
 Klik ikon ekstensi di bilah alat peramban untuk membuka panel konfigurasi:
 
 ![Panel Pengaturan (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@ Ikon globe mengubah teks tampilan tanpa mengubah bahasa tujuan judul. Kunci disi
 | :--- | :--- |
 | **DeepSeek (Direkomendasikan)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Endpoint kustom yang kompatibel dengan OpenAI |
 
 ### 🔌 Endpoint Kustom Kompatibel OpenAI
 Pilih **Custom** untuk menghubungkan layanan apa pun yang mematuhi format OpenAI Chat Completions:
@@ -148,6 +147,8 @@ Pilih **Custom** untuk menghubungkan layanan apa pun yang mematuhi format OpenAI
 ---
 
 ## 🔒 Privasi & Keamanan
+
+Penyedia AI bawaan hanya OpenAI / Claude / DeepSeek; endpoint kustom yang kompatibel dengan OpenAI juga didukung. Injeksi dan akses halaman dibatasi ke `https://www.youtube.com/*` dan `https://m.youtube.com/*`; akses API bawaan ke `https://api.openai.com/*`, `https://api.anthropic.com/*`, dan `https://api.deepseek.com/*`; izin host opsional untuk endpoint kustom diminta saat disimpan.
 
 - **Nol Pengumpulan Data**: Kami tidak memantau aktivitas penjelajahan dan tidak mengumpulkan informasi pribadi apa pun.
 - **Penyimpanan Lokal Saja**: Kunci API, preferensi, dan cache hanya disimpan di `chrome.storage.local` peramban Anda.

@@ -102,6 +102,8 @@
 
 ## 🛠️ 사용 및 설정
 
+처음 설치하면 안내 페이지가 열려 번역 대상 언어를 확인합니다.
+
 설치 후 브라우저 툴바의 확장 프로그램 아이콘을 클릭하여 설정 패널을 엽니다:
 
 ![설정 화면 (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@
 | :--- | :--- |
 | **DeepSeek (권장)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | 사용자 지정 OpenAI 호환 엔드포인트 |
 
 ### 🔌 사용자 지정 OpenAI 호환 엔드포인트 (로컬 모델 및 중계 서비스)
 **Custom**을 선택하면 OpenAI Chat Completions 규격을 따르는 모든 엔드포인트에 연결할 수 있습니다:
@@ -148,6 +147,8 @@
 ---
 
 ## 🔒 개인정보 및 보안
+
+기본 AI 제공업체는 OpenAI / Claude / DeepSeek이며 사용자 지정 OpenAI 호환 엔드포인트도 지원합니다. 페이지 삽입과 접근은 `https://www.youtube.com/*` 및 `https://m.youtube.com/*`, 기본 API 권한은 `https://api.openai.com/*`, `https://api.anthropic.com/*`, `https://api.deepseek.com/*`로 제한하며 사용자 지정 엔드포인트의 선택적 호스트 권한은 저장할 때 요청합니다.
 
 - **데이터 수집 제로**: 사용자의 브라우징 기록을 추적하거나 개인 정보를 수집하지 않습니다.
 - **로컬 저장소 전용**: API Key, 환경 설정 및 캐시는 사용자의 브라우저 `chrome.storage.local`에만 안전하게 저장됩니다.

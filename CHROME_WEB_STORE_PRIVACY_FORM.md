@@ -63,8 +63,10 @@ The storage permission is used only to save the user's settings (API keys, provi
 Paste-ready, host permissions (需请求主机权限的理由):
 
 ```
-Host permissions serve the single purpose: (1) the youtube.com content script reads visible video titles and renders translations in place; (2) the built-in AI provider hosts (api.openai.com, api.deepseek.com, etc.) let the browser send title text directly to the AI provider the user selected; (3) optional host access is requested at runtime only when the user configures a custom OpenAI-compatible endpoint. No host data is sent to the developer.
+Host permissions serve the single purpose: (1) https://www.youtube.com/* and https://m.youtube.com/* allow reading visible video titles and rendering translations in place; (2) https://api.openai.com/*, https://api.anthropic.com/*, and https://api.deepseek.com/* allow direct AI requests; (3) optional https://*/* and http://*/* host access is requested at runtime only when saving a custom OpenAI-compatible endpoint. No host data is sent to the developer.
 ```
+
+The first installation opens a welcome page to confirm the target language. Built-in AI providers are limited to OpenAI / Claude / DeepSeek, with custom OpenAI-compatible endpoints also supported.
 
 ## Custom Endpoint Note
 

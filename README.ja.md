@@ -102,6 +102,8 @@
 
 ## 🛠️ 使い方と設定
 
+初回インストール時に案内ページが開き、翻訳先の言語を確認できます。
+
 インストール後、ブラウザのツールバーにある拡張機能アイコンをクリックして設定パネルを開きます：
 
 ![設定画面 (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@
 | :--- | :--- |
 | **DeepSeek（推奨）** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | OpenAI 互換カスタムエンドポイント |
 
 ### 🔌 OpenAI 互換のカスタムエンドポイント（ローカルモデルなど）
 **Custom** を選択すると、OpenAI Chat Completions 規格に準拠したあらゆるエンドポイントに接続できます：
@@ -148,6 +147,8 @@
 ---
 
 ## 🔒 プライバシーと安全性
+
+組み込み AI プロバイダーは OpenAI / Claude / DeepSeek のみで、OpenAI 互換のカスタムエンドポイントも利用できます。 ページへの挿入とアクセスは `https://www.youtube.com/*` と `https://m.youtube.com/*`、組み込み API の権限は `https://api.openai.com/*`、`https://api.anthropic.com/*`、`https://api.deepseek.com/*` に限定され、カスタムエンドポイントの任意のホスト権限は保存時に要求されます。
 
 - **データ収集ゼロ**：閲覧履歴の追跡や個人情報の収集は一切行いません。
 - **ローカル完結**：API Key、設定、キャッシュはお使いのブラウザの `chrome.storage.local` にのみ保存されます。

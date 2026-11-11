@@ -102,6 +102,8 @@
 
 ## 🛠️ Utilisation et Paramètres
 
+La première installation ouvre une page d’accueil pour confirmer la langue cible.
+
 Cliquez sur l'icône de l'extension dans la barre d'outils pour ouvrir le panneau :
 
 ![Interface des paramètres (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@ Le globe change le texte de l’interface sans modifier la langue de destination
 | :--- | :--- |
 | **DeepSeek (Recommandé)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Point de terminaison personnalisé compatible OpenAI |
 
 ### 🔌 Endpoints Personnalisés Compatibles OpenAI
 Sélectionnez **Custom** pour connecter tout service conforme au format Chat Completions d'OpenAI :
@@ -148,6 +147,8 @@ Sélectionnez **Custom** pour connecter tout service conforme au format Chat Com
 ---
 
 ## 🔒 Confidentialité et Sécurité
+
+Les fournisseurs IA prédéfinis sont OpenAI / Claude / DeepSeek ; les points de terminaison personnalisés compatibles OpenAI sont aussi pris en charge. L’injection et l’accès aux pages se limitent à `https://www.youtube.com/*` et `https://m.youtube.com/*` ; l’accès aux API prédéfinies se limite à `https://api.openai.com/*`, `https://api.anthropic.com/*` et `https://api.deepseek.com/*` ; les autorisations facultatives d’un point de terminaison personnalisé sont demandées lors de son enregistrement.
 
 - **Zéro Collecte de Données** : Aucun suivi de navigation, aucune donnée personnelle stockée ou transmise à des tiers.
 - **Stockage 100% Local** : Clés API, préférences et cache résident uniquement dans `chrome.storage.local` sur votre navigateur.

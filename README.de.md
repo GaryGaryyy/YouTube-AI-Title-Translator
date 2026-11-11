@@ -102,6 +102,8 @@
 
 ## 🛠️ Verwendung & Einstellungen
 
+Bei der ersten Installation öffnet sich eine Willkommensseite zur Bestätigung der Zielsprache.
+
 Klicken Sie auf das Erweiterungssymbol in der Symbolleiste, um das Menü zu öffnen:
 
 ![Einstellungsansicht (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@ Das Globussymbol ändert die Oberflächentexte, ohne die Zielsprache der Titel z
 | :--- | :--- |
 | **DeepSeek (Empfohlen)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Eigener OpenAI-kompatibler Endpunkt |
 
 ### 🔌 Benutzerdefinierte OpenAI-kompatible Endpunkte
 Wählen Sie **Custom**, um jeden mit OpenAI Chat Completions kompatiblen Dienst anzubinden:
@@ -148,6 +147,8 @@ Wählen Sie **Custom**, um jeden mit OpenAI Chat Completions kompatiblen Dienst 
 ---
 
 ## 🔒 Datenschutz & Sicherheit
+
+Die integrierten KI-Anbieter sind OpenAI / Claude / DeepSeek; eigene OpenAI-kompatible Endpunkte werden ebenfalls unterstützt. Skripteinbindung und Seitenzugriff sind auf `https://www.youtube.com/*` und `https://m.youtube.com/*` begrenzt; der integrierte API-Zugriff auf `https://api.openai.com/*`, `https://api.anthropic.com/*` und `https://api.deepseek.com/*`; optionale Hostrechte für eigene Endpunkte werden beim Speichern angefordert.
 
 - **Keine Datenerfassung**: Wir verfolgen kein Nutzerverhalten und speichern keine persönlichen Daten.
 - **Rein lokaler Speicher**: API-Keys, Einstellungen und Cache verbleiben ausschließlich in Ihrem Browser (`chrome.storage.local`).

@@ -78,7 +78,7 @@ function title(text, { main = false, linked = true, nested = false } = {}) {
     parent.appendChild(el);
     return { el, parent, targetElement:el, isMainTitle:main };
 }
-const aiSettings = (targetLanguage = 'es') => ({translationMode:'ai', targetLanguage, uiLanguage:'en',
+const aiSettings = (targetLanguage = 'es') => ({translationMode:'ai', selectedProvider:'custom', targetLanguage, uiLanguage:'en',
     customApiKey:'test-key',customApiUrl:'https://example.test/chat/completions',customModel:'test'});
 const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 module.exports = { source, plain, Element, createRuntime, title, aiSettings, settle };

@@ -102,6 +102,8 @@
 
 ## 🛠️ Hướng Dẫn Cấu Hình
 
+Lần cài đặt đầu tiên mở trang hướng dẫn để xác nhận ngôn ngữ đích.
+
 Nhấp vào biểu tượng của tiện ích trên thanh công cụ trình duyệt để mở bảng điều khiển:
 
 ![Giao diện cài đặt (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@ Biểu tượng quả địa cầu đổi ngôn ngữ giao diện mà không đ�
 | :--- | :--- |
 | **DeepSeek (Khuyên dùng)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | Điểm cuối tùy chỉnh tương thích OpenAI |
 
 ### 🔌 Endpoint Tùy Chỉnh Tương Thích Chuẩn OpenAI
 Chọn **Custom** để kết nối tới bất kỳ dịch vụ nào tuân theo chuẩn OpenAI Chat Completions:
@@ -148,6 +147,8 @@ Chọn **Custom** để kết nối tới bất kỳ dịch vụ nào tuân theo
 ---
 
 ## 🔒 Quyền Riêng Tư & An Toàn
+
+Các nhà cung cấp AI có sẵn chỉ gồm OpenAI / Claude / DeepSeek; cũng hỗ trợ điểm cuối tùy chỉnh tương thích OpenAI. Việc chèn mã và truy cập trang chỉ giới hạn ở `https://www.youtube.com/*` và `https://m.youtube.com/*`; API có sẵn chỉ gồm `https://api.openai.com/*`, `https://api.anthropic.com/*`, `https://api.deepseek.com/*`; quyền máy chủ tùy chọn cho điểm cuối tùy chỉnh được yêu cầu khi lưu.
 
 - **Không Thu Thập Dữ Liệu**: Tiện ích không theo dõi lịch sử duyệt web và không thu thập bất kỳ thông tin cá nhân nào.
 - **Lưu Trữ Hoàn Toàn Tại Máy**: API Key, cài đặt và bộ nhớ đệm chỉ lưu trong `chrome.storage.local` trên trình duyệt của bạn.

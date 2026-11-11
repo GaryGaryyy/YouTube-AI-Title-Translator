@@ -63,7 +63,7 @@ function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',tr
     };
     const data = structuredClone(initial), messages = [], permissions = [];
     let setError = false, grant = true, messagingError = false, messagingThrows = false;
-    const chrome = { i18n:{getUILanguage:()=>browserLanguage}, runtime:{lastError:null,getManifest(){return {version:'8.0.4'};},sendMessage(message,callback){
+    const chrome = { i18n:{getUILanguage:()=>browserLanguage}, runtime:{lastError:null,getManifest(){return {version:'8.1.0'};},sendMessage(message,callback){
         messages.push(structuredClone(message));
         if (messagingThrows) throw new Error('Extension context invalidated');
         if (messagingError) {
@@ -114,14 +114,14 @@ test('model presets: 每家最多四个，推荐项唯一且排第一，所有�
     }
 });
 
-test('旧版扁平配置与手动模型保留；默认使用已保存的云端配置', () => {
+test('旧版扁平配置保留 Key 并将过期模型回落到推荐项', () => {
     const ui=createPopup({selectedProvider:'openai',customApiKey:'legacy-test-key',
         customApiUrl:'https://api.openai.com/v1/chat/completions',customModel:'gpt-5.5'});
     assert.equal(ui.elements.aiSettings.hidden,false);
     assert.equal(ui.elements.apiKey.value,'legacy-test-key');
-    assert.equal(ui.elements.modelName.value,'gpt-5.5');
-    assert.equal(ui.elements.modelSelect.value,'__custom_model__');
-    assert.equal(ui.elements.manualModelSection.hidden,false);
+    assert.equal(ui.elements.modelName.value,'gpt-6-luna');
+    assert.equal(ui.elements.modelSelect.value,'gpt-6-luna');
+    assert.equal(ui.elements.manualModelSection.hidden,true);
     assert.equal(ui.elements.apiKey.type,'password');
 });
 
@@ -130,7 +130,7 @@ test('切换服务商和模式保留未保存的 Key 与手动模型；不会提
     await input(ui,'apiKey','draft-test-key');
     await input(ui,'modelSelect','__custom_model__','change');
     await input(ui,'modelName','manual-model');
-    await ui.elements['card-google'].fire('click');
+    await ui.elements['card-anthropic'].fire('click');
     assert.equal(ui.elements.apiKey.value,'');
     await ui.elements['card-openai'].fire('click');
     assert.equal(ui.elements.apiKey.value,'draft-test-key');
@@ -165,7 +165,7 @@ test('测试中锁定配置；成功后保存并标记通过；修改 Key 后仅
     assert.equal(ui.messages[0].type,'testTranslation');
     assert.equal(ui.elements.aiSettings.disabled,true);
     assert.equal(ui.data.providerConfigs.openai.apiKey,'saved-test-key');
-    await ui.elements['card-google'].fire('click');
+    await ui.elements['card-anthropic'].fire('click');
     assert.equal(ui.elements['card-openai'].getAttribute('aria-pressed'),'true');
     finish({ok:true,result:{tag:'科技',translatedTitle:'新的译文'}});
     await pending;
@@ -282,4 +282,72 @@ test('中文浏览器的 popup 默认中文，显式保存 en 时保持英文', 
     const saved = createPopup({uiLanguage:'en',targetLanguage:'en'}, undefined, 'zh-CN');
     assert.equal(saved.elements.uiLanguageSelect.value,'en');
     assert.equal(saved.elements.targetLanguageSelect.value,'en');
+});
+
+test('下线预设读取时迁移为 custom，保留凭证、清理旧项，提示重新授权且只迁移一次', async () => {
+    for (const provider of ['google','minimax','zhipu','kimi']) {
+        const cfg={apiKey:'retired-key',apiUrl:'https://old-provider.test/v1/chat/completions',model:'retired-model'};
+        const ui=createPopup({selectedProvider:provider,translationMode:'ai',providerConfigs:{[provider]:cfg}});
+        assert.equal(ui.data.selectedProvider,'custom');
+        assert.deepEqual(ui.data.providerConfigs.custom,{...cfg,apiUrl:provider==='google'?'':cfg.apiUrl});
+        assert.equal(ui.data.providerConfigs[provider],undefined);
+        assert.equal(ui.data.providerMigrationPending,true);
+        assert.equal(ui.elements.status.textContent,ui.api.UI_TEXT.en.providerRetired);
+        const again=createPopup(ui.data);
+        assert.deepEqual(again.data,ui.data);
+        assert.equal(Object.keys(ui.api.migrateProviderSettings(ui.data).updates).length,0);
+        if (provider==='google') {
+            assert.equal(ui.elements.apiUrl.value,'');
+            assert.equal(ui.elements.configState.textContent,'Custom · '+ui.api.UI_TEXT.en.unconfiguredStatus);
+            assert.equal(ui.elements['card-custom'].classList.contains('provider-configured'),false);
+            assert.equal(require('./runtime-harness').createRuntime('content.js',{stored:ui.data}).api.getActiveTranslationConfig(ui.data).config.configured,false);
+            await input(ui,'apiUrl','https://replacement.test/v1/chat/completions');
+        }
+        await ui.elements.saveBtn.fire('click');
+        assert.equal(ui.permissions.length,1);
+        assert.equal(ui.data.providerMigrationPending,false);
+    }
+});
+
+test('迁移不覆盖已存在的 custom，包括空配置；旧扁平下线配置同样迁移', () => {
+    for (const custom of [{},{apiKey:'existing-key',apiUrl:'https://existing.test/v1/chat/completions',model:'existing-model',testedAt:123}]) {
+        const initial={selectedProvider:'kimi',providerConfigs:{custom,kimi:{apiKey:'retired-key',model:'retired-model',apiUrl:'https://old.test'}}};
+        const ui=createPopup(initial);
+        assert.deepEqual(ui.data.providerConfigs.custom,custom);
+        assert.equal(ui.data.providerConfigs.kimi,undefined);
+    }
+    const ui=createPopup({selectedProvider:'zhipu',customApiKey:'legacy-key',customApiUrl:'https://legacy.test',customModel:'legacy-model'});
+    assert.deepEqual(ui.data.providerConfigs.custom,{apiKey:'legacy-key',apiUrl:'https://legacy.test',model:'legacy-model'});
+});
+
+test('旧模型在读取时持久回落推荐项、保留 Key，custom 模型不变，后台与弹窗迁移完全相同', () => {
+    const bg=require('./runtime-harness').createRuntime('background.js').api;
+    const configs={openai:{apiKey:'key',model:'gpt-6-astra',testedAt:123},anthropic:{apiKey:'claude-key',model:'claude-fable-5-1'},deepseek:{apiKey:'deep-key',model:'old-model'},custom:{apiKey:'custom-key',model:'keep-model'}};
+    const ui=createPopup({selectedProvider:'anthropic',providerConfigs:configs});
+    assert.equal(ui.data.providerConfigs.openai.model,'gpt-6-luna');
+    assert.equal(ui.data.providerConfigs.anthropic.model,'claude-haiku-5-5');
+    assert.equal(ui.data.providerConfigs.deepseek.model,'deepseek-flash');
+    assert.equal(ui.data.providerConfigs.custom.model,'keep-model');
+    assert.equal(ui.data.providerConfigs.openai.testedAt,undefined);
+    assert.equal(ui.data.providerConfigs.openai.apiKey,'key');
+    assert.equal(ui.elements.modelName.value,'claude-haiku-5-5');
+    const oldHaiku=createPopup({selectedProvider:'anthropic',providerConfigs:{anthropic:{apiKey:'key',model:'claude-haiku-4-5-20251001'}}});
+    assert.equal(oldHaiku.data.providerConfigs.anthropic.model,'claude-haiku-5-5');
+    for (const selectedProvider of ['google','minimax','zhipu','kimi','openai','anthropic']) {
+        const initial={selectedProvider,providerConfigs:configs,customApiKey:'legacy-key'};
+        assert.equal(JSON.stringify(bg.migrateProviderSettings(initial)),JSON.stringify(ui.api.migrateProviderSettings(initial)));
+    }
+    for (const [provider,ids] of Object.entries({openai:['gpt-6-luna','gpt-6.1-terra','gpt-6.1-sol'],anthropic:['claude-haiku-5-5','claude-sonnet-5-5','claude-opus-5-5'],deepseek:['deepseek-flash','deepseek-v4-pro']})) {
+        assert.deepEqual(Array.from(ui.api.PRESETS[provider].models,m=>m.id),ids);
+    }
+});
+
+test('下线提示与精简保存说明覆盖全部 14 种语言', () => {
+    const ui=createPopup();
+    assert.equal(Object.keys(ui.api.UI_TEXT).length,14);
+    for (const [lang,pack] of Object.entries(ui.api.UI_TEXT)) {
+        assert.ok(pack.providerRetired);
+        if (lang!=='en') assert.notEqual(pack.providerRetired,ui.api.UI_TEXT.en.providerRetired);
+        assert.ok(pack.saveOnlyHint.length < 130,lang+' 保存说明应精简');
+    }
 });

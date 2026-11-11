@@ -102,6 +102,8 @@
 
 ## 🛠️ การใช้งานและการตั้งค่า
 
+เมื่อติดตั้งครั้งแรกจะเปิดหน้าต้อนรับเพื่อยืนยันภาษาเป้าหมาย
+
 คลิกที่ไอคอนของส่วนขยายบนแถบเครื่องมือเพื่อเปิดแผงควบคุม:
 
 ![หน้าต่างการตั้งค่า (v8.0.1)](screenshots/v8.0.1/config-ui.png)
@@ -125,11 +127,8 @@
 | :--- | :--- |
 | **DeepSeek (แนะนำ)** | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
 | **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Claude** | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **MiniMax** | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) |
-| **Z.AI** | [z.ai](https://z.ai/manage-apikey/apikey-list) |
-| **Kimi** | [platform.kimi.ai](https://platform.kimi.ai/console/api-keys) |
+| **Custom** | ปลายทางกำหนดเองที่เข้ากันได้กับ OpenAI |
 
 ### 🔌 การเชื่อมต่อ Custom Endpoint ที่เข้ากันได้กับ OpenAI
 เลือก **Custom** เพื่อเชื่อมต่อไปยังบริการใดๆ ที่ใช้มาตรฐาน OpenAI Chat Completions:
@@ -148,6 +147,8 @@
 ---
 
 ## 🔒 ความเป็นส่วนตัวและความปลอดภัย
+
+ผู้ให้บริการ AI ที่ตั้งไว้มีเฉพาะ OpenAI / Claude / DeepSeek และรองรับปลายทางกำหนดเองที่เข้ากันได้กับ OpenAI การแทรกสคริปต์และเข้าถึงหน้าเว็บจำกัดที่ `https://www.youtube.com/*` และ `https://m.youtube.com/*` สิทธิ์ API ที่ตั้งไว้จำกัดที่ `https://api.openai.com/*`, `https://api.anthropic.com/*`, `https://api.deepseek.com/*` และจะขอสิทธิ์โฮสต์เพิ่มเติมเมื่อบันทึกปลายทางกำหนดเอง
 
 - **ไม่มีการเก็บข้อมูล**: เราไม่ติดตามประวัติการท่องเว็บและไม่เก็บข้อมูลส่วนบุคคลใดๆ
 - **จัดเก็บในเครื่อง 100%**: API Key การตั้งค่า และแคชจะถูกบันทึกไว้ใน `chrome.storage.local` บนเบราว์เซอร์ของคุณเท่านั้น
