@@ -3,21 +3,23 @@
     text-decoration: none;
     color: inherit;
     display: block;
-    margin-bottom: 4px;
+    margin-block-end: 4px;
     cursor: pointer;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    transition: opacity 0.2s;
+    font-family: inherit;
 }
 
 .gary-cn-box:hover {
     text-decoration: none;
-    opacity: 0.8;
+}
+
+.gary-cn-box:not(.gary-main-title-box):hover .gary-cn-title {
+    text-decoration: underline;
 }
 
 .gary-main-title-box {
     display: block;
-    margin-top: 4px;
-    margin-bottom: 12px;
+    margin-block-start: 4px;
+    margin-block-end: 12px;
     cursor: default;
 }
 
@@ -29,7 +31,7 @@
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 1.1rem;
-    margin-right: 8px;
+    margin-inline-end: 8px;
     font-weight: 500;
     vertical-align: 2px;
 }
@@ -49,7 +51,7 @@
 
 .gary-original-title {
     display: block;
-    margin-top: 8px;
+    margin-block-start: 8px;
     color: #888;
     font-size: 1.45rem;
     line-height: 1.45;
@@ -65,7 +67,7 @@
     text-decoration: none !important;
     font-weight: 400 !important;
     display: block !important;
-    margin-top: 2px;
+    margin-block-start: 2px;
 }
 
 .gary-original-source-hidden {
@@ -89,7 +91,25 @@ html[dark] .gary-original-title {
     color: #aaa;
 }
 
-/* 翻译失败时的红色提示 */
+/* 状态提示：标签与最多两行的次要文字并排，观看页原文独占一行。 */
+.gary-cn-box[data-gary-state="error"],
+.gary-cn-box[data-gary-state="download"] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    column-gap: 8px;
+}
+.gary-cn-box[data-gary-state="error"] .gary-tag,
+.gary-cn-box[data-gary-state="download"] .gary-tag {
+    margin-inline-end: 0;
+    justify-self: start;
+}
+.gary-cn-box[data-gary-state="error"] .gary-original-title,
+.gary-cn-box[data-gary-state="download"] .gary-original-title {
+    grid-column: 1 / -1;
+}
+
+/* 失败时仅标签使用红色。 */
 .gary-tag.gary-error {
     background-color: #ffebee;
     color: #c62828;
@@ -98,13 +118,41 @@ html[dark] .gary-tag.gary-error {
     background-color: #4a1f1f;
     color: #ff7a7a;
 }
-.gary-cn-title.gary-error {
-    color: #c62828;
+.gary-cn-title.gary-error,
+.gary-cn-box[data-gary-state="download"] .gary-cn-title {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #606060;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
 }
-html[dark] .gary-cn-title.gary-error {
-    color: #ff7a7a;
+html[dark] .gary-cn-title.gary-error,
+html[dark] .gary-cn-box[data-gary-state="download"] .gary-cn-title {
+    color: #aaa;
 }
 
+/* 下载语言包是可操作提示，不使用失败配色。 */
+.gary-cn-box[data-gary-state="download"] {
+    cursor: pointer;
+}
+.gary-cn-box[data-gary-state="download"] .gary-tag {
+    background-color: #e8f0fe;
+    color: #065fd4;
+}
+html[dark] .gary-cn-box[data-gary-state="download"] .gary-tag {
+    background-color: #203047;
+    color: #8ab4f8;
+}
+.gary-cn-box[data-gary-state="download"]:not(.gary-main-title-box):hover .gary-cn-title {
+    text-decoration: underline;
+}
 /* 排队/翻译中的呼吸动画（data-gary-state 由 content.js 维护） */
 @keyframes gary-pulse {
     0%, 100% { opacity: 1; }

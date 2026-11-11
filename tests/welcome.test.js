@@ -5,7 +5,8 @@ const {WELCOME_TEXT} = require('../welcome-locales.js');
 const {initWelcome,WELCOME_TARGET_LANGUAGES} = require('../welcome.js');
 function makeDoc() {
     const ids={};
-    for (const id of ['title','subtitle','targetLabel','localNote','localUnsupported','aiNote','pinTip','openYouTube','privacy','targetLanguage','saveStatus']) ids[id]=new Element(id==='targetLanguage'?'select':'p');
+    for (const id of ['title','subtitle','targetLabel','localNote','localUnsupported','aiNote','pinTip','openYouTube','privacy','targetLanguage','saveStatus',
+        'beforeLabel','afterLabel','exampleOriginal','exampleTranslated','exampleOriginalAfter','chooseLanguage','pinTitle']) ids[id]=new Element(id==='targetLanguage'?'select':'p');
     return {documentElement:{},ids,getElementById:id=>ids[id],createElement:tag=>new Element(tag)};
 }
 function makeChrome(stored={},language='zh-CN') {
@@ -16,11 +17,33 @@ function makeChrome(stored={},language='zh-CN') {
 test('welcome 14 种文案键位齐全，无空串、无英文回落', () => {
     assert.deepEqual(Object.keys(WELCOME_TEXT).sort(),['zh-Hans','en','ja','ko','th','es','fr','de','pt','id','vi','ru','ar','hi'].sort());
     for (const [language,copy] of Object.entries(WELCOME_TEXT)) {
+        for (const key of ['beforeLabel','afterLabel','exampleOriginal','exampleTranslated','chooseLanguage','pinTitle']) {
+            assert.ok(typeof copy[key]==='string' && copy[key].trim(),`${language}.${key}`);
+        }
         assert.deepEqual(Object.keys(copy).sort(),Object.keys(WELCOME_TEXT.en).sort());
         for (const [key,text] of Object.entries(copy)) {
             assert.ok(typeof text==='string' && text.trim(),`${language}.${key}`);
             if(language!=='en')assert.notEqual(text,WELCOME_TEXT.en[key],`${language}.${key}`);
         }
+    }
+});
+test('welcome 14 种界面均渲染前后示例和三步文案，译文与原文不同', async () => {
+    const html=source('welcome.html');
+    const steps=html.match(/<ol class="steps"[^>]*>([\s\S]*?)<\/ol>/)[1];
+    assert.equal([...steps.matchAll(/<li>/g)].length,3);
+    assert.match(steps,/<li>\s*<h2 id="chooseLanguage"[\s\S]*?<li>\s*<a id="openYouTube"[\s\S]*?<li>\s*<h2 id="pinTitle"/);
+    assert.equal([...html.matchAll(/class="thumbnail" aria-hidden="true"/g)].length,2);
+    assert.match(html,/id="exampleTranslated"[\s\S]*?id="exampleOriginalAfter"/);
+    for (const [language,copy] of Object.entries(WELCOME_TEXT)) {
+        const doc=makeDoc(),{chrome}=makeChrome({uiLanguage:language});
+        await initWelcome(doc,chrome,WELCOME_TEXT,true);
+        for (const id of ['beforeLabel','afterLabel','exampleOriginal','exampleTranslated','chooseLanguage','openYouTube','pinTitle']) {
+            assert.match(html,new RegExp(`id="${id}"`));
+            assert.equal(doc.ids[id].textContent,copy[id],`${language}.${id}`);
+        }
+        assert.notEqual(copy.exampleOriginal,copy.exampleTranslated,language);
+        assert.equal(doc.ids.exampleOriginalAfter.textContent,copy.exampleOriginal);
+        assert.equal(doc.documentElement.dir,language==='ar'?'rtl':'ltr');
     }
 });
 test('welcome 渲染浏览器默认值和 12 种原生语言名，加载不写存储；改动仅保存目标语言', async () => {
@@ -75,4 +98,16 @@ test('welcome HTML 使用本地外部脚本、指定 YouTube 链接和无障碍�
     assert.match(html,/prefers-color-scheme:dark/); assert.match(html,/:focus-visible/);
     assert.match(html,/icon\/icon128.png/); assert.match(html,/--accent:#d9153c/);
     assert.doesNotMatch(source('welcome.js'),/innerHTML/);
+});
+test('welcome 仅主链接使用按钮样式，资源均本地加载且保留窄屏布局', () => {
+    const html=source('welcome.html');
+    for (const [,src] of html.matchAll(/\bsrc="([^"]+)"/g)) {
+        assert.doesNotMatch(src,/^(?:[a-z]+:|\/\/)/i);
+    }
+    assert.doesNotMatch(html,/<link\b|@import|url\s*\(/i);
+    const links=html.match(/(?:^|\n)\s*a\s*\{([^}]+)\}/)[1];
+    assert.doesNotMatch(links,/background|padding|border-radius|display/);
+    assert.match(html,/#openYouTube\s*\{[^}]*background:var\(--accent\)/);
+    assert.match(html,/@media \(max-width:600px\)/);
+    assert.match(html,/\[dir="rtl"\] \.preview-arrow::before/);
 });
