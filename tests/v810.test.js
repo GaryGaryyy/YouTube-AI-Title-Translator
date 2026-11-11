@@ -118,12 +118,12 @@ test('后台忽略页面传入凭证，每次读 storage；Key、端点、模型
     assert.equal(calls[2].headers.Authorization,'Bearer second-key');
 });
 
-test('迁移后缺域名权限的网络异常回到现有错误路径，不产生未处理异常', async () => {
+test('迁移后待确认期间不自动翻译，走现有错误路径，不产生未处理异常', async () => {
     const runtime=backgroundRuntime({translationMode:'ai',targetLanguage:'es',selectedProvider:'minimax',
         providerConfigs:{minimax:{apiKey:'saved-key',apiUrl:'https://api.minimax.io/v1/chat/completions',model:'saved-model'}}},
         async()=>{throw new TypeError('Failed to fetch');});
     const result=await runtime.send({type:'translateBatch',items:['Old provider title'],targetLanguage:'es'});
-    assert.equal(result.ok,false); assert.equal(result.error.type,'network');
+    assert.equal(result.ok,false); assert.equal(result.error.type,'cancelled');   // 迁移待确认：不发请求
     assert.equal(runtime.data.selectedProvider,'custom');
     assert.equal(runtime.data.providerMigrationPending,true);
     assert.deepEqual(plain(runtime.data.providerConfigs.custom),{apiKey:'saved-key',apiUrl:'https://api.minimax.io/v1/chat/completions',model:'saved-model'});
@@ -169,4 +169,30 @@ test('发布文档包含精确权限、服务商和初次引导说明，当前 R
     }
     assert.match(source('RELEASE_NOTES_v8.1.0.md'),/OpenAI \/ Claude 的新模型参数未用真实 Key 实测，仅 DeepSeek 实测/);
     assert.match(source('RELEASE_NOTES_v8.1.0.md'),/## English/);
+});
+
+// 对抗式 review 补的三处
+test('已有 custom 配置时迁移：下线服务商的 Key 归档保留，确认前不向 custom 发请求', async () => {
+    let calls=0;
+    const runtime=backgroundRuntime({translationMode:'ai',targetLanguage:'es',selectedProvider:'kimi',
+        providerConfigs:{kimi:{apiKey:'kimi-key',apiUrl:'https://api.moonshot.ai/v1/chat/completions',model:'kimi-k3'},
+            minimax:{apiKey:'mm-key',apiUrl:'u',model:'m'},
+            custom:{apiKey:'custom-key',apiUrl:'https://api.openai.com/v1/chat/completions',model:'x'}}},
+        async()=>{calls++; throw new TypeError('should not be called');});
+    const result=await runtime.send({type:'translateBatch',items:['Title'],targetLanguage:'es'});
+    assert.equal(result.ok,false); assert.equal(calls,0);
+    assert.equal(runtime.data.retiredProviderConfigs.kimi.apiKey,'kimi-key');
+    assert.equal(runtime.data.retiredProviderConfigs.minimax.apiKey,'mm-key');
+    assert.equal(runtime.data.providerConfigs.custom.apiKey,'custom-key');
+    assert.equal(runtime.data.providerConfigs.kimi,undefined);
+    await runtime.send({type:'translateBatch',items:['Title'],targetLanguage:'es'});   // 再读一次：归档不被清空
+    assert.equal(runtime.data.retiredProviderConfigs.kimi.apiKey,'kimi-key');
+});
+test('手动填写的非预设模型不会被后台读取改回默认值', async () => {
+    const runtime=backgroundRuntime({translationMode:'ai',targetLanguage:'es',selectedProvider:'openai',
+        providerConfigs:{openai:{apiKey:'k',apiUrl:'https://api.openai.com/v1/chat/completions',model:'my-finetune',testedAt:5}}},
+        async()=>{throw new TypeError('Failed to fetch');});
+    await runtime.send({type:'translateBatch',items:['Title'],targetLanguage:'es'});
+    assert.equal(runtime.data.providerConfigs.openai.model,'my-finetune');
+    assert.equal(runtime.data.providerConfigs.openai.testedAt,5);
 });

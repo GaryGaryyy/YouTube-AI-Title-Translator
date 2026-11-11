@@ -326,7 +326,7 @@ test('旧模型在读取时持久回落推荐项、保留 Key，custom 模型不
     const ui=createPopup({selectedProvider:'anthropic',providerConfigs:configs});
     assert.equal(ui.data.providerConfigs.openai.model,'gpt-6-luna');
     assert.equal(ui.data.providerConfigs.anthropic.model,'claude-haiku-5-5');
-    assert.equal(ui.data.providerConfigs.deepseek.model,'deepseek-flash');
+    assert.equal(ui.data.providerConfigs.deepseek.model,'old-model');   // 手动填写的模型名不改写
     assert.equal(ui.data.providerConfigs.custom.model,'keep-model');
     assert.equal(ui.data.providerConfigs.openai.testedAt,undefined);
     assert.equal(ui.data.providerConfigs.openai.apiKey,'key');

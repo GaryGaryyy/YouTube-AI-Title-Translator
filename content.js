@@ -426,7 +426,8 @@ function getActiveTranslationConfig(result) {
     if (result.selectedProvider === "google" && provider !== "custom" && cfg) cfg = Object.assign({}, cfg, { apiUrl:"" });
     const mode = ["local", "ai"].includes(result.translationMode)
         ? result.translationMode : (cfg && cfg.apiKey ? "ai" : "local");
-    return { mode, config: { configured: !!(mode === "ai" && cfg && cfg.apiKey && cfg.apiUrl && cfg.model),
+    const pending = !!result.providerMigrationPending || RETIRED_PROVIDERS.includes(result.selectedProvider);
+    return { mode, config: { configured: !!(mode === "ai" && !pending && cfg && cfg.apiKey && cfg.apiUrl && cfg.model),
         batchSize: getModelBatchSize(cfg && cfg.model) } };
 }
 
@@ -447,7 +448,7 @@ function applyConfigFromStorage(result) {
     if (previous !== JSON.stringify([ENABLED, TARGET_LANGUAGE, TRANSLATION_MODE, USER_CONFIG])) translationGeneration++;
 }
 
-const CONFIG_STORAGE_KEYS = ['enabled', 'translationMode', 'providerConfigs', 'selectedProvider', 'customApiUrl', 'customApiKey', 'customModel', 'targetLanguage', 'uiLanguage'];
+const CONFIG_STORAGE_KEYS = ['enabled', 'translationMode', 'providerConfigs', 'selectedProvider', 'customApiUrl', 'customApiKey', 'customModel', 'targetLanguage', 'uiLanguage', 'providerMigrationPending'];
 
 function initConfig() {
     chrome.storage.local.get(CONFIG_STORAGE_KEYS, (result) => {

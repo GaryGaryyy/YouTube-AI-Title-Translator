@@ -527,10 +527,10 @@ function sameProviderConfig(a, b) {
 // Keep this storage migration identical in popup.js and background.js (no shared runtime script).
 function migrateProviderSettings(result) {
     const retired = ["google", "minimax", "zhipu", "kimi"];
-    const models = {
-        openai: ["gpt-6-luna", "gpt-6.1-terra", "gpt-6.1-sol"],
-        anthropic: ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"],
-        deepseek: ["deepseek-flash", "deepseek-v4-pro"]
+    // 只改写明确下线的旧预设 ID；用户手动填写的模型名原样保留。
+    const removedModels = {
+        openai: { "gpt-6-astra": "gpt-6-luna" },
+        anthropic: { "claude-haiku-4-5-20251001": "claude-haiku-5-5", "claude-fable-5-1": "claude-haiku-5-5" }
     };
     const stored = Object.assign({}, result);
     const configs = Object.fromEntries(Object.entries(result.providerConfigs || {}).map(([id, cfg]) => [id, Object.assign({}, cfg)]));
@@ -548,12 +548,20 @@ function migrateProviderSettings(result) {
         Object.assign(updates, { selectedProvider:provider, providerMigrationPending:true,
             customApiKey:configs.custom.apiKey || "", customApiUrl:configs.custom.apiUrl || "", customModel:configs.custom.model || "" });
     }
-    for (const id of retired) delete configs[id];
-    for (const [id, ids] of Object.entries(models)) {
-        if (configs[id] && !ids.includes(configs[id].model)) {
-            configs[id].model = ids[0];
+    // 下线服务商的配置（含 Key）归档保留，不参与翻译，也不丢弃。
+    const archived = Object.assign({}, result.retiredProviderConfigs || {});
+    let archivedChanged = false;
+    for (const id of retired) {
+        if (configs[id]) { archived[id] = configs[id]; archivedChanged = true; }
+        delete configs[id];
+    }
+    if (archivedChanged) updates.retiredProviderConfigs = archived;
+    for (const [id, map] of Object.entries(removedModels)) {
+        const next = configs[id] && Object.prototype.hasOwnProperty.call(map, configs[id].model) ? map[configs[id].model] : null;
+        if (next) {
+            configs[id].model = next;
             delete configs[id].testedAt;
-            if (id === provider) updates.customModel = ids[0];
+            if (id === provider) updates.customModel = next;
         }
     }
     if (JSON.stringify(configs) !== JSON.stringify(result.providerConfigs || {}) || updates.selectedProvider) updates.providerConfigs = configs;
@@ -849,7 +857,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setBusy("save");
             await saveStorage({ providerConfigs, selectedProvider:provider, translationMode:mode, targetLanguage, uiLanguage,
                 customApiUrl:cfg.apiUrl, customApiKey:cfg.apiKey, customModel:cfg.model,
-                ...((mode === "ai" && provider === "custom") ? { providerMigrationPending:false } : {}) });
+                providerMigrationPending:false });
             if (saved) drafts.commit(provider, saved);
             savedMode = mode; savedProvider = provider;
             setStatus(shouldTest && mode === "ai" ? "verifiedSaved" : "savedRefresh", "success", sample);
@@ -861,7 +869,7 @@ document.addEventListener("DOMContentLoaded", () => {
     populateLanguageSelect(uiLanguageSelect, UI_LANGUAGES, uiLanguage);
     populateLanguageSelect(targetLanguageSelect, TARGET_LANGUAGES, targetLanguage);
     setBusy("");
-    chrome.storage.local.get({ enabled:true, providerConfigs:null, selectedProvider:"deepseek", translationMode:null,
+    chrome.storage.local.get({ enabled:true, retiredProviderConfigs:null, providerConfigs:null, selectedProvider:"deepseek", translationMode:null,
         customApiUrl:"", customApiKey:"", customModel:"", uiLanguage:DEFAULT_UI_LANGUAGE, targetLanguage:DEFAULT_TARGET_LANGUAGE, translationCache:null, providerMigrationPending:false }, result => {
         if (chrome.runtime.lastError) { setStatus("saveFailed", "error"); return; }
         const migration = migrateProviderSettings(result);
