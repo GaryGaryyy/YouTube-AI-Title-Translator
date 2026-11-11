@@ -30,9 +30,11 @@ function renderWelcome(doc, stored, locales, browserLanguage, localSupported) {
     doc.documentElement.lang = uiLanguage;
     doc.documentElement.dir = uiLanguage === "ar" ? "rtl" : "ltr";
     doc.title = copy.title;
-    for (const key of ["title", "subtitle", "targetLabel", "localNote", "localUnsupported", "aiNote", "pinTip", "openYouTube", "privacy"]) {
+    for (const key of ["title", "subtitle", "targetLabel", "localNote", "localUnsupported", "aiNote", "pinTip", "openYouTube", "privacy",
+        "beforeLabel", "afterLabel", "exampleOriginal", "exampleTranslated", "chooseLanguage", "pinTitle"]) {
         doc.getElementById(key).textContent = copy[key];
     }
+    doc.getElementById("exampleOriginalAfter").textContent = copy.exampleOriginal;
     doc.getElementById("localNote").hidden = !localSupported;
     doc.getElementById("localUnsupported").hidden = localSupported;
     const select = doc.getElementById("targetLanguage");

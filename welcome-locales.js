@@ -1,5 +1,11 @@
 const WELCOME_TEXT = {
     "zh-Hans": {
+        beforeLabel: "翻译前",
+        afterLabel: "翻译后",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "山间的宁静清晨",
+        chooseLanguage: "选择语言",
+        pinTitle: "把图标固定到工具栏",
         title: "安装完成，先确认翻译语言",
         subtitle: "YouTube 上的外语标题会翻译成你选的语言，原标题保留在下方。",
         targetLabel: "把标题翻译成",
@@ -13,6 +19,12 @@ const WELCOME_TEXT = {
         privacy: "设置和 Key 只保存在本机浏览器，开发者不收集任何数据。"
     },
     en: {
+        beforeLabel: "Before translation",
+        afterLabel: "After translation",
+        exampleOriginal: "Una mañana tranquila en las montañas",
+        exampleTranslated: "A quiet morning in the mountains",
+        chooseLanguage: "Choose your language",
+        pinTitle: "Pin the icon to the toolbar",
         title: "You're all set. Confirm your language",
         subtitle: "Foreign-language YouTube titles are translated into the language you choose. The original stays visible below.",
         targetLabel: "Translate titles into",
@@ -26,6 +38,12 @@ const WELCOME_TEXT = {
         privacy: "Settings and keys stay in this browser. The developer collects no data."
     },
     ja: {
+        beforeLabel: "翻訳前",
+        afterLabel: "翻訳後",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "山で過ごす静かな朝",
+        chooseLanguage: "言語を選ぶ",
+        pinTitle: "アイコンをツールバーに固定する",
         title: "インストール完了。翻訳先の言語を確認しましょう",
         subtitle: "YouTube の外国語タイトルを選んだ言語に翻訳します。元のタイトルは下に表示されます。",
         targetLabel: "タイトルの翻訳先",
@@ -39,6 +57,12 @@ const WELCOME_TEXT = {
         privacy: "設定とキーはこのブラウザ内にのみ保存されます。開発者はデータを収集しません。"
     },
     ko: {
+        beforeLabel: "번역 전",
+        afterLabel: "번역 후",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "산에서 맞는 고요한 아침",
+        chooseLanguage: "언어 선택",
+        pinTitle: "도구 모음에 아이콘 고정",
         title: "설치 완료! 번역 언어를 확인하세요",
         subtitle: "YouTube의 외국어 제목을 선택한 언어로 번역합니다. 원래 제목은 아래에 그대로 표시됩니다.",
         targetLabel: "제목을 번역할 언어",
@@ -52,6 +76,12 @@ const WELCOME_TEXT = {
         privacy: "설정과 키는 이 브라우저에만 저장됩니다. 개발자는 어떤 데이터도 수집하지 않습니다."
     },
     th: {
+        beforeLabel: "ก่อนแปล",
+        afterLabel: "หลังแปล",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "เช้าอันเงียบสงบท่ามกลางภูเขา",
+        chooseLanguage: "เลือกภาษา",
+        pinTitle: "ปักหมุดไอคอนบนแถบเครื่องมือ",
         title: "ติดตั้งแล้ว ยืนยันภาษาที่ต้องการแปล",
         subtitle: "ชื่อวิดีโอ YouTube ภาษาต่างประเทศจะแปลเป็นภาษาที่คุณเลือก โดยยังแสดงชื่อเดิมไว้ด้านล่าง",
         targetLabel: "แปลชื่อวิดีโอเป็น",
@@ -65,6 +95,12 @@ const WELCOME_TEXT = {
         privacy: "การตั้งค่าและคีย์เก็บไว้ในเบราว์เซอร์นี้เท่านั้น ผู้พัฒนาไม่เก็บรวบรวมข้อมูลใด ๆ"
     },
     es: {
+        beforeLabel: "Antes de traducir",
+        afterLabel: "Después de traducir",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Una mañana tranquila en las montañas",
+        chooseLanguage: "Elige tu idioma",
+        pinTitle: "Fija el icono en la barra de herramientas",
         title: "Todo listo. Confirma tu idioma",
         subtitle: "Los títulos de YouTube en otros idiomas se traducen al que elijas. El original sigue visible debajo.",
         targetLabel: "Traducir títulos al",
@@ -78,6 +114,12 @@ const WELCOME_TEXT = {
         privacy: "Los ajustes y las claves se guardan en este navegador. El desarrollador no recopila datos."
     },
     fr: {
+        beforeLabel: "Avant traduction",
+        afterLabel: "Après traduction",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Un matin paisible à la montagne",
+        chooseLanguage: "Choisissez votre langue",
+        pinTitle: "Épinglez l’icône dans la barre d’outils",
         title: "Tout est prêt. Confirmez votre langue",
         subtitle: "Les titres YouTube en langue étrangère sont traduits dans la langue de votre choix. L’original reste visible en dessous.",
         targetLabel: "Traduire les titres en",
@@ -91,6 +133,12 @@ const WELCOME_TEXT = {
         privacy: "Les réglages et les clés restent dans ce navigateur. Le développeur ne collecte aucune donnée."
     },
     de: {
+        beforeLabel: "Vor der Übersetzung",
+        afterLabel: "Nach der Übersetzung",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Ein ruhiger Morgen in den Bergen",
+        chooseLanguage: "Sprache auswählen",
+        pinTitle: "Symbol an die Symbolleiste anheften",
         title: "Alles bereit. Bestätige deine Sprache",
         subtitle: "Fremdsprachige YouTube-Titel werden in die gewählte Sprache übersetzt. Das Original bleibt darunter sichtbar.",
         targetLabel: "Titel übersetzen in",
@@ -104,6 +152,12 @@ const WELCOME_TEXT = {
         privacy: "Einstellungen und Schlüssel bleiben in diesem Browser. Der Entwickler erhebt keine Daten."
     },
     pt: {
+        beforeLabel: "Antes da tradução",
+        afterLabel: "Depois da tradução",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Uma manhã tranquila nas montanhas",
+        chooseLanguage: "Escolha seu idioma",
+        pinTitle: "Fixe o ícone na barra de ferramentas",
         title: "Tudo pronto. Confirme seu idioma",
         subtitle: "Os títulos do YouTube em outros idiomas são traduzidos para o idioma escolhido. O original continua visível abaixo.",
         targetLabel: "Traduzir títulos para",
@@ -117,6 +171,12 @@ const WELCOME_TEXT = {
         privacy: "As configurações e chaves ficam neste navegador. O desenvolvedor não coleta dados."
     },
     id: {
+        beforeLabel: "Sebelum diterjemahkan",
+        afterLabel: "Setelah diterjemahkan",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Pagi yang tenang di pegunungan",
+        chooseLanguage: "Pilih bahasa Anda",
+        pinTitle: "Sematkan ikon ke toolbar",
         title: "Siap digunakan. Konfirmasi bahasa Anda",
         subtitle: "Judul YouTube berbahasa asing diterjemahkan ke bahasa pilihan Anda. Judul asli tetap terlihat di bawahnya.",
         targetLabel: "Terjemahkan judul ke",
@@ -130,6 +190,12 @@ const WELCOME_TEXT = {
         privacy: "Pengaturan dan kunci hanya disimpan di browser ini. Pengembang tidak mengumpulkan data apa pun."
     },
     vi: {
+        beforeLabel: "Trước khi dịch",
+        afterLabel: "Sau khi dịch",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Một buổi sáng yên bình trên núi",
+        chooseLanguage: "Chọn ngôn ngữ",
+        pinTitle: "Ghim biểu tượng vào thanh công cụ",
         title: "Đã cài đặt. Hãy xác nhận ngôn ngữ",
         subtitle: "Tiêu đề YouTube bằng tiếng nước ngoài sẽ được dịch sang ngôn ngữ bạn chọn. Tiêu đề gốc vẫn hiển thị bên dưới.",
         targetLabel: "Dịch tiêu đề sang",
@@ -143,6 +209,12 @@ const WELCOME_TEXT = {
         privacy: "Cài đặt và khóa chỉ được lưu trong trình duyệt này. Nhà phát triển không thu thập dữ liệu."
     },
     ru: {
+        beforeLabel: "До перевода",
+        afterLabel: "После перевода",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "Тихое утро в горах",
+        chooseLanguage: "Выберите язык",
+        pinTitle: "Закрепите значок на панели инструментов",
         title: "Всё готово. Подтвердите язык",
         subtitle: "Иноязычные заголовки YouTube переводятся на выбранный язык. Оригинал остаётся виден ниже.",
         targetLabel: "Переводить заголовки на",
@@ -156,6 +228,12 @@ const WELCOME_TEXT = {
         privacy: "Настройки и ключи хранятся только в этом браузере. Разработчик не собирает данные."
     },
     ar: {
+        beforeLabel: "قبل الترجمة",
+        afterLabel: "بعد الترجمة",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "صباح هادئ في الجبال",
+        chooseLanguage: "اختر لغتك",
+        pinTitle: "ثبّت الأيقونة في شريط الأدوات",
         title: "اكتمل التثبيت. أكّد لغتك",
         subtitle: "تُترجم عناوين YouTube باللغات الأجنبية إلى اللغة التي تختارها. ويبقى العنوان الأصلي ظاهرًا أسفلها.",
         targetLabel: "ترجمة العناوين إلى",
@@ -169,6 +247,12 @@ const WELCOME_TEXT = {
         privacy: "تبقى الإعدادات والمفاتيح في هذا المتصفح فقط. لا يجمع المطوّر أي بيانات."
     },
     hi: {
+        beforeLabel: "अनुवाद से पहले",
+        afterLabel: "अनुवाद के बाद",
+        exampleOriginal: "A quiet morning in the mountains",
+        exampleTranslated: "पहाड़ों में एक शांत सुबह",
+        chooseLanguage: "अपनी भाषा चुनें",
+        pinTitle: "आइकन को टूलबार पर पिन करें",
         title: "इंस्टॉल हो गया। अपनी भाषा की पुष्टि करें",
         subtitle: "YouTube के दूसरी भाषाओं वाले शीर्षक आपकी चुनी भाषा में अनुवाद होंगे। मूल शीर्षक नीचे दिखाई देता रहेगा।",
         targetLabel: "शीर्षकों का अनुवाद इस भाषा में करें",
