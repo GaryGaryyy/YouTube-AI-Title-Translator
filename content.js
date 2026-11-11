@@ -725,6 +725,14 @@ function renderDownload(box, source, target) {
     renderStatus(box, localizeTag(BUILTIN_TAG), title, title);
     box.dataset.garyState = "download";
     builtinDownloadBoxes.add(box);
+    // 该语言对的翻译器可能正在创建或刚创建完（扫描与下载完成交错）：接在同一个 Promise 上补译，
+    // 不能只靠创建完成时那一次遍历。
+    const creating = builtinTranslators.get(`${source}→${target}`);
+    if (creating) creating.then(translator => {
+        if (translator && box.isConnected && box.dataset.garyState === "download" && box.garyGeneration === translationGeneration) {
+            translateBuiltinIntoBox(box.dataset.garyOriginal, box, target, source, true);
+        }
+    });
 }
 
 async function translateBuiltinIntoBox(text, box, requestLanguage, source, downloading = false) {

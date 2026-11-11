@@ -114,14 +114,14 @@ test('model presets: 每家最多四个，推荐项唯一且排第一，所有�
     }
 });
 
-test('旧版扁平配置保留 Key 并将过期模型回落到推荐项', () => {
+test('旧版扁平配置保留 Key，未知模型按手动模型保留', () => {
     const ui=createPopup({selectedProvider:'openai',customApiKey:'legacy-test-key',
         customApiUrl:'https://api.openai.com/v1/chat/completions',customModel:'gpt-5.5'});
     assert.equal(ui.elements.aiSettings.hidden,false);
     assert.equal(ui.elements.apiKey.value,'legacy-test-key');
-    assert.equal(ui.elements.modelName.value,'gpt-6-luna');
-    assert.equal(ui.elements.modelSelect.value,'gpt-6-luna');
-    assert.equal(ui.elements.manualModelSection.hidden,true);
+    // 不在预设里、也不是明确下线的 ID：按手动模型原样保留（与 8.0.4 行为一致），不悄悄改写。
+    assert.equal(ui.elements.modelName.value,'gpt-5.5');
+    assert.equal(ui.elements.manualModelSection.hidden,false);
     assert.equal(ui.elements.apiKey.type,'password');
 });
 
@@ -350,4 +350,12 @@ test('下线提示与精简保存说明覆盖全部 14 种语言', () => {
         if (lang!=='en') assert.notEqual(pack.providerRetired,ui.api.UI_TEXT.en.providerRetired);
         assert.ok(pack.saveOnlyHint.length < 130,lang+' 保存说明应精简');
     }
+});
+
+test('已保存的手动模型重开弹窗后原样显示，不被换成推荐模型', () => {
+    const ui=createPopup({selectedProvider:'openai',translationMode:'ai',providerConfigs:{openai:{apiKey:'k',
+        apiUrl:'https://api.openai.com/v1/chat/completions',model:'my-finetune',testedAt:5}}});
+    assert.equal(ui.elements.modelName.value,'my-finetune');
+    assert.equal(ui.elements.manualModelSection.hidden,false);
+    assert.equal(ui.data.providerConfigs.openai.model,'my-finetune');
 });

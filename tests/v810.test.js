@@ -196,3 +196,16 @@ test('手动填写的非预设模型不会被后台读取改回默认值', async
     assert.equal(runtime.data.providerConfigs.openai.model,'my-finetune');
     assert.equal(runtime.data.providerConfigs.openai.testedAt,5);
 });
+test('下载完成与扫描交错：拿着旧 availability 晚到的新标题也会自动补译，不停在 download', async () => {
+    const runtime=localRuntime(async()=>'downloadable', async()=>({translate:async text=>'Übersetzt '+text}));
+    const first=await localBadge(runtime,'First English title');
+    await first.fire('click'); await settle();
+    assert.equal(first.dataset.garyState,'done');
+    // 模拟扫描在下载完成前就取到了 downloadable，渲染却发生在完成之后
+    const late=title('Late English title');
+    const box=runtime.context.createSafeBadge('x','x',false,late.el.textContent,'','pending',late.el);
+    runtime.context.attachTitleBadge(late.el,late.el,false,box,late.el.textContent);
+    runtime.context.renderDownload(box,'en','de');
+    await settle(); await settle();
+    assert.equal(box.dataset.garyState,'done');
+});

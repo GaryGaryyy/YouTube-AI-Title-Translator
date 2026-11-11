@@ -587,7 +587,7 @@ function createProviderDrafts(configs) {
     const defaults = provider => {
         const cfg = saved[provider] || {};
         const model = provider === "custom" ? cfg.model || "" :
-            (PRESETS[provider].models.some(item => item.id === cfg.model) ? cfg.model : PRESETS[provider].models[0].id);
+            (cfg.model || PRESETS[provider].models[0].id);   // 非预设 ID 视为手动模型，原样保留
         return { apiKey: cfg.apiKey || "", apiUrl: cfg.apiUrl || buildUrl(provider, model), model,
             manual: provider === "custom" || !PRESETS[provider].models.some(item => item.id === model) };
     };
