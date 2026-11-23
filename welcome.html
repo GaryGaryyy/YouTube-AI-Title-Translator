@@ -5,78 +5,893 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>YouTube Title Translator</title>
   <style>
-    :root { color-scheme:light; --bg:#fff; --surface:#f6f7f9; --text:#18202b; --muted:#636b79; --border:#dce0e7; --accent:#d9153c; --tint:#fff1f4; --error:#a52335; }
-    * { box-sizing:border-box; } [hidden] { display:none !important; }
-    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
-    main { max-width:560px; margin:64px auto; padding:0 24px; }
-    img { width:64px; height:64px; } h1 { font-size:28px; line-height:1.3; margin:24px 0 12px; }
-    p { margin:16px 0; } #subtitle,#pinTip,#privacy { color:var(--muted); }
-    .preview { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:start; gap:12px; margin:28px 0; }
-    .video-card { margin:0; min-width:0; overflow-wrap:anywhere; }
-    .video-card figcaption { margin-bottom:8px; font-size:13px; font-weight:600; color:var(--muted); }
-    .thumbnail { aspect-ratio:16/9; background:var(--border); border-radius:8px; }
-    .video-title { margin:10px 0 0; font-size:14px; font-weight:600; line-height:1.5; }
-    .original-title { margin:4px 0 0; font-size:12px; line-height:1.5; color:var(--muted); }
-    .preview-arrow { align-self:center; color:var(--muted); }
-    .preview-arrow::before { content:"→"; } [dir="rtl"] .preview-arrow::before { content:"←"; }
-    .steps { list-style:none; counter-reset:step; margin:28px 0; padding:0; }
-    .steps > li { counter-increment:step; position:relative; padding:20px; padding-inline-start:62px; margin:12px 0; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
-    .steps > li::before { content:counter(step); position:absolute; inset-inline-start:20px; top:20px; display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:var(--tint); color:var(--accent); font-size:14px; font-weight:600; }
-    .steps h2 { margin:0 0 12px; font-size:16px; line-height:1.65; }
-    .steps p { margin:8px 0 0; }
-    label { display:block; font-weight:600; margin-bottom:10px; }
-    select { width:100%; padding:10px; font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--border); border-radius:6px; }
-    #saveStatus { min-height:1.65em; margin:8px 0 0; font-size:14px; } .error { color:var(--error); }
-    #localUnsupported { padding:16px; background:var(--tint); color:var(--error); border-inline-start:4px solid var(--accent); border-radius:6px; }
-    a { color:var(--accent); text-decoration:none; }
-    a:hover { text-decoration:underline; }
-    #openYouTube { display:inline-block; color:#fff; background:var(--accent); border-radius:8px; padding:10px 20px; font-weight:600; }
-    #openYouTube:hover { text-decoration:underline; }
-    a:focus-visible,select:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
-    #privacy { font-size:13px; border-top:1px solid var(--border); padding-top:20px; }
-    @media (prefers-color-scheme:dark) { :root { color-scheme:dark; --bg:#1e2229; --surface:#292e37; --text:#f0f2f6; --muted:#b5bdca; --border:#3c4451; --accent:#ff5478; --tint:#39202a; --error:#ff9ca6; } #openYouTube { background:#d9153c; } }
-    @media (max-width:600px) { main { margin:32px auto; } .preview { grid-template-columns:minmax(0,1fr); } .preview-arrow { justify-self:center; } .preview-arrow::before,[dir="rtl"] .preview-arrow::before { content:"↓"; } .steps > li { padding-inline-end:16px; } }
+    :root {
+      color-scheme: light;
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --soft: #f2f4f8;
+      --text: #151b26;
+      --muted: #5d6675;
+      --border: #dfe4ec;
+      --accent: #d9153c;
+      --accent-hover: #be1033;
+      --tint: #fff1f4;
+      --info: #0b57d0;
+      --info-bg: #eaf2ff;
+      --success: #146c43;
+      --success-bg: #eaf7f0;
+      --error: #a52335;
+      --shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    main {
+      max-width: 720px;
+      margin: 40px auto 56px;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    .hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .hero-brand {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      min-width: 0;
+    }
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+      border-radius: 13px;
+      box-shadow: 0 6px 18px rgba(217, 21, 60, 0.22);
+    }
+    .hero-copy { min-width: 0; }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    #subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14.5px;
+    }
+    .ui-lang-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .ui-lang-icon {
+      position: absolute;
+      inset-inline-start: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    #uiLanguageSelect {
+      width: auto;
+      min-width: 124px;
+      height: 34px;
+      padding: 4px 10px;
+      padding-inline-start: 30px;
+      font: 500 12.5px/1.3 inherit;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Steps container */
+    .steps {
+      list-style: none;
+      counter-reset: step;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 16px;
+    }
+    .steps > li {
+      counter-increment: step;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+    }
+    .step-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .step-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .step-num {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: 9px;
+      background: var(--tint);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .step-num::before { content: counter(step); }
+    .steps h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    /* Step 1: target language control + live preview stage */
+    .lang-picker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .lang-picker label {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    #targetLanguage {
+      min-width: 168px;
+      height: 36px;
+      padding: 6px 12px;
+      font: 600 13.5px/1.3 inherit;
+      color: var(--text);
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #saveStatus {
+      margin: 0;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--success);
+      min-height: 1.2em;
+    }
+    #saveStatus:empty { display: none; }
+    #saveStatus.error { color: var(--error); }
+
+    /* Before / After YouTube Card Stage */
+    .preview {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin: 14px 0 16px;
+    }
+    .video-card {
+      margin: 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      overflow-wrap: anywhere;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .video-card.after-card {
+      border-color: rgba(217, 21, 60, 0.28);
+    }
+    .video-card.after-card[data-live="ready"] {
+      border-color: var(--success);
+      box-shadow: 0 0 0 1px rgba(20, 108, 67, 0.18);
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .video-card figcaption {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+    .preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .preview-badge[data-state="working"] {
+      background: var(--info-bg);
+      color: var(--info);
+      border-color: transparent;
+    }
+    .preview-badge[data-state="live"] {
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: transparent;
+    }
+
+    /* Stylized YouTube Thumbnail (no empty flat box!) */
+    .thumbnail {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1b2845 0%, #274060 52%, #3b2d5b 100%);
+      display: grid;
+      place-items: center;
+    }
+    .after-card .thumbnail {
+      background: linear-gradient(135deg, #1a2942 0%, #243b55 50%, #4b2338 100%);
+    }
+    .thumb-art {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .thumb-duration {
+      position: absolute;
+      inset-inline-end: 7px;
+      bottom: 7px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      font: 600 10.5px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+      direction: ltr;
+    }
+    .yt-meta {
+      display: flex;
+      gap: 9px;
+      margin-top: 10px;
+      align-items: flex-start;
+    }
+    .yt-avatar {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #d9153c, #ff6b6b);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      margin-top: 2px;
+    }
+    .yt-lines { min-width: 0; flex: 1; }
+    .video-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.4;
+      color: var(--text);
+    }
+    .original-title {
+      margin: 4px 0 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+    .channel-line {
+      margin: 5px 0 0;
+      font-size: 11.5px;
+      color: var(--muted);
+      opacity: 0.85;
+    }
+    .preview-arrow {
+      align-self: center;
+      justify-self: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--soft);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .preview-arrow::before { content: "→"; }
+    [dir="rtl"] .preview-arrow::before { content: "←"; }
+
+    /* Interactive Local Trial Bar */
+    .local-trial {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    #tryLocalBtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      font: 600 13.5px/1.3 inherit;
+      color: var(--accent);
+      background: var(--tint);
+      border: 1px solid rgba(217, 21, 60, 0.35);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    #tryLocalBtn:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+    #tryLocalBtn:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+    #tryLocalStatus {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      flex: 1 1 220px;
+      overflow-wrap: anywhere;
+    }
+    #tryLocalStatus[data-kind="ready"] { color: var(--success); font-weight: 600; }
+    #tryLocalStatus[data-kind="error"] { color: var(--error); }
+    #tryLocalStatus:empty { display: none; }
+    #tryLocalOutput {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    /* Step 2: Symmetrical Two-Card Chrome Toolbar Pin Flow (Plan A) */
+    #pinTip {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .pin-flow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+    }
+    .pin-card {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+    .pin-card-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--text);
+      min-width: 0;
+    }
+    .pin-step-pill {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .pin-step-pill.p1 {
+      background: var(--tint);
+      color: var(--accent);
+    }
+    .pin-step-pill.p2 {
+      background: var(--info-bg);
+      color: var(--info);
+    }
+    .pin-stage {
+      height: 54px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .chrome-url {
+      flex: 1;
+      min-width: 0;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      direction: ltr;
+    }
+    .toolbar-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      background: var(--tint);
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 0 0 3px rgba(217, 21, 60, 0.12);
+      flex-shrink: 0;
+    }
+    .toolbar-btn svg {
+      width: 19px;
+      height: 19px;
+    }
+    .toolbar-dots {
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+    .pin-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 700;
+      padding-top: 26px;
+      user-select: none;
+    }
+    .pin-arrow::before { content: "→"; }
+    [dir="rtl"] .pin-arrow::before { content: "←"; }
+    .pin-ext-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .pin-ext-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pin-action {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: var(--info-bg);
+      color: var(--info);
+      border: 1.5px solid var(--info);
+      box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.12);
+      flex-shrink: 0;
+    }
+    .pin-action svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Step 3: Local vs AI Comparison + Launch YouTube */
+    .compare-box {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: grid;
+      gap: 11px;
+    }
+    .compare-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+    }
+    .compare-heading {
+      font-weight: 700;
+      color: var(--text);
+    }
+    .compare-orig-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+    #compareOrig {
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1px 8px;
+      border-radius: 6px;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .cmp-col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+    .cmp-col.ai {
+      border-color: rgba(217, 21, 60, 0.34);
+    }
+    .cmp-col-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cmp-col-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .cmp-col.ai .cmp-col-title { color: var(--accent); }
+    .cmp-col-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .cmp-result {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.4;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cmp-tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--soft);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .cmp-note {
+      margin: 0;
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .launch-notes {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .launch-notes p {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+    #localUnsupported {
+      padding: 12px 14px;
+      background: var(--tint);
+      color: var(--error);
+      border-inline-start: 4px solid var(--accent);
+      border-radius: 8px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    #openYouTube {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 10px;
+      padding: 11px 24px;
+      font-size: 15px;
+      font-weight: 650;
+      box-shadow: 0 4px 12px rgba(217, 21, 60, 0.25);
+    }
+    #openYouTube:hover {
+      background: var(--accent-hover);
+      text-decoration: none;
+    }
+    a:focus-visible, select:focus-visible, button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+    #privacy {
+      margin: 22px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #161920;
+        --surface: #1f242e;
+        --soft: #272d3a;
+        --text: #f0f3f8;
+        --muted: #aeb8c7;
+        --border: #363f4f;
+        --accent: #ff4d6d;
+        --accent-hover: #e63958;
+        --tint: #391f2a;
+        --info: #8ab4f8;
+        --info-bg: #1e2f47;
+        --success: #6ee7b7;
+        --success-bg: #143628;
+        --error: #ff9ca6;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+      }
+      #openYouTube { background: #d9153c; }
+      #openYouTube:hover { background: #bf1133; }
+    }
+
+    @media (max-width: 600px) {
+      main { margin: 24px auto 40px; padding: 0 16px; }
+      .hero { flex-direction: column; }
+      .steps > li { padding: 18px 16px; }
+      .preview, .pin-flow, .compare-grid { grid-template-columns: minmax(0, 1fr); }
+      .preview-arrow::before, [dir="rtl"] .preview-arrow::before,
+      .pin-arrow::before, [dir="rtl"] .pin-arrow::before { content: "↓"; }
+      .pin-arrow { padding-top: 0; }
+    }
   </style>
   <script src="welcome-locales.js" defer></script>
+  <script src="shared.js" defer></script>
   <script src="welcome.js" defer></script>
 </head>
 <body>
   <main>
-    <img src="icon/icon128.png" alt="">
-    <h1 id="title"></h1>
-    <p id="subtitle"></p>
-    <div class="preview">
-      <figure class="video-card">
-        <figcaption id="beforeLabel"></figcaption>
-        <div class="thumbnail" aria-hidden="true"></div>
-        <p class="video-title" id="exampleOriginal" dir="auto"></p>
-      </figure>
-      <span class="preview-arrow" aria-hidden="true"></span>
-      <figure class="video-card">
-        <figcaption id="afterLabel"></figcaption>
-        <div class="thumbnail" aria-hidden="true"></div>
-        <p class="video-title" id="exampleTranslated" dir="auto"></p>
-        <p class="original-title" id="exampleOriginalAfter" dir="auto"></p>
-      </figure>
-    </div>
+    <header class="hero">
+      <div class="hero-brand">
+        <img class="brand-logo" src="icon/icon128.png" alt="">
+        <div class="hero-copy">
+          <h1 id="title"></h1>
+          <p id="subtitle"></p>
+        </div>
+      </div>
+      <div class="ui-lang-wrap">
+        <svg class="ui-lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3.6 9h16.8M3.6 15h16.8M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"></path>
+        </svg>
+        <select id="uiLanguageSelect"></select>
+      </div>
+    </header>
+
     <ol class="steps" role="list">
       <li>
-        <h2 id="chooseLanguage"></h2>
-        <label id="targetLabel" for="targetLanguage"></label>
-        <select id="targetLanguage"></select>
-        <p id="saveStatus" role="status" aria-live="polite"></p>
+        <div class="step-head">
+          <div class="step-title-group">
+            <span class="step-num" aria-hidden="true"></span>
+            <h2 id="chooseLanguage"></h2>
+          </div>
+          <div class="lang-picker">
+            <label id="targetLabel" for="targetLanguage"></label>
+            <select id="targetLanguage"></select>
+            <p id="saveStatus" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="preview">
+          <figure class="video-card">
+            <div class="card-top">
+              <figcaption id="beforeLabel"></figcaption>
+            </div>
+            <div class="thumbnail" aria-hidden="true">
+              <svg class="thumb-art" viewBox="0 0 320 180" fill="none">
+                <circle cx="72" cy="54" r="52" fill="#38bdf8" fill-opacity="0.14"/>
+                <circle cx="258" cy="134" r="64" fill="#d9153c" fill-opacity="0.18"/>
+                <path d="M0 142 L68 96 L128 126 L204 72 L320 132 L320 180 L0 180 Z" fill="#0f172a" fill-opacity="0.45"/>
+                <rect x="134" y="68" width="52" height="36" rx="10" fill="#000" fill-opacity="0.55"/>
+                <polygon points="154,78 154,94 170,86" fill="#fff"/>
+              </svg>
+              <span class="thumb-duration">12:34</span>
+            </div>
+            <div class="yt-meta">
+              <span class="yt-avatar" aria-hidden="true">AI</span>
+              <div class="yt-lines">
+                <p class="video-title" id="exampleOriginal" dir="auto"></p>
+                <p class="channel-line" id="exampleChannelBefore" dir="ltr"></p>
+              </div>
+            </div>
+          </figure>
+
+          <span class="preview-arrow" aria-hidden="true"></span>
+
+          <figure class="video-card after-card" id="afterCard">
+            <div class="card-top">
+              <figcaption id="afterLabel"></figcaption>
+              <span class="preview-badge" id="previewBadge"></span>
+            </div>
+            <div class="thumbnail" aria-hidden="true">
+              <svg class="thumb-art" viewBox="0 0 320 180" fill="none">
+                <circle cx="72" cy="54" r="52" fill="#38bdf8" fill-opacity="0.16"/>
+                <circle cx="258" cy="134" r="64" fill="#d9153c" fill-opacity="0.24"/>
+                <path d="M0 142 L68 96 L128 126 L204 72 L320 132 L320 180 L0 180 Z" fill="#0f172a" fill-opacity="0.45"/>
+                <rect x="134" y="68" width="52" height="36" rx="10" fill="#d9153c" fill-opacity="0.9"/>
+                <polygon points="154,78 154,94 170,86" fill="#fff"/>
+              </svg>
+              <span class="thumb-duration">12:34</span>
+            </div>
+            <div class="yt-meta">
+              <span class="yt-avatar" aria-hidden="true">AI</span>
+              <div class="yt-lines">
+                <p class="video-title" id="exampleTranslated" dir="auto"></p>
+                <p class="original-title" id="exampleOriginalAfter" dir="auto"></p>
+                <p class="channel-line" id="exampleChannelAfter" dir="ltr"></p>
+              </div>
+            </div>
+          </figure>
+        </div>
+
+        <div class="local-trial" id="localTrialRow" hidden>
+          <button type="button" id="tryLocalBtn" hidden></button>
+          <p id="tryLocalStatus" role="status" aria-live="polite"></p>
+          <p id="tryLocalOutput" dir="auto"></p>
+        </div>
       </li>
+
       <li>
-        <a id="openYouTube" href="https://www.youtube.com/" target="_blank" rel="noopener"></a>
-        <p id="localNote" hidden></p>
-        <p id="localUnsupported" role="note" hidden></p>
-        <p id="aiNote"></p>
-      </li>
-      <li>
-        <h2 id="pinTitle"></h2>
+        <div class="step-head">
+          <div class="step-title-group">
+            <span class="step-num" aria-hidden="true"></span>
+            <h2 id="pinTitle"></h2>
+          </div>
+        </div>
         <p id="pinTip"></p>
+        <div class="pin-flow">
+          <div class="pin-card">
+            <div class="pin-card-head">
+              <span class="pin-step-pill p1" aria-hidden="true">1</span>
+              <span id="pinStep1"></span>
+            </div>
+            <div class="pin-stage" aria-hidden="true">
+              <div class="chrome-url">youtube.com</div>
+              <span class="toolbar-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 8 A1.5 1.5 0 0 1 6 6.5 H9.4 A2.1 2.1 0 1 1 13.6 6.5 H17 A1.5 1.5 0 0 1 18.5 8 V11.4 A2.1 2.1 0 1 1 18.5 15.6 V19 A1.5 1.5 0 0 1 17 20.5 H6 A1.5 1.5 0 0 1 4.5 19 V15.6 A2.1 2.1 0 1 0 4.5 11.4 Z"></path>
+                </svg>
+              </span>
+              <svg class="toolbar-dots" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="1.9"></circle>
+                <circle cx="12" cy="12" r="1.9"></circle>
+                <circle cx="12" cy="19" r="1.9"></circle>
+              </svg>
+            </div>
+          </div>
+
+          <span class="pin-arrow" aria-hidden="true"></span>
+
+          <div class="pin-card">
+            <div class="pin-card-head">
+              <span class="pin-step-pill p2" aria-hidden="true">2</span>
+              <span id="pinStep2"></span>
+            </div>
+            <div class="pin-stage" aria-hidden="true">
+              <img class="pin-ext-icon" src="icon/icon48.png" alt="">
+              <span class="pin-ext-name" id="pinExtName"></span>
+              <span class="pin-action">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 17v5"></path>
+                  <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <div class="step-head">
+          <div class="step-title-group">
+            <span class="step-num" aria-hidden="true"></span>
+            <h2 id="readyTitle"></h2>
+          </div>
+        </div>
+        <div class="compare-box">
+          <div class="compare-top">
+            <span class="compare-heading" id="compareHeading"></span>
+            <span class="compare-orig-wrap">
+              <span id="compareOrigLabel"></span>
+              <span id="compareOrig" dir="auto"></span>
+            </span>
+          </div>
+          <div class="compare-grid">
+            <div class="cmp-col">
+              <div class="cmp-col-head">
+                <span class="cmp-col-title" id="compareLocalLabel"></span>
+                <span class="cmp-col-meta" id="compareLocalMeta"></span>
+              </div>
+              <p class="cmp-result"><span id="compareLocalResult" dir="auto"></span></p>
+              <p class="cmp-note" id="compareLocalNote"></p>
+            </div>
+            <div class="cmp-col ai">
+              <div class="cmp-col-head">
+                <span class="cmp-col-title" id="compareAiLabel"></span>
+                <span class="cmp-col-meta" id="compareAiMeta"></span>
+              </div>
+              <p class="cmp-result"><span class="cmp-tag" id="compareAiTag"></span><span id="compareAiResult" dir="auto"></span></p>
+              <p class="cmp-note" id="compareAiNote"></p>
+            </div>
+          </div>
+        </div>
+        <div class="launch-notes">
+          <p id="localNote" hidden></p>
+          <p id="localUnsupported" role="note" hidden></p>
+          <p id="aiNote"></p>
+        </div>
+        <a id="openYouTube" href="https://www.youtube.com/" target="_blank" rel="noopener"></a>
       </li>
     </ol>
+
     <p id="privacy"></p>
   </main>
 </body>

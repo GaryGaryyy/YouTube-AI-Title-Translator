@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "Configurer la traduction des titres",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "Activer ou mettre en pause la traduction automatique des titres"
   }
 }

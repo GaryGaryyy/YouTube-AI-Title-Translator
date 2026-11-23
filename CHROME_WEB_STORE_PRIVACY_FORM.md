@@ -35,7 +35,7 @@ Disclose the following data types if the form asks what user data the extension 
 
 - Website content: YouTube video titles visible on the page are read so the extension can translate and display bilingual titles.
 - Authentication information: API keys entered by the user are stored locally and used to call the user-selected AI service.
-- User activity or user settings/preferences: selected provider, model, endpoint, translation switch, and local translation cache are stored locally for extension functionality.
+- User activity or user settings/preferences: selected provider, model, endpoint, translation switch, display preferences, local translation cache, and local aggregate usage counters (success/failure counts, error categories, and up to 30 active dates for local diagnostics; no titles, URLs, or keys) are stored locally for extension functionality.
 
 Do not claim that the extension collects personal identity, financial information, health information, or precise location.
 
@@ -57,7 +57,7 @@ Use these statements where relevant:
 Paste-ready, storage (需请求 storage 的理由):
 
 ```
-The storage permission is used only to save the user's settings (API keys, provider, model, translation mode, target language, UI language, and last successful configuration test time) and a local translation cache in the browser. Stored settings and cache are never uploaded to the developer. AI translation and explicit configuration tests send title text and required API credentials directly to the user's selected endpoint.
+The storage permission is used only to save the user's settings (API keys, provider, model, translation mode, target language, UI language, display preferences, and last successful configuration test time), a local translation cache, and local aggregate usage counters for optional diagnostics in the browser. Stored settings, counters, and cache are never uploaded to the developer. AI translation and explicit configuration tests send title text and required API credentials directly to the user's selected endpoint.
 ```
 
 Paste-ready, host permissions (需请求主机权限的理由):

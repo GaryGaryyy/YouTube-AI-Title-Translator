@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "Titelübersetzung konfigurieren",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "Automatische Titelübersetzung ein- oder ausschalten"
   }
 }

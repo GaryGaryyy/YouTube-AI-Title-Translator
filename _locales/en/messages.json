@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "Configure title translation",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "Toggle automatic title translation"
   }
 }

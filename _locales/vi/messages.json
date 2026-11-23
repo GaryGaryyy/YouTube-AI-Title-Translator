@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "Cấu hình dịch tiêu đề",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "Bật hoặc tạm dừng tự động dịch tiêu đề"
   }
 }

@@ -267,4 +267,89 @@ const WELCOME_TEXT = {
     }
 };
 
-if (typeof module !== "undefined" && module.exports) module.exports = { WELCOME_TEXT };
+const WELCOME_SAMPLE_PREVIEWS = {
+    "zh-Hans": { source: "How global creators explain AI tools", translated: "全球创作者如何解读 AI 工具", channel: "Creator Lab · 1.2M views" },
+    "zh-Hant": { source: "How global creators explain AI tools", translated: "全球創作者如何解讀 AI 工具", channel: "Creator Lab · 1.2M views" },
+    en: { source: "東京旅行Vlog 2026 おすすめスポット", translated: "Tokyo Travel Vlog 2026: Top Recommended Spots", channel: "Tokyo Walk · 860K views" },
+    ja: { source: "How global creators explain AI tools", translated: "世界のクリエイターがAIツールを解説する方法", channel: "Creator Lab · 1.2M views" },
+    ko: { source: "How global creators explain AI tools", translated: "글로벌 크리에이터들이 AI 도구를 설명하는 방법", channel: "Creator Lab · 1.2M views" },
+    th: { source: "How global creators explain AI tools", translated: "ครีเอเตอร์ทั่วโลกอธิบายเครื่องมือ AI อย่างไร", channel: "Creator Lab · 1.2M views" },
+    es: { source: "How global creators explain AI tools", translated: "Cómo explican los creadores globales las herramientas de IA", channel: "Creator Lab · 1.2M views" },
+    fr: { source: "How global creators explain AI tools", translated: "Comment les créateurs mondiaux expliquent les outils d’IA", channel: "Creator Lab · 1.2M views" },
+    de: { source: "How global creators explain AI tools", translated: "Wie internationale Creator KI-Tools erklären", channel: "Creator Lab · 1.2M views" },
+    pt: { source: "How global creators explain AI tools", translated: "Como criadores globais explicam ferramentas de IA", channel: "Creator Lab · 1.2M views" },
+    id: { source: "How global creators explain AI tools", translated: "Cara kreator global menjelaskan alat AI", channel: "Creator Lab · 1.2M views" },
+    vi: { source: "How global creators explain AI tools", translated: "Cách các nhà sáng tạo toàn cầu giải thích công cụ AI", channel: "Creator Lab · 1.2M views" }
+};
+
+const WELCOME_TRIAL_KEYS = ["tryLocal", "tryLocalUnsupported", "tryLocalUnavailable", "tryLocalDownloading",
+    "tryLocalWorking", "tryLocalReady", "tryLocalFailed",
+    "previewBadgeExample", "previewBadgeWorking", "previewBadgeLive",
+    "readyTitle", "pinExtName", "pinStep1", "pinStep2", "uiLanguageLabel",
+    "compareHeading", "compareOrigLabel", "compareOrig",
+    "compareLocalLabel", "compareLocalMeta", "compareLocalResult", "compareLocalNote",
+    "compareAiLabel", "compareAiMeta", "compareAiTag", "compareAiResult", "compareAiNote"];
+const WELCOME_TRIAL_TEXT = {
+    en: ["Download language pack", "This browser doesn’t support on-device translation. Open the extension from the toolbar to set up an AI API key.", "On-device translation is unavailable for this language pair. Choose AI translation in the extension settings.", "Downloading Chrome’s on-device language pack…", "Translating on this device…", "Language pack ready — open YouTube to start.", "Couldn’t complete the download. Click to try again.", "Preview", "Translating…", "Ready", "Open YouTube and start browsing", "YouTube Title Translator", "Click the puzzle icon", "Click Pin to keep it handy", "Interface language",
+        "On-device vs AI comparison", "Sample title", "史上最高のギターイントロ80選",
+        "On-device", "Free · no API key", "80 Great Guitar Intros", "Fast literal translation, ready out of the box, no tags",
+        "AI translation", "Context-aware · API key", "Music", "Top 80 Greatest Guitar Intros of All Time", "Natural idiomatic phrasing with automatic topic tags"],
+    "zh-Hans": ["下载本机语言包", "此浏览器不支持本机翻译。请点击工具栏里的扩展图标，切换 AI 翻译并填入 API Key。", "当前语言对暂不支持本机翻译。请在扩展设置中切换 AI 翻译。", "正在下载 Chrome 本机语言包…", "正在本机实时翻译…", "语言包已就绪，打开 YouTube 即可直接使用。", "下载未完成，请再次点击重试。", "效果预览", "本机翻译中…", "语言包已就绪", "打开 YouTube，马上体验", "YouTube 标题翻译", "点击右上角拼图图标", "点击图钉固定扩展", "切换页面语言",
+        "本机 vs AI 翻译对比", "示例原标题", "TOP 80 GREATEST GUITAR INTROS",
+        "本机翻译", "免费 · 无需 Key", "80大吉他前奏", "流畅直译，开箱即用，无分类标签",
+        "AI 翻译", "懂语境 · 需自备 Key", "音乐", "史上最伟大的80段吉他前奏", "更懂语境更地道，自动识别内容分类标签"],
+    ja: ["言語パックをダウンロード", "このブラウザーは端末内翻訳に対応していません。ツールバーの拡張機能アイコンから AI API キーを設定してください。", "この言語の組み合わせでは端末内翻訳を使えません。拡張機能の設定で AI 翻訳を選んでください。", "Chrome の言語パックをダウンロードしています…", "端末内で翻訳しています…", "言語パックの準備が完了しました。YouTube ですぐに使えます。", "ダウンロードに失敗しました。もう一度クリックしてください。", "プレビュー", "翻訳中…", "準備完了", "YouTube を開いて体験する", "YouTube タイトル翻訳", "パズルアイコンをクリック", "ピン留めアイコンをクリック", "表示言語を切り替え",
+        "端末内翻訳と AI 翻訳の比較", "サンプル原題", "TOP 80 GREATEST GUITAR INTROS",
+        "端末内翻訳", "無料 · キー不要", "ギターイントロ80選", "手軽な直訳ですぐ使え、タグなし",
+        "AI 翻訳", "文脈を理解 · キー必要", "音楽", "史上最高のギターイントロ名曲80選", "自然な意訳と自動トピックタグ付き"],
+    ko: ["언어 팩 다운로드", "이 브라우저는 기기 내 번역을 지원하지 않습니다. 도구 모음의 확장 프로그램 아이콘에서 AI API 키를 설정하세요.", "이 언어 조합은 기기 내 번역을 지원하지 않습니다. 확장 프로그램 설정에서 AI 번역을 선택하세요.", "Chrome 언어 팩을 다운로드하는 중…", "기기 내에서 번역하는 중…", "언어 팩 준비 완료! 이제 YouTube에서 바로 사용할 수 있습니다.", "다운로드에 실패했습니다. 버튼을 눌러 다시 시도하세요.", "미리보기", "번역 중…", "준비 완료", "YouTube를 열고 바로 사용하기", "YouTube 제목 번역", "퍼즐 아이콘 클릭", "핀 아이콘으로 고정", "표시 언어 변경",
+        "기기 내 번역 vs AI 번역 비교", "예시 원제목", "TOP 80 GREATEST GUITAR INTROS",
+        "기기 내 번역", "무료 · 키 불필요", "기타 인트로 80선", "간편한 직역, 바로 사용 가능, 태그 없음",
+        "AI 번역", "문맥 이해 · 키 필요", "음악", "역대 가장 위대한 기타 인트로 80곡", "자연스러운 의역과 자동 주제 태그 제공"],
+    th: ["ดาวน์โหลดชุดภาษา", "เบราว์เซอร์นี้ไม่รองรับการแปลบนอุปกรณ์ เปิดส่วนขยายจากแถบเครื่องมือเพื่อตั้งค่าคีย์ API สำหรับ AI", "การแปลบนอุปกรณ์ยังไม่รองรับภาษาคู่นี้ เลือกการแปลด้วย AI ในการตั้งค่าส่วนขยาย", "กำลังดาวน์โหลดชุดภาษาของ Chrome…", "กำลังแปลบนอุปกรณ์…", "ชุดภาษาพร้อมแล้ว เปิด YouTube แล้วใช้งานได้ทันที", "ดาวน์โหลดไม่สำเร็จ กดปุ่มเพื่อลองอีกครั้ง", "ตัวอย่าง", "กำลังแปล…", "พร้อมใช้งาน", "เปิด YouTube แล้วเริ่มใช้งานเลย", "แปลชื่อวิดีโอ YouTube", "คลิกไอคอนจิ๊กซอว์", "คลิกปักหมุดส่วนขยาย", "ภาษาที่แสดง",
+        "เทียบการแปลบนอุปกรณ์กับ AI", "ชื่อตัวอย่าง", "TOP 80 GREATEST GUITAR INTROS",
+        "แปลบนอุปกรณ์", "ฟรี · ไม่ต้องใช้คีย์", "80 อินโทรกีตาร์ยอดนิยม", "แปลตรงตัวรวดเร็ว พร้อมใช้ทันที ไม่มีแท็ก",
+        "แปลด้วย AI", "เข้าใจบริบท · ต้องใช้คีย์", "เพลง", "80 อินโทรกีตาร์ที่ยิ่งใหญ่ที่สุดตลอดกาล", "สำนวนเป็นธรรมชาติพร้อมแท็กหมวดหมู่อัตโนมัติ"],
+    es: ["Descargar paquete de idioma", "Este navegador no admite la traducción en el dispositivo. Abre la extensión desde la barra de herramientas para configurar una clave de API de IA.", "La traducción en el dispositivo no está disponible para este par de idiomas. Selecciona la traducción con IA en los ajustes de la extensión.", "Descargando el paquete de idioma de Chrome…", "Traduciendo en el dispositivo…", "Paquete de idioma listo: abre YouTube para usarlo.", "No se pudo completar la descarga. Pulsa para reintentar.", "Vista previa", "Traduciendo…", "Listo", "Abre YouTube y empieza a navegar", "Traductor de títulos", "Pulsa el icono del puzle", "Pulsa la chincheta para fijar", "Idioma de la página",
+        "Local frente a traducción con IA", "Título de ejemplo", "TOP 80 GREATEST GUITAR INTROS",
+        "En el dispositivo", "Gratis · sin clave", "Los 80 mejores intros de guitarra", "Traducción directa y rápida, sin etiquetas",
+        "Traducción con IA", "Con contexto · requiere clave", "Música", "Los 80 mejores riffs de entrada de guitarra de la historia", "Más natural y con etiquetas temáticas automáticas"],
+    fr: ["Télécharger le pack de langue", "Ce navigateur ne prend pas en charge la traduction sur l’appareil. Ouvrez l’extension depuis la barre d’outils pour configurer une clé d’API d’IA.", "La traduction sur l’appareil est indisponible pour cette paire de langues. Sélectionnez la traduction par IA dans les réglages de l’extension.", "Téléchargement du pack de langue Chrome…", "Traduction sur l’appareil…", "Pack prêt — ouvrez YouTube pour commencer.", "Échec du téléchargement. Cliquez pour réessayer.", "Aperçu", "Traduction…", "Prêt", "Ouvrez YouTube et essayez", "Traducteur de titres", "Cliquez sur le puzzle", "Cliquez sur l’épingle", "Langue de la page",
+        "Local vs traduction par IA", "Titre d’exemple", "TOP 80 GREATEST GUITAR INTROS",
+        "Sur l’appareil", "Gratuit · sans clé", "80 intros de guitare célèbres", "Traduction littérale rapide, prête à l’emploi, sans étiquette",
+        "Traduction IA", "Contextuelle · clé requise", "Musique", "Les 80 plus grandes intros de guitare de tous les temps", "Formulation naturelle avec étiquettes thématiques automatiques"],
+    de: ["Sprachpaket herunterladen", "Dieser Browser unterstützt keine Übersetzung auf dem Gerät. Öffne die Erweiterung über die Symbolleiste und hinterlege einen KI-API-Schlüssel.", "Für dieses Sprachpaar ist keine Übersetzung auf dem Gerät verfügbar. Wähle in den Einstellungen der Erweiterung die KI-Übersetzung aus.", "Chrome-Sprachpaket wird heruntergeladen…", "Wird lokal übersetzt…", "Sprachpaket bereit — öffne YouTube und leg los.", "Download fehlgeschlagen. Klicke zum Wiederholen.", "Vorschau", "Übersetzt…", "Bereit", "YouTube öffnen und loslegen", "YouTube-Titelübersetzer", "Auf das Puzzle klicken", "Mit Pin anheften", "Seitensprache",
+        "Lokal vs. KI-Übersetzung", "Beispieltitel", "TOP 80 GREATEST GUITAR INTROS",
+        "Auf dem Gerät", "Kostenlos · ohne Schlüssel", "80 beste Gitarren-Intros", "Direkte Übersetzung, sofort startklar, ohne Tags",
+        "KI-Übersetzung", "Kontextstark · Schlüssel nötig", "Musik", "Die 80 legendärsten Gitarren-Intros aller Zeiten", "Natürlicher Ausdruck mit automatischen Themen-Tags"],
+    pt: ["Baixar pacote de idioma", "Este navegador não oferece tradução no dispositivo. Abra a extensão pela barra de ferramentas para configurar uma chave de API de IA.", "A tradução no dispositivo não está disponível para este par de idiomas. Selecione a tradução por IA nas configurações da extensão.", "Baixando o pacote de idioma do Chrome…", "Traduzindo no dispositivo…", "Pacote pronto — abra o YouTube para começar.", "Não foi possível baixar. Clique para tentar novamente.", "Prévia", "Traduzindo…", "Pronto", "Abra o YouTube e comece a usar", "Tradutor de títulos", "Clique no quebra-cabeça", "Clique no alfinete", "Idioma da página",
+        "Local vs tradução por IA", "Título de exemplo", "TOP 80 GREATEST GUITAR INTROS",
+        "No dispositivo", "Grátis · sem chave", "80 melhores intros de guitarra", "Tradução direta e rápida, pronta para uso, sem etiquetas",
+        "Tradução por IA", "Com contexto · exige chave", "Música", "As 80 maiores introduções de guitarra de todos os tempos", "Texto mais natural com etiquetas temáticas automáticas"],
+    id: ["Unduh paket bahasa", "Browser ini tidak mendukung terjemahan di perangkat. Buka ekstensi dari bilah alat untuk mengatur kunci API AI.", "Terjemahan di perangkat belum tersedia untuk pasangan bahasa ini. Pilih terjemahan AI di setelan ekstensi.", "Mengunduh paket bahasa Chrome…", "Menerjemahkan di perangkat…", "Paket bahasa siap — buka YouTube untuk mulai.", "Gagal mengunduh. Klik untuk mencoba lagi.", "Pratinjau", "Menerjemahkan…", "Siap", "Buka YouTube dan mulai jelajah", "Penerjemah Judul YouTube", "Klik ikon puzzle", "Klik ikon pin", "Bahasa halaman",
+        "Perbandingan lokal vs AI", "Judul contoh", "TOP 80 GREATEST GUITAR INTROS",
+        "Di perangkat", "Gratis · tanpa kunci", "80 intro gitar terbaik", "Terjemahan langsung yang cepat, siap pakai, tanpa tag",
+        "Terjemahan AI", "Paham konteks · perlu kunci", "Musik", "80 Intro Gitar Terbaik Sepanjang Masa", "Lebih natural dan dilengkapi tag topik otomatis"],
+    vi: ["Tải gói ngôn ngữ", "Trình duyệt này không hỗ trợ dịch trên thiết bị. Hãy mở tiện ích từ thanh công cụ để thiết lập khóa API AI.", "Tính năng dịch trên thiết bị chưa hỗ trợ cặp ngôn ngữ này. Hãy chọn dịch bằng AI trong phần cài đặt tiện ích.", "Đang tải gói ngôn ngữ Chrome…", "Đang dịch trên thiết bị…", "Gói ngôn ngữ đã sẵn sàng — mở YouTube để dùng ngay.", "Không thể tải xong. Hãy bấm để thử lại.", "Xem trước", "Đang dịch…", "Sẵn sàng", "Mở YouTube và trải nghiệm ngay", "Dịch tiêu đề YouTube", "Nhấp biểu tượng mảnh ghép", "Nhấp ghim lên thanh công cụ", "Ngôn ngữ trang",
+        "So sánh dịch cục bộ và AI", "Tiêu đề mẫu", "TOP 80 GREATEST GUITAR INTROS",
+        "Trên thiết bị", "Miễn phí · không cần khóa", "80 đoạn intro guitar hay nhất", "Dịch trực tiếp nhanh gọn, dùng ngay, không gắn thẻ",
+        "Dịch bằng AI", "Hiểu ngữ cảnh · cần khóa", "Âm nhạc", "Top 80 đoạn dạo đầu guitar vĩ đại nhất mọi thời đại", "Diễn đạt tự nhiên hơn cùng thẻ chủ đề tự động"],
+    ru: ["Скачать языковой пакет", "Этот браузер не поддерживает перевод на устройстве. Откройте расширение на панели инструментов и настройте ключ API для ИИ.", "Перевод на устройстве недоступен для этой языковой пары. Выберите перевод с ИИ в настройках расширения.", "Скачивается языковой пакет Chrome…", "Перевод на устройстве…", "Языковой пакет готов — можно открывать YouTube.", "Не удалось скачать. Нажмите, чтобы повторить.", "Предпросмотр", "Перевод…", "Готово", "Откройте YouTube и попробуйте", "Переводчик заголовков", "Нажмите значок пазла", "Нажмите значок булавки", "Язык страницы",
+        "Сравнение локального и ИИ-перевода", "Пример заголовка", "TOP 80 GREATEST GUITAR INTROS",
+        "На устройстве", "Бесплатно · без ключа", "80 лучших гитарных интро", "Быстрый прямой перевод сразу после установки, без меток",
+        "Перевод с ИИ", "С контекстом · нужен ключ", "Музыка", "80 величайших гитарных вступлений в истории", "Естественная формулировка и автоматические метки тем"],
+    ar: ["تنزيل حزمة اللغة", "هذا المتصفح لا يدعم الترجمة على الجهاز. افتح الإضافة من شريط الأدوات لإعداد مفتاح واجهة برمجة التطبيقات للذكاء الاصطناعي.", "الترجمة على الجهاز غير متاحة لهاتين اللغتين. اختر الترجمة بالذكاء الاصطناعي في إعدادات الإضافة.", "جارٍ تنزيل حزمة اللغة في Chrome…", "جارٍ الترجمة على الجهاز…", "حزمة اللغة جاهزة — افتح YouTube للبدء.", "تعذّر التنزيل. اضغط للمحاولة مرة أخرى.", "معاينة", "جارٍ الترجمة…", "جاهز", "افتح YouTube وابدأ التصفح", "مترجم عناوين YouTube", "انقر أيقونة الأحجية", "انقر أيقونة الدبوس للتثبيت", "لغة الصفحة",
+        "مقارنة الترجمة المحلية والذكاء الاصطناعي", "عنوان تجريبي", "TOP 80 GREATEST GUITAR INTROS",
+        "على الجهاز", "مجاني · دون مفتاح", "أفضل 80 مقدمة غيتار", "ترجمة مباشرة وسريعة جاهزة فورًا دون وسوم",
+        "ترجمة بالذكاء الاصطناعي", "تفهم السياق · تتطلب مفتاحًا", "موسيقى", "أعظم 80 مقدمة غيتار في التاريخ", "صياغة طبيعية مع وسوم تلقائية للمواضيع"],
+    hi: ["भाषा पैक डाउनलोड करें", "यह ब्राउज़र डिवाइस पर अनुवाद की सुविधा नहीं देता। AI की API कुंजी सेट करने के लिए टूलबार से एक्सटेंशन खोलें।", "इन दो भाषाओं के बीच डिवाइस पर अनुवाद उपलब्ध नहीं है। एक्सटेंशन की सेटिंग में AI अनुवाद चुनें।", "Chrome का भाषा पैक डाउनलोड हो रहा है…", "डिवाइस पर अनुवाद हो रहा है…", "भाषा पैक तैयार है — अब YouTube खोलकर इस्तेमाल करें।", "डाउनलोड पूरा नहीं हो सका। दोबारा कोशिश करने के लिए क्लिक करें।", "पूर्वावलोकन", "अनुवाद हो रहा है…", "तैयार", "YouTube खोलें और शुरू करें", "YouTube शीर्षक अनुवादक", "पज़ल आइकन पर क्लिक करें", "पिन आइकन से फिक्स करें", "पेज की भाषा",
+        "लोकल बनाम AI अनुवाद तुलना", "उदाहरण शीर्षक", "TOP 80 GREATEST GUITAR INTROS",
+        "डिवाइस पर", "मुफ़्त · कुंजी नहीं चाहिए", "शीर्ष 80 गिटार इंट्रो", "तुरंत उपयोग के लिए सीधा अनुवाद, बिना टैग के",
+        "AI अनुवाद", "संदर्भ समझता है · कुंजी चाहिए", "संगीत", "अब तक के 80 सबसे महान गिटार इंट्रो", "स्वाभाविक भाषा और स्वचालित विषय टैग के साथ"]
+};
+for (const [code, values] of Object.entries(WELCOME_TRIAL_TEXT)) {
+    WELCOME_TRIAL_KEYS.forEach((key, index) => { WELCOME_TEXT[code][key] = values[index]; });
+}
+globalThis.WELCOME_SAMPLE_PREVIEWS = WELCOME_SAMPLE_PREVIEWS;
+
+if (typeof module !== "undefined" && module.exports) module.exports = { WELCOME_TEXT, WELCOME_SAMPLE_PREVIEWS };

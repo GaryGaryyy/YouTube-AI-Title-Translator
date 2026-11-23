@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "إعداد ترجمة العناوين",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "تشغيل الترجمة التلقائية للعناوين أو إيقافها مؤقتًا"
   }
 }

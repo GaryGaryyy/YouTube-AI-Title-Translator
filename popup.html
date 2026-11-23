@@ -5,119 +5,1024 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>YouTube Title Translator</title>
   <style>
-    :root { color-scheme:light; --bg:#fff; --surface:#fff; --soft:#f6f7f9; --text:#18202b; --muted:#636b79; --border:#dce0e7; --accent:#d9153c; --tint:#fff1f4; --success:#18764a; --success-bg:#edf8f1; --error:#a52335; --error-bg:#fff2f3; --draft:#8a5800; }
-    * { box-sizing:border-box; } [hidden] { display:none !important; }
-    body { margin:0; width:440px; background:var(--bg); color:var(--text); font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; overflow:hidden; }
-    button,input,select { font:inherit; } button { cursor:pointer; } button:disabled,fieldset:disabled button { cursor:wait; opacity:.6; }
-    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
-    a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
-    .app-shell { display:flex; flex-direction:column; max-height:600px; }
-    header { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:66px; padding:14px 20px; border-bottom:1px solid var(--border); }
-    .brand { display:flex; align-items:center; gap:10px; flex:1; min-width:0; } .brand-mark { width:32px; height:32px; flex-shrink:0; object-fit:contain; }
-    h1 { margin:0; font-size:15px; line-height:1.25; font-weight:700; overflow-wrap:anywhere; }
-    .brand-subtitle { margin-top:4px; color:var(--muted); font-size:10.5px; line-height:1.3; }
-    .interface-select { position:relative; flex-shrink:0; }
-    .interface-select .globe { position:absolute; inset-inline-start:10px; top:8px; width:17px; height:17px; pointer-events:none; }
-    .interface-select .chevron { position:absolute; inset-inline-end:9px; top:10px; width:13px; height:13px; pointer-events:none; }
-    #uiLanguageSelect { width:auto; field-sizing:content; min-width:136px; max-width:188px; height:33px; padding:5px 25px 5px 33px; padding-inline:33px 25px; font-size:12px; appearance:none; }
-    main { min-height:0; overflow-y:auto; padding:12px 20px 8px; scrollbar-width:thin; }
-    .mode-toolbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-    .master-control { display:flex; align-items:center; gap:10px; flex:0 1 auto; min-width:124px; } .basic-label { font-size:12px; }
-    .switch { position:relative; display:block; flex-shrink:0; width:34px; height:20px; margin:0; }
-    .switch input { width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
-    .slider { position:absolute; inset:0; background:#a5aab4; border-radius:20px; pointer-events:none; }
-    .slider::before { content:""; position:absolute; top:3px; inset-inline-start:3px; width:14px; height:14px; border-radius:50%; background:#fff; transition:transform .15s; }
-    .switch input:checked + .slider { background:var(--accent); } .switch input:checked + .slider::before { transform:translateX(14px); }
-    [dir="rtl"] .switch input:checked + .slider::before { transform:translateX(-14px); }
-    .switch input:focus-visible + .slider { outline:3px solid var(--accent); outline-offset:3px; }
-    .mode-grid { display:grid; grid-template-columns:1fr 1fr; flex:1; min-width:220px; gap:3px; padding:3px; border-radius:8px; background:#f1f3f5; }
-    .mode-card { min-height:30px; padding:4px 7px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--muted); text-align:center; line-height:1.3; }
-    .mode-card strong { font-size:12px; font-weight:500; }
-    .mode-card[aria-pressed="true"] { border-color:#e9acba; background:var(--tint); color:var(--accent); } .mode-card[aria-pressed="true"] strong { font-weight:650; }
-    .target-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding:5px 10px 5px 12px; background:var(--soft); border-radius:9px; }
-    .target-copy { min-width:0; } .target-copy label { margin:0; font-size:13px; } .target-hint { margin-top:2px; color:var(--muted); font-size:10.5px; line-height:1.25; }
-    #targetLanguageSelect { width:auto; field-sizing:content; min-width:138px; max-width:190px; flex-shrink:0; }
-    .notice { margin:12px 0 0; color:var(--muted); font-size:12px; line-height:1.65; }
-    h2 { margin:0; font-size:13px; font-weight:650; } fieldset { margin:0; padding:0; border:0; min-width:0; }
-    .provider-section { margin-top:10px; padding-top:6px; border-top:1px solid var(--border); }
-    .provider-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:6px; }
-    .provider-card { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:56px; padding:4px 3px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:var(--surface); }
-    .provider-card:hover { border-color:var(--muted); } .provider-card.active { border-color:var(--accent); background:var(--tint); box-shadow:inset 0 0 0 .5px var(--accent); }
-    .provider-card.active .p-name { color:var(--accent); font-weight:650; } .p-icon { height:30px; display:grid; place-items:center; }
-    .p-icon img { width:30px; height:30px; object-fit:contain; } .logo-openai,.logo-deepseek { width:34px !important; height:34px !important; }
-    .p-name { font-size:11.5px; line-height:1.25; white-space:nowrap; direction:ltr; unicode-bidi:isolate; }
-    .provider-card.provider-configured::after,.provider-card.provider-draft::after { content:""; position:absolute; inset-inline-end:5px; top:5px; width:5px; height:5px; border-radius:50%; background:#89929f; }
-    .provider-card.provider-verified::after { background:var(--success); } .provider-card.provider-draft::after { background:var(--draft); }
-    .model-card { margin-top:8px; } .input-section:not([hidden]) ~ .input-section:not([hidden]) { margin-top:8px; }
-    label { display:block; margin-bottom:5px; font-weight:600; line-height:1.25; }
-    .field-label { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:5px; } .field-label label { margin:0; } .field-label a { font-size:11px; font-weight:500; text-align:end; }
-    input[type="text"],input[type="url"],input[type="password"],select { width:100%; min-width:0; height:36px; padding:6px 10px; border:1px solid var(--border); border-radius:7px; color:var(--text); background:var(--surface); }
-    input::placeholder { color:var(--muted); opacity:.85; }
-    .api-key-field { display:flex; align-items:center; border:1px solid var(--border); border-radius:7px; background:var(--surface); }
-    .api-key-field input { border:0; min-width:0; flex:1; background:transparent; } .api-key-field:focus-within { outline:3px solid var(--accent); outline-offset:2px; } .api-key-field input:focus-visible { outline:0; }
-    .visibility-toggle { display:grid; place-items:center; flex-shrink:0; width:36px; height:34px; padding:0; border:0; border-radius:7px; background:transparent; } .visibility-toggle img { width:17px; height:17px; }
-    #advancedSettings { margin-top:6px; font-size:12px; color:var(--muted); } summary { cursor:pointer; padding:2px 0; } .advanced-content { padding:4px 0 2px; }
-    .model-id { margin:2px 0 8px; font-size:11px; overflow-wrap:anywhere; } .model-id code { font:inherit; }
-    .utility-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
-    .ghost-btn { min-height:32px; border:1px solid var(--border); border-radius:7px; background:var(--surface); color:var(--text); padding:5px 9px; font-size:11px; }
-    .skip-save { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); } .skip-save p { margin:5px 0 0; font-size:11px; }
-    .status-panel { margin-top:9px; padding:8px 10px; border-radius:8px; color:var(--muted); background:var(--soft); font-size:11px; }
-    .status-panel[data-kind="success"] { color:var(--success); background:var(--success-bg); } .status-panel[data-kind="error"] { color:var(--error); background:var(--error-bg); }
-    #status { margin:0; white-space:pre-line; overflow-wrap:anywhere; } #statusDetails { margin-top:4px; }
-    .diagnostic-grid { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:5px 0 0; } .diagnostic-grid dt,.diagnostic-grid dd { margin:0; } .diagnostic-grid code { font:inherit; }
-    .action-panel { flex-shrink:0; padding:7px 20px; border-top:1px solid var(--border); background:var(--surface); }
-    .state-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:5px; color:var(--muted); font-size:11px; line-height:1.3; }
-    .state-copy { display:flex; align-items:center; gap:5px; min-width:0; } #stateIcon { width:14px; height:14px; }
-    #configState[data-kind="draft"] { color:var(--draft); } #configState[data-kind="success"] { color:var(--success); } #versionLabel { font-size:10px; flex-shrink:0; direction:ltr; }
-    .primary-btn { width:100%; min-height:40px; padding:9px 12px; border:1px solid var(--accent); border-radius:8px; background:var(--accent); color:#fff; font-weight:650; }
-    .footer-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; margin-top:6px; color:var(--muted); }
-    .privacy-summary { margin:0; font-size:10px; line-height:1.45; }
-    .privacy-info { display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; width:16px; height:18px; padding:0; margin-inline-start:4px; border:0; background:transparent; } .privacy-info img { width:13px; height:13px; }
-    .footer-links { display:flex; gap:8px; flex-shrink:0; font-size:10px; margin-inline-start:auto; } .footer-links a { color:var(--muted); }
-    #privacyInfo { position:fixed; inset:auto 20px 92px; width:auto; max-width:400px; margin:0; padding:14px 16px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:12px; box-shadow:0 4px 16px #0002; }
-    #privacyInfo p { margin:6px 0 0; line-height:1.6; } #privacyInfo::backdrop { background:transparent; }
-    @media (prefers-reduced-motion:reduce) { .slider::before { transition:none; } }
-    @media (prefers-color-scheme:dark) { :root { color-scheme:dark; --bg:#1e2229; --surface:#1e2229; --soft:#292e37; --text:#f0f2f6; --muted:#b5bdca; --border:#3c4451; --accent:#ff5478; --tint:#39202a; --success:#72daa4; --success-bg:#173729; --error:#ff9ca6; --error-bg:#402329; --draft:#f5c76c; } .mode-grid { background:#292e37; } .mode-card[aria-pressed="true"] { border-color:#9c4a60; } .primary-btn { background:#d9153c; border-color:#d9153c; } .ui-icon { filter:brightness(1.9); } .logo-openai { filter:invert(1); } }
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --soft: #eef1f6;
+      --text: #151b26;
+      --muted: #647082;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.15);
+      --accent: #d9153c;
+      --accent-hover: #bf1133;
+      --accent-soft: #fff1f4;
+      --accent-border: rgba(217, 21, 60, 0.36);
+      --accent-text: #d9153c;
+      --success: #15803d;
+      --success-bg: #eaf7ef;
+      --error: #a52335;
+      --error-bg: #fff2f3;
+      --draft: #9a6200;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.07);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      width: 440px;
+      background: var(--bg);
+      color: var(--text);
+      font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      overflow: hidden;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled, fieldset:disabled button { cursor: wait; opacity: 0.6; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    a { color: var(--accent-text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      max-height: 600px;
+    }
+
+    /* Header */
+    header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .brand-copy { min-width: 0; }
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    h1 {
+      margin: 0;
+      font-size: 14.5px;
+      line-height: 1.2;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #versionLabel {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--soft);
+      padding: 1px 6px;
+      border-radius: 5px;
+      direction: ltr;
+    }
+    #versionLabel:empty { display: none; }
+    .brand-subtitle {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10.5px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .interface-select {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .interface-select .globe {
+      position: absolute;
+      inset-inline-start: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+      opacity: 0.72;
+    }
+    .interface-select .chevron {
+      position: absolute;
+      inset-inline-end: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      pointer-events: none;
+      opacity: 0.72;
+    }
+    #uiLanguageSelect {
+      width: auto;
+      field-sizing: content;
+      min-width: 108px;
+      max-width: 158px;
+      height: 30px;
+      padding: 4px 24px 4px 28px;
+      padding-inline: 28px 24px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--text);
+      font-size: 11.5px;
+      font-weight: 500;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    /* Main Scroll Area */
+    main {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scrollbar-width: thin;
+    }
+    main > * { flex-shrink: 0; }
+
+    /* Elevated Card Primitive */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      overflow: hidden;
+    }
+    .card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 13px;
+    }
+    .card-row + .card-row,
+    .card-row + .card-block,
+    .card-block + .card-row {
+      border-top: 1px solid var(--border);
+    }
+    .card-block {
+      padding: 9px 11px;
+    }
+    .row-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 0;
+    }
+    .row-title label {
+      margin: 0;
+      font-weight: 600;
+    }
+    .shortcut-badge {
+      padding: 1px 6px;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--soft);
+      color: var(--muted);
+      font: 500 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: nowrap;
+      direction: ltr;
+    }
+
+    /* Switch */
+    .switch {
+      position: relative;
+      display: block;
+      flex-shrink: 0;
+      width: 36px;
+      height: 20px;
+      margin: 0;
+    }
+    .switch input {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #9ca4b3;
+      border-radius: 999px;
+      pointer-events: none;
+      transition: background 0.15s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      top: 2.5px;
+      inset-inline-start: 2.5px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+      transition: transform 0.15s;
+    }
+    .switch input:checked + .slider { background: var(--accent); }
+    .switch input:checked + .slider::before { transform: translateX(16px); }
+    [dir="rtl"] .switch input:checked + .slider::before { transform: translateX(-16px); }
+    .switch input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Mode Segmented Cards */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      padding: 3px;
+      border-radius: 10px;
+      background: var(--soft);
+    }
+    .mode-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      text-align: start;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .mode-card svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+    .mode-card-copy { min-width: 0; }
+    .mode-card strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .mode-card .mode-desc {
+      display: block;
+      margin-top: 1px;
+      font-size: 10px;
+      line-height: 1.25;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mode-card[aria-pressed="true"] {
+      background: var(--surface);
+      border-color: var(--accent-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .mode-card[aria-pressed="true"] svg,
+    .mode-card[aria-pressed="true"] strong {
+      color: var(--accent-text);
+    }
+
+    /* Compact Select */
+    #targetLanguageSelect {
+      width: auto;
+      field-sizing: content;
+      min-width: 126px;
+      max-width: 186px;
+      height: 31px;
+      padding: 4px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 550;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* Local Notice Strip */
+    .info-strip {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 0;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+    .info-strip svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--muted);
+    }
+
+    /* AI Settings Card */
+    .ai-card-body {
+      padding: 11px 13px 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 11.5px;
+      font-weight: 650;
+      color: var(--muted);
+    }
+    .section-head a {
+      font-size: 11px;
+      font-weight: 550;
+      text-align: end;
+    }
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+    }
+    .provider-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      min-height: 54px;
+      padding: 6px 3px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--muted);
+      background: var(--soft);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .provider-card:hover { border-color: var(--border-strong); color: var(--text); }
+    .provider-card.active {
+      border-color: var(--accent-border);
+      background: var(--accent-soft);
+      color: var(--accent-text);
+    }
+    .provider-card.active .p-name { color: var(--accent-text); font-weight: 650; }
+    .p-icon { height: 24px; display: grid; place-items: center; }
+    .p-icon img { width: 22px; height: 22px; object-fit: contain; }
+    .logo-openai, .logo-deepseek { width: 25px !important; height: 25px !important; }
+    .p-name { font-size: 11px; line-height: 1.2; white-space: nowrap; direction: ltr; unicode-bidi: isolate; }
+    .provider-card.provider-configured::after,
+    .provider-card.provider-draft::after {
+      content: "";
+      position: absolute;
+      inset-inline-end: 5px;
+      top: 5px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #89929f;
+    }
+    .provider-card.provider-verified::after { background: var(--success); }
+    .provider-card.provider-draft::after { background: var(--draft); }
+
+    .model-fields { display: grid; gap: 8px; }
+    .input-section label {
+      display: block;
+      margin: 0 0 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .input-section input[type="text"],
+    .input-section input[type="url"],
+    .input-section select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 5px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      color: var(--text);
+      background: var(--soft);
+      font-size: 12px;
+    }
+    .input-section input::placeholder { color: var(--muted); opacity: 0.85; }
+    .field-hint {
+      margin: 4px 0 0;
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+    .api-key-field {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+    .api-key-field input {
+      border: 0;
+      min-width: 0;
+      flex: 1;
+      height: 32px;
+      padding: 5px 10px;
+      background: transparent;
+      color: var(--text);
+      font-size: 12px;
+    }
+    .api-key-field:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .api-key-field input:focus-visible { outline: 0; }
+    .visibility-toggle {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 34px;
+      height: 32px;
+      padding: 0;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+    }
+    .visibility-toggle img { width: 16px; height: 16px; opacity: 0.78; }
+
+    /* Status Panel */
+    .status-panel {
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 11.5px;
+    }
+    .status-panel[data-kind="success"] { color: var(--success); background: var(--success-bg); border-color: transparent; }
+    .status-panel[data-kind="error"] { color: var(--error); background: var(--error-bg); border-color: transparent; }
+    #status { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+    #statusDetails { margin-top: 5px; }
+    .diagnostic-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 5px 0 0; }
+    .diagnostic-grid dt, .diagnostic-grid dd { margin: 0; }
+    .diagnostic-grid code { font: inherit; }
+
+    /* More Settings Accordion Card */
+    #advancedSettings {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      overflow: hidden;
+    }
+    #advancedSettings > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 13px;
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+    #advancedSettings > summary::-webkit-details-marker { display: none; }
+    #advancedSettings > summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      border-radius: 12px;
+    }
+    .acc-chevron {
+      width: 15px;
+      height: 15px;
+      color: var(--muted);
+      transition: transform 0.18s;
+      flex-shrink: 0;
+    }
+    #advancedSettings[open] .acc-chevron { transform: rotate(180deg); }
+    .advanced-content {
+      border-top: 1px solid var(--border);
+      padding: 10px 13px 12px;
+      display: grid;
+      gap: 11px;
+    }
+    .display-preferences {
+      display: grid;
+      gap: 10px;
+    }
+    .preference-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .preference-row label {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 550;
+      color: var(--text);
+    }
+
+    /* Segmented Order Control */
+    .order-segment {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      padding: 2px;
+      border-radius: 8px;
+      background: var(--soft);
+      border: 1px solid var(--border);
+    }
+    .order-btn {
+      padding: 4px 10px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 550;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    .order-btn[aria-pressed="true"] {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 650;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Skip Languages Chips */
+    .skip-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #skipLanguagesGroup legend {
+      padding: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .preference-hint {
+      margin: 0;
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .language-choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 7px;
+    }
+    .language-choices label {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      margin: 0;
+    }
+    .language-choices label:hover { color: var(--text); border-color: var(--muted); }
+    .language-choices label.active {
+      border-color: var(--accent-border);
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+    .language-choices label:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .language-choices input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; margin: 0; }
+
+    /* AI Meta Row + Save Only */
+    .ai-meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+    .model-id {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+    .model-id code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--soft);
+      color: var(--text);
+    }
+    .link-btn {
+      border: 0;
+      background: transparent;
+      padding: 2px 0;
+      color: var(--accent-text);
+      font-size: 11px;
+      font-weight: 550;
+    }
+    .link-btn:hover { text-decoration: underline; }
+
+    /* 2-Column Tool Buttons */
+    .utility-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      padding-top: 9px;
+      border-top: 1px solid var(--border);
+    }
+    .ghost-btn {
+      min-height: 31px;
+      padding: 5px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 550;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .ghost-btn:hover { border-color: var(--muted); }
+    .ghost-btn svg { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; }
+
+    #reviewPrompt:not([hidden]) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 11.5px;
+    }
+    #reviewPrompt .ghost-btn { min-height: 26px; padding: 3px 9px; }
+
+    /* Sticky Action Footer */
+    .action-panel {
+      flex-shrink: 0;
+      padding: 9px 16px 10px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .state-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    .state-copy {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+    #stateIcon { width: 13px; height: 13px; flex-shrink: 0; }
+    #configState[data-kind="draft"] { color: var(--draft); font-weight: 600; }
+    #configState[data-kind="success"] { color: var(--success); font-weight: 600; }
+    .primary-btn {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 14px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 650;
+      box-shadow: 0 2px 8px rgba(217, 21, 60, 0.24);
+      transition: background 0.15s;
+    }
+    .primary-btn:hover { background: var(--accent-hover); }
+
+    .footer-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 10.5px;
+    }
+    .privacy-summary {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .privacy-lock { width: 11px; height: 11px; opacity: 0.78; flex-shrink: 0; }
+    .privacy-info {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    .privacy-info img { width: 12px; height: 12px; opacity: 0.75; }
+    .footer-links {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+      margin-inline-start: auto;
+    }
+    .footer-links a { color: var(--muted); }
+    .footer-links a:hover { color: var(--text); }
+
+    #privacyInfo {
+      position: fixed;
+      inset: auto 16px 86px;
+      width: auto;
+      max-width: 408px;
+      margin: 0;
+      padding: 13px 15px;
+      border: 1px solid var(--border-strong);
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    #privacyInfo p { margin: 6px 0 0; line-height: 1.55; color: var(--muted); }
+    #privacyInfo::backdrop { background: transparent; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slider::before, .acc-chevron { transition: none; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #171a21;
+        --surface: #1f242e;
+        --soft: #272d3a;
+        --text: #f1f4f9;
+        --muted: #9aa5b6;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.14);
+        --accent: #e5284f;
+        --accent-hover: #cf1f43;
+        --accent-soft: rgba(229, 40, 79, 0.14);
+        --accent-border: rgba(229, 40, 79, 0.48);
+        --accent-text: #ff6b8a;
+        --success: #4ade80;
+        --success-bg: rgba(74, 222, 128, 0.12);
+        --error: #ff9ca6;
+        --error-bg: rgba(255, 100, 120, 0.14);
+        --draft: #f5c76c;
+        --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.25);
+      }
+      .ui-icon { filter: brightness(1.9); }
+      .logo-openai { filter: invert(1); }
+    }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <header>
-      <div class="brand"><img class="brand-mark" src="icon/icon128.png" alt=""><div><h1 data-i18n="appTitle">YouTube Title Translator</h1><div class="brand-subtitle" data-i18n="brandSubtitle">Bilingual titles · Explore more</div></div></div>
-      <div class="interface-select"><img class="globe ui-icon" src="assets/icons/globe.svg" alt=""><select id="uiLanguageSelect" aria-label="Switch interface text" data-i18n-attr="aria-label:uiLanguageLabel;title:uiLanguageLabel"></select><img class="chevron ui-icon" src="assets/icons/chevron-down.svg" alt=""></div>
-    </header>
-    <main>
-      <div class="mode-toolbar">
-        <div class="master-control"><span class="basic-label" data-i18n="masterLabel">Translate</span><label class="switch"><input id="masterToggle" type="checkbox" role="switch" checked aria-label="Automatic translation" data-i18n-attr="aria-label:masterDesc;title:masterDesc"><span class="slider"></span></label></div>
-        <div class="mode-grid" role="group" data-i18n-attr="aria-label:modeTitle"><button type="button" class="mode-card" id="modeLocal" aria-pressed="true" data-i18n-attr="title:modeLocalDesc"><strong data-i18n="modeLocal">On-device</strong></button><button type="button" class="mode-card" id="modeAi" aria-pressed="false" data-i18n-attr="title:modeAiDesc"><strong data-i18n="modeAi">AI translation</strong></button></div>
+      <div class="brand">
+        <img class="brand-mark" src="icon/icon128.png" alt="">
+        <div class="brand-copy">
+          <div class="brand-title-row">
+            <h1 data-i18n="appTitle">YouTube Title Translator</h1>
+            <span id="versionLabel"></span>
+          </div>
+          <div class="brand-subtitle" data-i18n="brandSubtitle">Bilingual titles · Explore more</div>
+        </div>
       </div>
-      <div class="target-row"><div class="target-copy"><label for="targetLanguageSelect" data-i18n="targetLanguageLabel">Translate titles into</label><div class="target-hint" data-i18n="targetLanguageHint">For YouTube video titles</div></div><select id="targetLanguageSelect"></select></div>
-      <p class="notice" id="localNotice" data-i18n="localNotice">Uses Chrome’s on-device translator. Supported browser and languages required.</p>
+      <div class="interface-select">
+        <img class="globe ui-icon" src="assets/icons/globe.svg" alt="">
+        <select id="uiLanguageSelect" aria-label="Switch interface text" data-i18n-attr="aria-label:uiLanguageLabel;title:uiLanguageLabel"></select>
+        <img class="chevron ui-icon" src="assets/icons/chevron-down.svg" alt="">
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="card-row">
+          <span class="row-title">
+            <span data-i18n="masterLabel">Translate</span>
+            <kbd class="shortcut-badge">Alt+Shift+T</kbd>
+          </span>
+          <label class="switch">
+            <input id="masterToggle" type="checkbox" role="switch" checked aria-label="Automatic translation" data-i18n-attr="aria-label:masterDesc;title:masterDesc">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="card-block">
+          <div class="mode-grid" role="group" data-i18n-attr="aria-label:modeTitle">
+            <button type="button" class="mode-card" id="modeLocal" aria-pressed="true" data-i18n-attr="title:modeLocalDesc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span class="mode-card-copy">
+                <strong data-i18n="modeLocal">On-device</strong>
+                <span class="mode-desc" data-i18n="modeLocalDesc">Free · no API key</span>
+              </span>
+            </button>
+            <button type="button" class="mode-card" id="modeAi" aria-pressed="false" data-i18n-attr="title:modeAiDesc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/></svg>
+              <span class="mode-card-copy">
+                <strong data-i18n="modeAi">AI translation</strong>
+                <span class="mode-desc" data-i18n="modeAiDesc">Context-aware · API key</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <span class="row-title"><label for="targetLanguageSelect" data-i18n="targetLanguageLabel">Translate titles into</label></span>
+          <select id="targetLanguageSelect"></select>
+        </div>
+      </section>
+
+      <div class="info-strip" id="localNotice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span data-i18n="localNotice">Uses Chrome’s on-device translator. Supported browser and languages required.</span>
+      </div>
+
       <fieldset id="aiSettings" hidden>
-        <section class="provider-section" aria-labelledby="providerTitle"><h2 id="providerTitle" data-i18n="providerTitle">AI provider</h2><div class="provider-grid">
-          <button type="button" class="provider-card" id="card-openai" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="logo-openai" src="assets/brands/openai-mark.svg" alt=""></span><span class="p-name">OpenAI</span></button>
-          <button type="button" class="provider-card" id="card-anthropic" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/claude.svg" alt=""></span><span class="p-name">Claude</span></button>
-          <button type="button" class="provider-card" id="card-deepseek" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="logo-deepseek" src="assets/brands/deepseek.svg" alt=""></span><span class="p-name">DeepSeek</span></button>
-          <button type="button" class="provider-card" id="card-custom" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="ui-icon" src="assets/icons/code.svg" alt=""></span><span class="p-name">Custom</span></button>
-        </div></section>
-        <section class="model-card" data-i18n-attr="aria-label:modelTitle">
-          <div class="input-section" id="apiUrlGroup" hidden><label for="apiUrl" data-i18n="apiEndpointLabel">API endpoint</label><input type="url" id="apiUrl" dir="ltr" autocomplete="off" spellcheck="false"></div>
-          <div class="input-section" id="modelSection"><label for="modelSelect" data-i18n="modelVersionLabel">Model</label><select id="modelSelect" dir="ltr"></select></div>
-          <div class="input-section" id="manualModelSection" hidden><label for="modelName" data-i18n="modelNameLabel">Model name</label><input type="text" id="modelName" dir="ltr" autocomplete="off" spellcheck="false"><p class="notice" data-i18n="manualModelHint">Enter a model ID supported by this provider</p></div>
-          <div class="input-section"><div class="field-label"><label for="apiKey">API Key</label><a id="help-link" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">Get an API key</a></div><div class="api-key-field"><input type="password" id="apiKey" dir="ltr" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:apiKeyPlaceholder"><button type="button" class="visibility-toggle" id="apiKeyVisibility" aria-pressed="false" data-i18n-attr="aria-label:toggleKey;title:toggleKey"><img class="ui-icon" src="assets/icons/eye.svg" alt=""></button></div></div>
-        </section>
+        <div class="card">
+          <div class="ai-card-body">
+            <div class="section-head">
+              <h2 id="providerTitle" data-i18n="providerTitle">AI provider</h2>
+              <a id="help-link" href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">Get an API key</a>
+            </div>
+            <div class="provider-grid" role="group" aria-labelledby="providerTitle">
+              <button type="button" class="provider-card" id="card-openai" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="logo-openai" src="assets/brands/openai-mark.svg" alt=""></span><span class="p-name">OpenAI</span></button>
+              <button type="button" class="provider-card" id="card-anthropic" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img src="assets/brands/claude.svg" alt=""></span><span class="p-name">Claude</span></button>
+              <button type="button" class="provider-card" id="card-deepseek" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="logo-deepseek" src="assets/brands/deepseek.svg" alt=""></span><span class="p-name">DeepSeek</span></button>
+              <button type="button" class="provider-card" id="card-custom" aria-pressed="false"><span class="p-icon" aria-hidden="true"><img class="ui-icon" src="assets/icons/code.svg" alt=""></span><span class="p-name">Custom</span></button>
+            </div>
+            <div class="model-fields" data-i18n-attr="aria-label:modelTitle">
+              <div class="input-section" id="apiUrlGroup" hidden>
+                <label for="apiUrl" data-i18n="apiEndpointLabel">API endpoint</label>
+                <input type="url" id="apiUrl" dir="ltr" autocomplete="off" spellcheck="false">
+              </div>
+              <div class="input-section" id="modelSection">
+                <label for="modelSelect" data-i18n="modelVersionLabel">Model</label>
+                <select id="modelSelect" dir="ltr"></select>
+              </div>
+              <div class="input-section" id="manualModelSection" hidden>
+                <label for="modelName" data-i18n="modelNameLabel">Model name</label>
+                <input type="text" id="modelName" dir="ltr" autocomplete="off" spellcheck="false">
+                <p class="field-hint" data-i18n="manualModelHint">Enter a model ID supported by this provider</p>
+              </div>
+              <div class="input-section">
+                <label for="apiKey">API Key</label>
+                <div class="api-key-field">
+                  <input type="password" id="apiKey" dir="ltr" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:apiKeyPlaceholder">
+                  <button type="button" class="visibility-toggle" id="apiKeyVisibility" aria-pressed="false" data-i18n-attr="aria-label:toggleKey;title:toggleKey"><img class="ui-icon" src="assets/icons/eye.svg" alt=""></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </fieldset>
-      <div id="statusPanel" class="status-panel" hidden><p id="status" role="status" aria-live="polite" aria-atomic="true" hidden></p><details id="statusDetails" hidden><summary data-i18n="diagnosticLabel">Diagnostic details</summary><dl class="diagnostic-grid"><dt data-i18n="diagnosticTypeLabel">Type</dt><dd><code id="diagnosticType" dir="ltr"></code></dd><dt id="diagnosticHttpLabel" data-i18n="diagnosticHttpLabel">HTTP status</dt><dd><code id="diagnosticHttp" dir="ltr"></code></dd></dl></details></div>
-      <details id="advancedSettings"><summary data-i18n="moreSettings">More settings</summary><div class="advanced-content"><p class="model-id" id="modelIdRow"><span data-i18n="modelIdLabel">API model ID</span>: <code id="modelIdValue" dir="ltr"></code></p><div class="utility-actions"><button type="button" id="clearCacheBtn" class="ghost-btn">Clear translation cache</button><a href="https://github.com/GaryGaryyy/YouTube-AI-Title-Translator" target="_blank" rel="noopener noreferrer" data-i18n="openDocs">Open project docs</a></div><div class="skip-save" id="skipSaveSection"><button type="button" id="saveBtn" class="ghost-btn">Save without verification</button><p data-i18n="saveOnlyHint">Skips the test and applies this configuration.</p></div></div></details>
+
+      <div id="statusPanel" class="status-panel" hidden>
+        <p id="status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+        <details id="statusDetails" hidden>
+          <summary data-i18n="diagnosticLabel">Diagnostic details</summary>
+          <dl class="diagnostic-grid">
+            <dt data-i18n="diagnosticTypeLabel">Type</dt>
+            <dd><code id="diagnosticType" dir="ltr"></code></dd>
+            <dt id="diagnosticHttpLabel" data-i18n="diagnosticHttpLabel">HTTP status</dt>
+            <dd><code id="diagnosticHttp" dir="ltr"></code></dd>
+          </dl>
+        </details>
+      </div>
+
+      <details id="advancedSettings">
+        <summary>
+          <span data-i18n="moreSettings">More settings</span>
+          <svg class="acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="advanced-content">
+          <div class="display-preferences">
+            <div class="preference-row" id="showTagsRow" hidden>
+              <label for="showTagsToggle" data-i18n="showTags">Show category tags</label>
+              <span class="switch"><input id="showTagsToggle" type="checkbox" role="switch" checked><span class="slider"></span></span>
+            </div>
+            <div class="preference-row">
+              <label for="bilingualOrderSelect" data-i18n="bilingualOrder">Title order</label>
+              <div class="order-segment" role="group" data-i18n-attr="aria-label:bilingualOrder">
+                <button type="button" class="order-btn" id="orderTranslatedBtn" aria-pressed="true" data-i18n="translatedFirst">Translated first</button>
+                <button type="button" class="order-btn" id="orderOriginalBtn" aria-pressed="false" data-i18n="originalFirst">Original first</button>
+              </div>
+              <select id="bilingualOrderSelect" class="sr-only" tabindex="-1" aria-hidden="true"></select>
+            </div>
+            <fieldset id="skipLanguagesGroup">
+              <div class="skip-head">
+                <legend data-i18n="skipLanguages">Also skip languages</legend>
+                <p class="preference-hint" data-i18n="skipLanguagesHint">Your target language is always skipped automatically.</p>
+              </div>
+              <div id="skipLanguageChoices" class="language-choices"></div>
+            </fieldset>
+          </div>
+
+          <div class="ai-meta-bar" id="skipSaveSection" hidden>
+            <p class="model-id" id="modelIdRow"><span data-i18n="modelIdLabel">API model ID</span>: <code id="modelIdValue" dir="ltr"></code></p>
+            <button type="button" id="saveBtn" class="link-btn" data-i18n-attr="title:saveOnlyHint">Save without verification</button>
+          </div>
+
+          <div class="utility-actions">
+            <button type="button" id="clearCacheBtn" class="ghost-btn">Clear translation cache</button>
+            <button type="button" id="copyDiagnosticsBtn" class="ghost-btn" data-i18n="copyDiagnostics">Copy diagnostics</button>
+          </div>
+        </div>
+      </details>
+
+      <div id="reviewPrompt" hidden>
+        <a href="https://chromewebstore.google.com/detail/bhajnflcikmidmdalnjhknillnkaojhk/reviews" target="_blank" rel="noopener noreferrer" data-i18n="rateInStore">Rate on the Chrome Web Store</a>
+        <button type="button" id="dismissReviewBtn" class="ghost-btn" data-i18n="dismissReview">Don’t show again</button>
+      </div>
     </main>
+
     <div class="action-panel">
-      <div class="state-row"><div class="state-copy"><img id="stateIcon" src="assets/icons/check.svg" alt="" hidden><span id="configState" aria-live="polite"></span></div><span id="versionLabel"></span></div>
+      <div class="state-row">
+        <div class="state-copy">
+          <img id="stateIcon" src="assets/icons/check.svg" alt="" hidden>
+          <span id="configState" aria-live="polite"></span>
+        </div>
+      </div>
       <button type="button" id="testBtn" class="primary-btn">Verify &amp; save</button>
-      <div class="footer-meta"><p class="privacy-summary"><span class="privacy-note"></span><button type="button" class="privacy-info" popovertarget="privacyInfo" data-i18n-attr="aria-label:privacyTitle;title:privacyTitle"><img class="ui-icon" src="assets/icons/info.svg" alt=""></button></p><div class="footer-links"><a href="https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues" target="_blank" rel="noopener noreferrer" data-i18n="feedback">Feedback</a><a href="https://github.com/GaryGaryyy/YouTube-AI-Title-Translator" target="_blank" rel="noopener noreferrer" data-i18n="supportDeveloper">Support</a></div></div>
+      <div class="footer-meta">
+        <p class="privacy-summary">
+          <svg class="privacy-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <span class="privacy-note"></span>
+          <button type="button" class="privacy-info" popovertarget="privacyInfo" data-i18n-attr="aria-label:privacyTitle;title:privacyTitle"><img class="ui-icon" src="assets/icons/info.svg" alt=""></button>
+        </p>
+        <div class="footer-links">
+          <a href="https://github.com/GaryGaryyy/YouTube-AI-Title-Translator" target="_blank" rel="noopener noreferrer" data-i18n="openDocs">Docs</a>
+          <a href="https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues" target="_blank" rel="noopener noreferrer" data-i18n="feedback">Feedback</a>
+          <a href="https://github.com/GaryGaryyy/YouTube-AI-Title-Translator#support" target="_blank" rel="noopener noreferrer" data-i18n="supportDeveloper">Support</a>
+        </div>
+      </div>
     </div>
   </div>
   <div id="privacyInfo" popover="auto"><strong data-i18n="privacyTitle">Privacy details</strong><p id="privacyBody"></p></div>
   <script src="popup-locales.js"></script>
+  <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

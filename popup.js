@@ -1,22 +1,9 @@
-// 用户从未保存过语言时，跟随浏览器界面语言；识别不了的语言回落英文。
-function getBrowserDefaultLanguages(browserLanguage) {
-    const raw = String(browserLanguage || "").toLowerCase().replace(/_/g, "-");
-    const base = raw.split("-")[0];
-    if (base === "zh") {
-        return { uiLanguage: "zh-Hans", targetLanguage: /-(hant|tw|hk|mo)(-|$)/.test(raw) ? "zh-Hant" : "zh-Hans" };
-    }
-    const targets = ["en", "ja", "ko", "th", "es", "fr", "de", "pt", "id", "vi"];
-    return {
-        uiLanguage: targets.concat(["ru", "ar", "hi"]).includes(base) ? base : "en",
-        targetLanguage: targets.includes(base) ? base : "en"
-    };
-}
+const { getBrowserDefaultLanguages, getBrowserLanguage, SUPPORTED_TARGET_LANGUAGES, SUPPORTED_UI_LANGUAGES,
+    isChineseLanguage, normalizeSkipLanguages, migrateProviderSettings, getDisplayPreferences } =
+    typeof require === "function" ? require("./shared.js") : globalThis.GaryShared;
 
-function getBrowserLanguage() {
-    try { return chrome.i18n.getUILanguage(); } catch (e) { return ""; }
-}
-
-if (!globalThis.chrome || !globalThis.chrome.storage || !globalThis.chrome.storage.local) {
+const isStaticPreview = !globalThis.chrome?.storage?.local;
+if (isStaticPreview) {
     const previewStore = {};
     globalThis.chrome = {
         storage: {
@@ -100,148 +87,90 @@ const UI_TEXT = {
     en: {
         appTitle: "AI Title Translator",
         brandSubtitle: "AI model settings",
-        quickActions: "Quick actions",
         openDocs: "Open project docs",
         masterLabel: "Translation",
         masterDesc: "Automatically translate YouTube video titles",
-        languageTitle: "1. Translation language",
         uiLanguageLabel: "Interface language",
         targetLanguageLabel: "Translate titles into",
         providerTitle: "2. Choose AI provider",
         modelTitle: "3. Model settings",
         modelVersionLabel: "Model version",
-        providerCustom: "Custom",
-        customEndpointLabel: "Custom endpoint",
         apiEndpointLabel: "API endpoint",
         modelNameLabel: "Model name",
         apiKeyPlaceholder: "Paste your API key...",
         toggleKey: "Show or hide API Key",
         saveSettings: "Save settings",
-        testConfig: "Test configuration",
         testingConfig: "Testing current configuration...",
-        testPassed: "Configuration works. Sample translation received.",
         testFailed: "Test failed. Check the key, model, endpoint, or provider quota.",
         testFailAuth: "Invalid API key",
         testFailQuota: "Quota exhausted or rate limited",
         testFailModel: "Model name may be wrong",
         testFailNetwork: "Network or provider error",
-        previewTestUnavailable: "Configuration test only works from the installed extension popup, not a file preview.",
         saved: "Saved",
         feedback: "Feedback",
         supportDeveloper: "Support developer",
-        localKeyChip: "API Key stays local",
-        originalChip: "Original title preserved",
-        customAiChip: "Custom AI setup",
-        deepseekRecommended: "REC",
         privacyNote: "Stored only in this browser. No data is uploaded to the developer.",
-        noKey: "No key?",
-        helpOpenAI: "Get one from OpenAI",
-        helpAnthropic: "Get one from Claude Console",
-        helpDeepSeek: "Get one from DeepSeek API Platform",
         helpCustom: "View custom endpoint guide",
         enabled: "Translation is on. Refresh YouTube to apply.",
         paused: "Translation paused",
-        switchedSaved: "Switched to {provider}. Saved key loaded.",
-        switchedNoKey: "Switched to {provider}. No key configured yet.",
         manualModelHint: "Enter a model ID supported by this provider",
         customModelOption: "Other model (enter manually)",
-        customModelEmpty: "(enter custom model name)",
-        customModelSuffix: "custom",
         endpointInvalid: "API endpoint format is invalid",
         endpointHttps: "Custom endpoints must use HTTPS. Localhost debugging may use HTTP.",
-        customRequired: "Custom endpoint needs URL and model name",
         permissionDenied: "Host permission was not granted",
         keyRequired: "API Key is required",
         modelRequired: "Choose a model version or enter a model name",
         savedRefresh: "Saved. Refresh YouTube to apply.",
-        languageSaved: "Interface language saved",
         apiUrlPlaceholder: "Example: https://openrouter.ai/api/v1/chat/completions",
         customModelPlaceholder: "Example: openai/gpt-6-luna or anthropic/claude-sonnet-5-5",
         manualModelPlaceholder: "Enter a supported model ID",
-        tierFlagship: "flagship",
         tierRecommended: "recommended",
-        tierStable: "stable",
-        tierFast: "fast",
-        tierStrong: "stronger",
-        tierCheapFast: "recommended, low cost and fast",
-        tierReasoning: "reasoning model, slower but more accurate",
-        tierCompatible: "compatible",
         clearCache: "Clear translation cache",
         cacheCleared: "Cache cleared",
-        configuredProvider: "Key configured"
     },
     "zh-Hans": {
         appTitle: "YouTube 标题翻译",
         brandSubtitle: "AI 模型配置中心",
-        quickActions: "快捷操作",
         openDocs: "打开项目说明",
         masterLabel: "翻译开关",
         masterDesc: "在 YouTube 页面上自动翻译视频标题",
-        languageTitle: "1. 翻译语言",
         uiLanguageLabel: "界面语言",
         targetLanguageLabel: "将标题翻译成",
         providerTitle: "2. 选择 AI 服务商",
         modelTitle: "3. 模型配置",
         modelVersionLabel: "模型版本",
-        providerCustom: "自定义",
-        customEndpointLabel: "自定义接口",
         apiEndpointLabel: "API 接口地址",
         modelNameLabel: "模型名称",
         apiKeyPlaceholder: "粘贴你的密钥...",
         toggleKey: "显示或隐藏 API Key",
         saveSettings: "保存设置",
-        testConfig: "测试配置",
         testingConfig: "正在测试当前配置...",
-        testPassed: "配置可用，已收到示例翻译结果",
         testFailed: "测试失败，请检查 Key、模型、接口地址或服务商额度",
         testFailAuth: "Key 无效，请检查 API Key",
         testFailQuota: "余额不足或被限流",
         testFailModel: "模型名可能错误，请检查模型版本",
         testFailNetwork: "网络或服务商异常，请稍后重试",
-        previewTestUnavailable: "配置测试只能在已安装扩展的弹窗中运行，不能在 file 预览页中运行。",
         saved: "已保存",
         feedback: "反馈建议",
         supportDeveloper: "支持开发者",
-        localKeyChip: "API Key 本地保存",
-        originalChip: "原始标题保留",
-        customAiChip: "可自定义 AI 配置",
-        deepseekRecommended: "推荐",
         privacyNote: "仅在当前浏览器本地存储，不会上传任何数据。",
-        noKey: "没有 Key?",
-        helpOpenAI: "去 OpenAI 官网申请",
-        helpAnthropic: "去 Claude Console 申请",
-        helpDeepSeek: "去 DeepSeek API 平台申请",
         helpCustom: "查看自定义端点说明",
         enabled: "翻译已开启，刷新 YouTube 后生效",
         paused: "翻译已暂停",
-        switchedSaved: "已切换为 {provider}，已读取保存的 Key",
-        switchedNoKey: "已切换为 {provider}，还未配置 Key",
         manualModelHint: "请输入该服务商支持的模型 ID",
         customModelOption: "其他（手动输入模型名）",
-        customModelEmpty: "（请填写自定义模型名）",
-        customModelSuffix: "自定义",
         endpointInvalid: "API Endpoint 格式不正确",
         endpointHttps: "自定义端点必须使用 HTTPS；本机 localhost 调试可使用 HTTP",
-        customRequired: "自定义端点需要填写 URL 和模型名",
         permissionDenied: "未授予该域名访问权限，无法调用",
         keyRequired: "必须填写 API Key",
         modelRequired: "请填写模型名称，或从模型版本中选择一个预设",
         savedRefresh: "保存成功，请刷新 YouTube 页面",
-        languageSaved: "界面语言已保存",
         apiUrlPlaceholder: "例如：https://openrouter.ai/api/v1/chat/completions",
         customModelPlaceholder: "例如：openai/gpt-6-luna、anthropic/claude-sonnet-5-5",
         manualModelPlaceholder: "填写服务商支持的模型 ID",
-        tierFlagship: "旗舰",
         tierRecommended: "推荐",
-        tierStable: "稳定",
-        tierFast: "快",
-        tierStrong: "更强",
-        tierCheapFast: "推荐，便宜快",
-        tierReasoning: "推理模型，慢但更准",
-        tierCompatible: "兼容旧 Key",
         clearCache: "清除翻译缓存",
         cacheCleared: "缓存已清除",
-        configuredProvider: "已配置 Key"
     }
 };
 
@@ -259,111 +188,111 @@ const UI_TEXT = {
     ["ar", "مترجم العناوين بالذكاء الاصطناعي", "إعدادات نموذج الذكاء الاصطناعي", "لغة الواجهة", "ترجمة العناوين إلى", "حفظ", "تم الحفظ"],
     ["hi", "AI शीर्षक अनुवादक", "AI मॉडल सेटिंग", "इंटरफ़ेस भाषा", "शीर्षक का अनुवाद", "सहेजें", "सहेजा गया"]
 ].forEach(([code, appTitle, brandSubtitle, uiLanguageLabel, targetLanguageLabel, saveSettings, saved]) => {
-    UI_TEXT[code] = Object.assign({}, UI_TEXT.en, {
+    UI_TEXT[code] = {
         appTitle,
         brandSubtitle,
         uiLanguageLabel,
         targetLanguageLabel,
         saveSettings,
         saved
-    });
+    };
 });
 
 Object.assign(UI_TEXT.ja, {
-    masterLabel: "翻訳", masterDesc: "YouTube 動画タイトルを自動翻訳", languageTitle: "1. 翻訳言語",
+    masterLabel: "翻訳", masterDesc: "YouTube 動画タイトルを自動翻訳",
     providerTitle: "2. AI プロバイダーを選択", modelTitle: "3. モデル設定", modelVersionLabel: "モデルバージョン",
-    providerCustom: "カスタム", customEndpointLabel: "カスタムエンドポイント", apiEndpointLabel: "API エンドポイント",
+    apiEndpointLabel: "API エンドポイント",
     modelNameLabel: "モデル名", apiKeyPlaceholder: "API キーを貼り付け...", feedback: "フィードバック",
     supportDeveloper: "開発者を支援", privacyNote: "このブラウザ内にのみ保存され、開発者へデータは送信されません。",
-    noKey: "キーがありませんか?", languageSaved: "言語設定を保存しました", savedRefresh: "保存しました。YouTube を更新してください。"
+    savedRefresh: "保存しました。YouTube を更新してください。"
 });
 Object.assign(UI_TEXT.ko, {
-    masterLabel: "번역", masterDesc: "YouTube 동영상 제목 자동 번역", languageTitle: "1. 번역 언어",
+    masterLabel: "번역", masterDesc: "YouTube 동영상 제목 자동 번역",
     providerTitle: "2. AI 제공업체 선택", modelTitle: "3. 모델 설정", modelVersionLabel: "모델 버전",
-    providerCustom: "사용자 지정", customEndpointLabel: "사용자 지정 엔드포인트", apiEndpointLabel: "API 엔드포인트",
+    apiEndpointLabel: "API 엔드포인트",
     modelNameLabel: "모델 이름", apiKeyPlaceholder: "API 키 붙여넣기...", feedback: "피드백",
     supportDeveloper: "개발자 지원", privacyNote: "이 브라우저에만 저장되며 개발자에게 데이터가 업로드되지 않습니다.",
-    noKey: "키가 없나요?", languageSaved: "언어 설정 저장됨", savedRefresh: "저장됨. YouTube를 새로고침하세요."
+    savedRefresh: "저장됨. YouTube를 새로고침하세요."
 });
 Object.assign(UI_TEXT.th, {
-    masterLabel: "การแปล", masterDesc: "แปลชื่อวิดีโอ YouTube อัตโนมัติ", languageTitle: "1. ภาษาแปล",
+    masterLabel: "การแปล", masterDesc: "แปลชื่อวิดีโอ YouTube อัตโนมัติ",
     providerTitle: "2. เลือกผู้ให้บริการ AI", modelTitle: "3. ตั้งค่าโมเดล", modelVersionLabel: "เวอร์ชันโมเดล",
-    providerCustom: "กำหนดเอง", customEndpointLabel: "เอนด์พอยต์กำหนดเอง", apiEndpointLabel: "เอนด์พอยต์ API",
+    apiEndpointLabel: "เอนด์พอยต์ API",
     modelNameLabel: "ชื่อโมเดล", apiKeyPlaceholder: "วาง API Key...", feedback: "ข้อเสนอแนะ",
     supportDeveloper: "สนับสนุนนักพัฒนา", privacyNote: "บันทึกเฉพาะในเบราว์เซอร์นี้ ไม่มีการอัปโหลดข้อมูลให้ผู้พัฒนา",
-    noKey: "ยังไม่มี Key?", languageSaved: "บันทึกภาษาสำเร็จ", savedRefresh: "บันทึกแล้ว โปรดรีเฟรช YouTube"
+    savedRefresh: "บันทึกแล้ว โปรดรีเฟรช YouTube"
 });
 Object.assign(UI_TEXT.es, {
-    masterLabel: "Traducción", masterDesc: "Traduce automáticamente títulos de YouTube", languageTitle: "1. Idioma de traducción",
+    masterLabel: "Traducción", masterDesc: "Traduce automáticamente títulos de YouTube",
     providerTitle: "2. Elegir proveedor de IA", modelTitle: "3. Ajustes del modelo", modelVersionLabel: "Versión del modelo",
-    providerCustom: "Personalizado", customEndpointLabel: "Endpoint personalizado", apiEndpointLabel: "Endpoint API",
+    apiEndpointLabel: "Endpoint API",
     modelNameLabel: "Nombre del modelo", apiKeyPlaceholder: "Pega tu API Key...", feedback: "Comentarios",
     supportDeveloper: "Apoyar al desarrollador", privacyNote: "Se guarda solo en este navegador. No se suben datos al desarrollador.",
-    noKey: "¿No tienes key?", languageSaved: "Idioma guardado", savedRefresh: "Guardado. Actualiza YouTube para aplicar."
+    savedRefresh: "Guardado. Actualiza YouTube para aplicar."
 });
 Object.assign(UI_TEXT.fr, {
-    masterLabel: "Traduction", masterDesc: "Traduit automatiquement les titres YouTube", languageTitle: "1. Langue de traduction",
+    masterLabel: "Traduction", masterDesc: "Traduit automatiquement les titres YouTube",
     providerTitle: "2. Choisir le fournisseur IA", modelTitle: "3. Paramètres du modèle", modelVersionLabel: "Version du modèle",
-    providerCustom: "Personnalisé", customEndpointLabel: "Endpoint personnalisé", apiEndpointLabel: "Endpoint API",
+    apiEndpointLabel: "Endpoint API",
     modelNameLabel: "Nom du modèle", apiKeyPlaceholder: "Collez votre clé API...", feedback: "Retour",
     supportDeveloper: "Soutenir le développeur", privacyNote: "Stocké uniquement dans ce navigateur. Aucune donnée n'est envoyée au développeur.",
-    noKey: "Pas de clé?", languageSaved: "Langue enregistrée", savedRefresh: "Enregistré. Actualisez YouTube."
+    savedRefresh: "Enregistré. Actualisez YouTube."
 });
 Object.assign(UI_TEXT.de, {
-    masterLabel: "Übersetzung", masterDesc: "YouTube-Videotitel automatisch übersetzen", languageTitle: "1. Übersetzungssprache",
+    masterLabel: "Übersetzung", masterDesc: "YouTube-Videotitel automatisch übersetzen",
     providerTitle: "2. KI-Anbieter wählen", modelTitle: "3. Modelleinstellungen", modelVersionLabel: "Modellversion",
-    providerCustom: "Benutzerdefiniert", customEndpointLabel: "Eigener Endpunkt", apiEndpointLabel: "API-Endpunkt",
+    apiEndpointLabel: "API-Endpunkt",
     modelNameLabel: "Modellname", apiKeyPlaceholder: "API Key einfügen...", feedback: "Feedback",
     supportDeveloper: "Entwickler unterstützen", privacyNote: "Nur in diesem Browser gespeichert. Keine Daten werden an den Entwickler hochgeladen.",
-    noKey: "Kein Key?", languageSaved: "Sprache gespeichert", savedRefresh: "Gespeichert. YouTube aktualisieren."
+    savedRefresh: "Gespeichert. YouTube aktualisieren."
 });
 Object.assign(UI_TEXT.pt, {
-    masterLabel: "Tradução", masterDesc: "Traduz automaticamente títulos do YouTube", languageTitle: "1. Idioma de tradução",
+    masterLabel: "Tradução", masterDesc: "Traduz automaticamente títulos do YouTube",
     providerTitle: "2. Escolher provedor de IA", modelTitle: "3. Configurações do modelo", modelVersionLabel: "Versão do modelo",
-    providerCustom: "Personalizado", customEndpointLabel: "Endpoint personalizado", apiEndpointLabel: "Endpoint da API",
+    apiEndpointLabel: "Endpoint da API",
     modelNameLabel: "Nome do modelo", apiKeyPlaceholder: "Cole sua API Key...", feedback: "Feedback",
     supportDeveloper: "Apoiar desenvolvedor", privacyNote: "Salvo apenas neste navegador. Nenhum dado é enviado ao desenvolvedor.",
-    noKey: "Sem key?", languageSaved: "Idioma salvo", savedRefresh: "Salvo. Atualize o YouTube."
+    savedRefresh: "Salvo. Atualize o YouTube."
 });
 Object.assign(UI_TEXT.id, {
-    masterLabel: "Terjemahan", masterDesc: "Terjemahkan judul video YouTube otomatis", languageTitle: "1. Bahasa terjemahan",
+    masterLabel: "Terjemahan", masterDesc: "Terjemahkan judul video YouTube otomatis",
     providerTitle: "2. Pilih penyedia AI", modelTitle: "3. Pengaturan model", modelVersionLabel: "Versi model",
-    providerCustom: "Kustom", customEndpointLabel: "Endpoint kustom", apiEndpointLabel: "Endpoint API",
+    apiEndpointLabel: "Endpoint API",
     modelNameLabel: "Nama model", apiKeyPlaceholder: "Tempel API Key...", feedback: "Masukan",
     supportDeveloper: "Dukung pengembang", privacyNote: "Hanya disimpan di browser ini. Tidak ada data yang diunggah ke pengembang.",
-    noKey: "Belum punya key?", languageSaved: "Bahasa disimpan", savedRefresh: "Tersimpan. Segarkan YouTube."
+    savedRefresh: "Tersimpan. Segarkan YouTube."
 });
 Object.assign(UI_TEXT.vi, {
-    masterLabel: "Dịch", masterDesc: "Tự động dịch tiêu đề video YouTube", languageTitle: "1. Ngôn ngữ dịch",
+    masterLabel: "Dịch", masterDesc: "Tự động dịch tiêu đề video YouTube",
     providerTitle: "2. Chọn nhà cung cấp AI", modelTitle: "3. Cài đặt mô hình", modelVersionLabel: "Phiên bản mô hình",
-    providerCustom: "Tùy chỉnh", customEndpointLabel: "Endpoint tùy chỉnh", apiEndpointLabel: "Endpoint API",
+    apiEndpointLabel: "Endpoint API",
     modelNameLabel: "Tên mô hình", apiKeyPlaceholder: "Dán API Key...", feedback: "Phản hồi",
     supportDeveloper: "Ủng hộ nhà phát triển", privacyNote: "Chỉ lưu trong trình duyệt này. Không tải dữ liệu lên nhà phát triển.",
-    noKey: "Chưa có key?", languageSaved: "Đã lưu ngôn ngữ", savedRefresh: "Đã lưu. Hãy làm mới YouTube."
+    savedRefresh: "Đã lưu. Hãy làm mới YouTube."
 });
 Object.assign(UI_TEXT.ru, {
-    masterLabel: "Перевод", masterDesc: "Автоматически переводить заголовки YouTube", languageTitle: "1. Язык перевода",
+    masterLabel: "Перевод", masterDesc: "Автоматически переводить заголовки YouTube",
     providerTitle: "2. Выберите AI-провайдера", modelTitle: "3. Настройки модели", modelVersionLabel: "Версия модели",
-    providerCustom: "Свой", customEndpointLabel: "Свой endpoint", apiEndpointLabel: "API endpoint",
+    apiEndpointLabel: "Адрес API",
     modelNameLabel: "Имя модели", apiKeyPlaceholder: "Вставьте API Key...", feedback: "Обратная связь",
     supportDeveloper: "Поддержать разработчика", privacyNote: "Хранится только в этом браузере. Данные не отправляются разработчику.",
-    noKey: "Нет key?", languageSaved: "Язык сохранен", savedRefresh: "Сохранено. Обновите YouTube."
+    savedRefresh: "Сохранено. Обновите YouTube."
 });
 Object.assign(UI_TEXT.ar, {
-    masterLabel: "الترجمة", masterDesc: "ترجمة عناوين YouTube تلقائيا", languageTitle: "1. لغة الترجمة",
+    masterLabel: "الترجمة", masterDesc: "ترجمة عناوين YouTube تلقائيا",
     providerTitle: "2. اختر مزود الذكاء الاصطناعي", modelTitle: "3. إعدادات النموذج", modelVersionLabel: "إصدار النموذج",
-    providerCustom: "مخصص", customEndpointLabel: "نقطة نهاية مخصصة", apiEndpointLabel: "نقطة نهاية API",
+    apiEndpointLabel: "نقطة نهاية API",
     modelNameLabel: "اسم النموذج", apiKeyPlaceholder: "الصق API Key...", feedback: "ملاحظات",
     supportDeveloper: "دعم المطور", privacyNote: "يتم الحفظ في هذا المتصفح فقط. لا يتم رفع أي بيانات إلى المطور.",
-    noKey: "لا تملك Key؟", languageSaved: "تم حفظ اللغة", savedRefresh: "تم الحفظ. حدّث YouTube."
+    savedRefresh: "تم الحفظ. حدّث YouTube."
 });
 Object.assign(UI_TEXT.hi, {
-    masterLabel: "अनुवाद", masterDesc: "YouTube वीडियो शीर्षक अपने आप अनुवाद करें", languageTitle: "1. अनुवाद भाषा",
+    masterLabel: "अनुवाद", masterDesc: "YouTube वीडियो शीर्षक अपने आप अनुवाद करें",
     providerTitle: "2. AI प्रदाता चुनें", modelTitle: "3. मॉडल सेटिंग", modelVersionLabel: "मॉडल संस्करण",
-    providerCustom: "कस्टम", customEndpointLabel: "कस्टम endpoint", apiEndpointLabel: "API endpoint",
+    apiEndpointLabel: "API पता",
     modelNameLabel: "मॉडल नाम", apiKeyPlaceholder: "API Key पेस्ट करें...", feedback: "फ़ीडबैक",
     supportDeveloper: "डेवलपर का समर्थन करें", privacyNote: "केवल इसी ब्राउज़र में संग्रहीत। डेवलपर को कोई डेटा अपलोड नहीं होता।",
-    noKey: "Key नहीं है?", languageSaved: "भाषा सेटिंग सहेजी गई", savedRefresh: "सहेजा गया। YouTube रीफ़्रेश करें।"
+    savedRefresh: "सहेजा गया। YouTube रीफ़्रेश करें।"
 });
 
 const SETTINGS_TEXT_KEYS = [
@@ -383,7 +312,7 @@ const SETTINGS_TEXT = {
     fr: ["Mode de traduction", "Sur l’appareil", "Gratuit · sans clé", "Traduction IA", "Comprend le contexte · clé requise", "Utilise la traduction locale de Chrome. Un navigateur et une paire de langues compatibles sont nécessaires ; des packs linguistiques peuvent être téléchargés à la première utilisation.", "Plus de paramètres", "Tester et enregistrer", "Enregistrer seulement", "Modifications non enregistrées", "Clé enregistrée", "Test réussi", "Aucune clé enregistrée", "Dernier test réussi : {date}", "Enregistrement…", "Échec de l’enregistrement. Réessayez.", "Le modèle a refusé cette configuration. Essayez un autre modèle ou vérifiez votre point de terminaison personnalisé.", "Aucune traduction exploitable reçue. Essayez un modèle recommandé.", "aperçu", "gratuit", "Les clés sont stockées dans ce navigateur. La traduction cloud envoie les titres directement au fournisseur choisi. Aucune donnée n’est envoyée au développeur.", "ID du modèle API", "Paramètres de traduction", "Fournisseur IA", "Modèle", "Enregistré. Les paramètres s’appliquent aux pages YouTube ouvertes."],
     de: ["Übersetzungsmodus", "Auf dem Gerät", "Kostenlos · ohne Schlüssel", "KI-Übersetzung", "Versteht Kontext · Schlüssel nötig", "Nutzt Chromes lokale Übersetzung. Ein unterstützter Browser und ein verfügbares Sprachpaar sind nötig; beim ersten Einsatz können Sprachpakete heruntergeladen werden.", "Weitere Einstellungen", "Testen und speichern", "Nur speichern", "Ungespeicherte Änderungen", "Schlüssel gespeichert", "Test bestanden", "Kein Schlüssel gespeichert", "Letzter erfolgreicher Test: {date}", "Wird gespeichert…", "Speichern fehlgeschlagen. Bitte erneut versuchen.", "Das Modell hat diese Konfiguration abgelehnt. Anderes Modell ausprobieren oder eigenen Endpunkt prüfen.", "Keine nutzbare Übersetzung erhalten. Bitte ein empfohlenes Modell versuchen.", "Vorschau", "kostenlos", "Schlüssel werden in diesem Browser gespeichert. Cloud-Übersetzung sendet Titel direkt an den gewählten Anbieter. Der Entwickler erhält keine Daten.", "API-Modell-ID", "Übersetzungseinstellungen", "KI-Anbieter", "Modell", "Gespeichert. Die Einstellungen gelten für offene YouTube-Seiten."],
     pt: ["Modo de tradução", "No dispositivo", "Grátis · sem chave", "Tradução com IA", "Entende o contexto · exige chave", "Usa a tradução local do Chrome. É necessário um navegador e um par de idiomas compatíveis; o primeiro uso pode baixar pacotes de idiomas.", "Mais configurações", "Testar e salvar", "Apenas salvar", "Alterações não salvas", "Chave salva", "Teste aprovado", "Nenhuma chave salva", "Último teste aprovado: {date}", "Salvando…", "Não foi possível salvar. Tente novamente.", "O modelo recusou esta configuração. Tente outro modelo ou verifique o endpoint personalizado.", "Nenhuma tradução válida recebida. Tente um modelo recomendado.", "prévia", "grátis", "As chaves ficam neste navegador. A tradução na nuvem envia os títulos diretamente ao provedor escolhido. Nenhum dado é enviado ao desenvolvedor.", "ID do modelo API", "Configurações de tradução", "Provedor de IA", "Modelo", "Salvo. As configurações se aplicam às páginas do YouTube abertas."],
-    id: ["Mode terjemahan", "Di perangkat", "Gratis · tanpa kunci", "Terjemahan AI", "Memahami konteks · perlu kunci", "Menggunakan penerjemah lokal Chrome. Memerlukan browser dan pasangan bahasa yang didukung; penggunaan pertama mungkin mengunduh paket bahasa.", "Pengaturan lainnya", "Uji dan simpan", "Simpan saja", "Perubahan belum disimpan", "Kunci tersimpan", "Uji berhasil", "Belum ada kunci tersimpan", "Uji terakhir berhasil: {date}", "Menyimpan…", "Tidak dapat menyimpan. Coba lagi.", "Model menolak konfigurasi ini. Coba model lain atau periksa endpoint khusus.", "Tidak ada terjemahan yang dapat digunakan. Coba model yang direkomendasikan.", "pratinjau", "gratis", "Kunci disimpan di browser ini. Terjemahan cloud mengirim judul langsung ke penyedia pilihan Anda. Tidak ada data yang dikirim ke pengembang.", "ID model API", "Pengaturan terjemahan", "Penyedia AI", "Model", "Tersimpan. Pengaturan berlaku pada halaman YouTube yang terbuka."],
+    id: ["Mode terjemahan", "Di perangkat", "Gratis · tanpa kunci", "Terjemahan AI", "Memahami konteks · perlu kunci", "Menggunakan penerjemah lokal Chrome. Memerlukan browser dan pasangan bahasa yang didukung; penggunaan pertama mungkin mengunduh paket bahasa.", "Pengaturan lainnya", "Uji dan simpan", "Simpan saja", "Perubahan belum disimpan", "Kunci tersimpan", "Uji berhasil", "Belum ada kunci tersimpan", "Uji terakhir berhasil: {date}", "Menyimpan…", "Tidak dapat menyimpan. Coba lagi.", "Model menolak konfigurasi ini. Coba model lain atau periksa endpoint khusus.", "Tidak ada terjemahan yang dapat digunakan. Coba model yang direkomendasikan.", "pratinjau", "gratis", "Kunci disimpan di browser ini. Terjemahan cloud mengirim judul langsung ke penyedia pilihan Anda. Tidak ada data yang dikirim ke pengembang.", "ID model API", "Pengaturan terjemahan", "Penyedia AI", "Versi model", "Tersimpan. Pengaturan berlaku pada halaman YouTube yang terbuka."],
     vi: ["Chế độ dịch", "Trên thiết bị", "Miễn phí · không cần khóa", "Dịch bằng AI", "Hiểu ngữ cảnh · cần khóa", "Sử dụng bản dịch cục bộ của Chrome. Cần trình duyệt và cặp ngôn ngữ được hỗ trợ; lần đầu có thể tải gói ngôn ngữ.", "Cài đặt khác", "Kiểm tra và lưu", "Chỉ lưu", "Thay đổi chưa lưu", "Đã lưu khóa", "Kiểm tra thành công", "Chưa lưu khóa", "Lần kiểm tra thành công: {date}", "Đang lưu…", "Không thể lưu. Vui lòng thử lại.", "Mô hình từ chối cấu hình này. Hãy thử mô hình khác hoặc kiểm tra điểm cuối tùy chỉnh.", "Chưa nhận được bản dịch hợp lệ. Hãy thử mô hình được đề xuất.", "xem trước", "miễn phí", "Khóa được lưu trong trình duyệt này. Dịch đám mây gửi tiêu đề trực tiếp đến nhà cung cấp đã chọn. Không gửi dữ liệu cho nhà phát triển.", "ID mô hình API", "Cài đặt dịch", "Nhà cung cấp AI", "Mô hình", "Đã lưu. Cài đặt áp dụng cho các trang YouTube đang mở."],
     ru: ["Режим перевода", "На устройстве", "Бесплатно · без ключа", "Перевод с ИИ", "Учитывает контекст · нужен ключ", "Используется локальный переводчик Chrome. Нужны поддерживаемый браузер и языковая пара; при первом запуске могут загружаться языковые пакеты.", "Другие настройки", "Проверить и сохранить", "Только сохранить", "Есть несохранённые изменения", "Ключ сохранён", "Проверка пройдена", "Ключ не сохранён", "Последняя успешная проверка: {date}", "Сохранение…", "Не удалось сохранить. Попробуйте ещё раз.", "Модель отклонила эту конфигурацию. Выберите другую модель или проверьте свой endpoint.", "Не получен пригодный перевод. Попробуйте рекомендуемую модель.", "предварительная", "бесплатно", "Ключи хранятся в этом браузере. При облачном переводе заголовки отправляются напрямую выбранному провайдеру. Разработчик не получает данные.", "ID модели API", "Настройки перевода", "Провайдер ИИ", "Модель", "Сохранено. Настройки применяются к открытым страницам YouTube."],
     ar: ["وضع الترجمة", "على الجهاز", "مجاني · دون مفتاح", "ترجمة بالذكاء الاصطناعي", "تفهم السياق · تتطلب مفتاحًا", "يستخدم مترجم Chrome المحلي. يلزم متصفح وزوج لغات مدعومان؛ قد يتم تنزيل حزم لغات عند الاستخدام الأول.", "إعدادات إضافية", "اختبار وحفظ", "حفظ فقط", "تغييرات غير محفوظة", "المفتاح محفوظ", "نجح الاختبار", "لا يوجد مفتاح محفوظ", "آخر اختبار ناجح: {date}", "جارٍ الحفظ…", "تعذر الحفظ. حاول مرة أخرى.", "رفض النموذج إعدادات هذا الطلب. جرّب نموذجًا آخر أو تحقق من نقطة الاتصال المخصصة.", "لم تصل ترجمة صالحة. جرّب نموذجًا موصى به.", "معاينة", "مجاني", "تُحفظ المفاتيح في هذا المتصفح. ترسل الترجمة السحابية العناوين مباشرة إلى المزود الذي تختاره. لا تُرسل بيانات إلى المطور.", "معرّف نموذج API", "إعدادات الترجمة", "مزود الذكاء الاصطناعي", "النموذج", "تم الحفظ. تُطبّق الإعدادات على صفحات YouTube المفتوحة."],
@@ -441,7 +370,6 @@ const PRESETS = {
     openai: {
         url: "https://api.openai.com/v1/chat/completions",
         helpUrl: "https://platform.openai.com/api-keys",
-        helpKey: "helpOpenAI",
         models: [
             { id: "gpt-6-luna", name: "GPT-6 Luna", tier: "tierRecommended" },
             { id: "gpt-6.1-terra", name: "GPT-6.1 Terra", tier: "" },
@@ -451,7 +379,6 @@ const PRESETS = {
     anthropic: {
         url: "https://api.anthropic.com/v1/messages",
         helpUrl: "https://console.anthropic.com/settings/keys",
-        helpKey: "helpAnthropic",
         models: [
             { id: "claude-haiku-5-5", name: "Claude Haiku 5.5", tier: "tierRecommended" },
             { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", tier: "" },
@@ -461,7 +388,6 @@ const PRESETS = {
     deepseek: {
         url: "https://api.deepseek.com/chat/completions",
         helpUrl: "https://platform.deepseek.com/api_keys",
-        helpKey: "helpDeepSeek",
         models: [
             { id: "deepseek-flash", name: "DeepSeek V4.1 Flash", tier: "tierRecommended" },
             { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro", tier: "" }
@@ -469,8 +395,7 @@ const PRESETS = {
     },
     custom: {
         url: "",
-        helpUrl: "https://github.com/GaryGaryyy/YouTube-AI-Title-Translator#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AB%AF%E7%82%B9",
-        helpKey: "helpCustom",
+        helpUrl: "https://github.com/GaryGaryyy/YouTube-AI-Title-Translator#custom-endpoint",
         models: []
     }
 };
@@ -524,61 +449,14 @@ function sameProviderConfig(a, b) {
     return ["apiKey", "apiUrl", "model"].every(key => String((a || {})[key] || "").trim() === String((b || {})[key] || "").trim());
 }
 
-// Keep this storage migration identical in popup.js and background.js (no shared runtime script).
-function migrateProviderSettings(result) {
-    const retired = ["google", "minimax", "zhipu", "kimi"];
-    // 只改写明确下线的旧预设 ID；用户手动填写的模型名原样保留。
-    const removedModels = {
-        openai: { "gpt-6-astra": "gpt-6-luna" },
-        anthropic: { "claude-haiku-4-5-20251001": "claude-haiku-5-5", "claude-fable-5-1": "claude-haiku-5-5" }
-    };
-    const stored = Object.assign({}, result);
-    const configs = Object.fromEntries(Object.entries(result.providerConfigs || {}).map(([id, cfg]) => [id, Object.assign({}, cfg)]));
-    let provider = result.selectedProvider || "deepseek";
-    if (!result.providerConfigs && result.customApiKey) {
-        configs[provider] = { apiKey:result.customApiKey, apiUrl:result.customApiUrl, model:result.customModel };
-    }
-    const updates = {};
-    if (retired.includes(provider)) {
-        if (!Object.prototype.hasOwnProperty.call(configs, "custom")) {
-            const old = configs[provider] || {};
-            configs.custom = { apiKey:old.apiKey || "", apiUrl:provider === "google" ? "" : old.apiUrl || "", model:old.model || "" };
-        }
-        provider = "custom";
-        Object.assign(updates, { selectedProvider:provider, providerMigrationPending:true,
-            customApiKey:configs.custom.apiKey || "", customApiUrl:configs.custom.apiUrl || "", customModel:configs.custom.model || "" });
-    }
-    // 下线服务商的配置（含 Key）归档保留，不参与翻译，也不丢弃。
-    const archived = Object.assign({}, result.retiredProviderConfigs || {});
-    let archivedChanged = false;
-    for (const id of retired) {
-        if (configs[id]) { archived[id] = configs[id]; archivedChanged = true; }
-        delete configs[id];
-    }
-    if (archivedChanged) updates.retiredProviderConfigs = archived;
-    for (const [id, map] of Object.entries(removedModels)) {
-        const next = configs[id] && Object.prototype.hasOwnProperty.call(map, configs[id].model) ? map[configs[id].model] : null;
-        if (next) {
-            configs[id].model = next;
-            delete configs[id].testedAt;
-            if (id === provider) updates.customModel = next;
-        }
-    }
-    if (JSON.stringify(configs) !== JSON.stringify(result.providerConfigs || {}) || updates.selectedProvider) updates.providerConfigs = configs;
-    Object.assign(stored, updates);
-    return { stored, updates };
-}
-
 function normalizeStoredSettings(result) {
-    result = migrateProviderSettings(result).stored;
-    const provider = PRESETS[result.selectedProvider] ? result.selectedProvider : "deepseek";
-    const configs = Object.assign({}, result.providerConfigs || {});
-    if (!result.providerConfigs && result.customApiKey) {
-        configs[provider] = { apiKey: result.customApiKey, apiUrl: result.customApiUrl, model: result.customModel };
-    }
-    const mode = ["local", "ai"].includes(result.translationMode)
-        ? result.translationMode : ((configs[provider] || {}).apiKey ? "ai" : "local");
-    return { provider, mode, configs };
+    const { stored: normalized, updates } = migrateProviderSettings(result);
+    const provider = Object.hasOwn(PRESETS, normalized.selectedProvider) ? normalized.selectedProvider : "deepseek";
+    const configs = normalized.providerConfigs || {};
+    const mode = ["local", "ai"].includes(normalized.translationMode)
+        ? normalized.translationMode : (configs[provider]?.apiKey ? "ai" : "local");
+    return { provider, mode, configs, migrationPending: normalized.providerMigrationPending,
+        needsMigration: Object.keys(updates).length > 0 };
 }
 
 function createProviderDrafts(configs) {
@@ -630,12 +508,74 @@ document.addEventListener("DOMContentLoaded", () => {
     const aiSettings = byId("aiSettings"), modelSection = byId("modelSection"), manualModelSection = byId("manualModelSection");
     const apiUrlGroup = byId("apiUrlGroup"), apiKeyVisibility = byId("apiKeyVisibility"), clearCacheBtn = byId("clearCacheBtn");
     const modeLocal = byId("modeLocal"), modeAi = byId("modeAi"), localNotice = byId("localNotice");
+    const showTagsToggle = byId("showTagsToggle"), showTagsRow = byId("showTagsRow"), orderSelect = byId("bilingualOrderSelect");
+    const orderTranslatedBtn = byId("orderTranslatedBtn"), orderOriginalBtn = byId("orderOriginalBtn");
+    const skipLanguagesGroup = byId("skipLanguagesGroup"), skipChoices = byId("skipLanguageChoices");
+    const reviewPrompt = byId("reviewPrompt"), dismissReviewBtn = byId("dismissReviewBtn");
     const cards = Object.fromEntries(Object.keys(PRESETS).map(provider => [provider, byId("card-" + provider)]));
     const providerNames = { openai:"OpenAI", anthropic:"Claude", deepseek:"DeepSeek", custom:"Custom" };
     const manualModels = {};
     let drafts = createProviderDrafts({});
     let translationMode = "local", savedMode = "local", savedProvider = "deepseek";
     let busy = "", ready = false, cacheEntryCount = 0, statusState = null;
+    let cacheCountRevision = 0;
+    let providerMigrationRequired = false;
+    let preferences = getDisplayPreferences({});
+    let showAiTags = true;
+    const orderOptions = ["translated-first", "original-first"].map(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        orderSelect.appendChild(option);
+        return option;
+    });
+    const skipItems = TARGET_LANGUAGES.map(({ code, nativeName }) => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        const name = document.createElement("bdi");
+        checkbox.type = "checkbox";
+        checkbox.value = code;
+        name.lang = code;
+        name.textContent = nativeName;
+        label.appendChild(checkbox);
+        label.appendChild(name);
+        skipChoices.appendChild(label);
+        return { label, checkbox };
+    });
+
+    function isAutoSkippedLanguage(code) {
+        return code === targetLanguage || (isChineseLanguage(code) && isChineseLanguage(targetLanguage));
+    }
+
+    function renderPreferences() {
+        showTagsRow.hidden = translationMode !== "ai";
+        showTagsToggle.checked = showAiTags;
+        orderSelect.value = preferences.bilingualOrder;
+        orderTranslatedBtn.setAttribute("aria-pressed", preferences.bilingualOrder !== "original-first" ? "true" : "false");
+        orderOriginalBtn.setAttribute("aria-pressed", preferences.bilingualOrder === "original-first" ? "true" : "false");
+        for (const { label, checkbox } of skipItems) {
+            const autoSkipped = isAutoSkippedLanguage(checkbox.value);
+            label.hidden = autoSkipped;
+            checkbox.checked = !autoSkipped && preferences.skipLanguages.includes(checkbox.value);
+            label.classList.toggle("active", checkbox.checked);
+        }
+    }
+
+    async function savePreference(key, value) {
+        try {
+            await saveStorage({ [key]: value });
+            if (key === "showTags") showAiTags = value;
+            else preferences[key] = value;
+            renderPreferences();
+        } catch (e) {
+            renderPreferences();
+            setStatus("saveFailed", "error");
+        }
+    }
+
+    function renderReviewPrompt(stats) {
+        reviewPrompt.hidden = !(stats?.successCount >= 50 && stats.activeDays?.length >= 3 &&
+            !stats.reviewPromptDismissed);
+    }
 
     function setStatus(key, kind, extra, error, retained = false) {
         statusState = key ? { key, kind: kind || "info", extra: extra || "",
@@ -715,6 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
         busy = value;
         masterToggle.disabled = !ready;
         uiLanguageSelect.disabled = !ready;
+        showTagsToggle.disabled = orderSelect.disabled = orderTranslatedBtn.disabled = orderOriginalBtn.disabled = skipLanguagesGroup.disabled = !ready;
         aiSettings.disabled = !!value || !ready;
         [testBtn, saveBtn, modeLocal, modeAi, targetLanguageSelect, clearCacheBtn].forEach(el => { el.disabled = !!value || !ready; });
         testBtn.setAttribute("aria-busy", value ? "true" : "false");
@@ -770,6 +711,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modeLocal.setAttribute("aria-pressed", translationMode === "local" ? "true" : "false");
         modeAi.setAttribute("aria-pressed", translationMode === "ai" ? "true" : "false");
         byId("modelIdRow").hidden = translationMode !== "ai";
+        renderPreferences();
         renderPrivacy();
         renderState();
     }
@@ -779,6 +721,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.documentElement.lang = meta.htmlLang;
         document.documentElement.dir = meta.dir;
         document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+        orderOptions[0].textContent = t("translatedFirst");
+        orderOptions[1].textContent = t("originalFirst");
         document.querySelectorAll("[data-i18n-attr]").forEach(el => {
             el.dataset.i18nAttr.split(";").forEach(pair => {
                 const [attr, key] = pair.split(":");
@@ -818,6 +762,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     async function saveConfiguration(shouldTest) {
         if (busy || !ready) return;
+        // SW 不可用时仍可预览归一化结果，避免保存草稿时覆盖尚未归档的配置。
+        if (providerMigrationRequired) { setStatus("saveFailed", "error"); return; }
         captureForm();
         const provider = currentProvider, mode = translationMode;
         const cfg = mode === "ai" ? validateCurrentConfig() : { apiKey:"", apiUrl:"", model:"" };
@@ -869,41 +815,115 @@ document.addEventListener("DOMContentLoaded", () => {
     populateLanguageSelect(uiLanguageSelect, UI_LANGUAGES, uiLanguage);
     populateLanguageSelect(targetLanguageSelect, TARGET_LANGUAGES, targetLanguage);
     setBusy("");
-    chrome.storage.local.get({ enabled:true, retiredProviderConfigs:null, providerConfigs:null, selectedProvider:"deepseek", translationMode:null,
-        customApiUrl:"", customApiKey:"", customModel:"", uiLanguage:DEFAULT_UI_LANGUAGE, targetLanguage:DEFAULT_TARGET_LANGUAGE, translationCache:null, providerMigrationPending:false }, result => {
-        if (chrome.runtime.lastError) { setStatus("saveFailed", "error"); return; }
-        const migration = migrateProviderSettings(result);
-        if (Object.keys(migration.updates).length) chrome.storage.local.set(migration.updates, () => {
-            if (chrome.runtime.lastError) setStatus("saveFailed", "error");
+    function loadSettings() {
+        chrome.storage.local.get({ enabled:true, retiredProviderConfigs:null, providerConfigs:null, selectedProvider:"deepseek", translationMode:null,
+            customApiUrl:"", customApiKey:"", customModel:"", uiLanguage:DEFAULT_UI_LANGUAGE, targetLanguage:DEFAULT_TARGET_LANGUAGE,
+            providerMigrationPending:false, showTags:true, bilingualOrder:"translated-first", skipLanguages:[], usageStats:null }, result => {
+            if (chrome.runtime.lastError) { setStatus("saveFailed", "error"); return; }
+            const stored = normalizeStoredSettings(result);
+            providerMigrationRequired = stored.needsMigration;
+            drafts = createProviderDrafts(stored.configs);
+            translationMode = savedMode = stored.mode; savedProvider = stored.provider;
+            uiLanguage = SUPPORTED_UI_LANGUAGES.has(result.uiLanguage) ? result.uiLanguage : DEFAULT_UI_LANGUAGE;
+            targetLanguage = SUPPORTED_TARGET_LANGUAGES.has(result.targetLanguage) ? result.targetLanguage : DEFAULT_TARGET_LANGUAGE;
+            masterToggle.checked = result.enabled !== false;
+            showAiTags = result.showTags !== false;
+            preferences = getDisplayPreferences(result, translationMode);
+            renderPreferences();
+            renderReviewPrompt(result.usageStats);
+            populateLanguageSelect(uiLanguageSelect, UI_LANGUAGES, uiLanguage);
+            populateLanguageSelect(targetLanguageSelect, TARGET_LANGUAGES, targetLanguage);
+            hydrateForm(stored.provider); applyI18n(); renderMode();
+            ready = true; setBusy("");
+            if (stored.migrationPending) setStatus("providerRetired", "");
         });
-        result = migration.stored;
-        const stored = normalizeStoredSettings(result);
-        drafts = createProviderDrafts(stored.configs);
-        translationMode = savedMode = stored.mode; savedProvider = stored.provider;
-        uiLanguage = UI_TEXT[result.uiLanguage] ? result.uiLanguage : DEFAULT_UI_LANGUAGE;
-        targetLanguage = TARGET_LANGUAGES.some(item => item.code === result.targetLanguage) ? result.targetLanguage : DEFAULT_TARGET_LANGUAGE;
-        masterToggle.checked = result.enabled !== false;
-        const cache = result.translationCache;
-        cacheEntryCount = (Array.isArray(cache) ? cache : (cache && Array.isArray(cache.entries) ? cache.entries : [])).length;
-        populateLanguageSelect(uiLanguageSelect, UI_LANGUAGES, uiLanguage);
-        populateLanguageSelect(targetLanguageSelect, TARGET_LANGUAGES, targetLanguage);
-        hydrateForm(stored.provider); applyI18n(); renderMode();
-        ready = true; setBusy("");
-        if (result.providerMigrationPending) setStatus("providerRetired", "");
+    }
+
+    function requestWorker(message, callback) {
+        try {
+            chrome.runtime.sendMessage(message, reply => callback(chrome.runtime.lastError ? null : reply));
+        } catch (e) { callback(null); }
+    }
+
+    requestWorker({ type: "migrateSettings" }, loadSettings);
+    const statsRevision = cacheCountRevision;
+    const applyCacheCount = count => {
+        if (statsRevision !== cacheCountRevision) return;
+        cacheEntryCount = count;
+        renderClearCacheBtn();
+    };
+    requestWorker({ type: "getCacheStats" }, reply => {
+        if (reply?.ok && Number.isInteger(reply.totalEntries)) {
+            applyCacheCount(reply.totalEntries);
+            return;
+        }
+        chrome.storage.local.get(["translationCacheMeta"], result => {
+            if (chrome.runtime.lastError) return;
+            if (result.translationCacheMeta?.v === 3 && Number.isInteger(result.translationCacheMeta.totalEntries)) {
+                applyCacheCount(result.translationCacheMeta.totalEntries);
+            }
+            else chrome.storage.local.get(["translationCache"], legacy => {
+                if (chrome.runtime.lastError) return;
+                const raw = legacy.translationCache;
+                applyCacheCount(Array.isArray(raw) ? raw.length : Array.isArray(raw?.entries) ? raw.entries.length : 0);
+            });
+        });
     });
 
     masterToggle.addEventListener("change", async () => {
         try { await saveStorage({ enabled:masterToggle.checked }); if (!busy) setStatus(masterToggle.checked ? "enabled" : "paused", "success"); }
         catch (e) { setStatus("saveFailed", "error"); masterToggle.checked = !masterToggle.checked; }
     });
+    chrome.storage.onChanged?.addListener((changes, area) => {
+        if (area !== "local") return;
+        if (changes.enabled) masterToggle.checked = changes.enabled.newValue !== false;
+        if (changes.usageStats) renderReviewPrompt(changes.usageStats.newValue);
+    });
+    showTagsToggle.addEventListener("change", () => savePreference("showTags", showTagsToggle.checked));
+    orderSelect.addEventListener("change", () => savePreference("bilingualOrder", orderSelect.value));
+    orderTranslatedBtn.addEventListener("click", () => {
+        if (orderSelect.value !== "translated-first") { orderSelect.value = "translated-first"; savePreference("bilingualOrder", "translated-first"); }
+    });
+    orderOriginalBtn.addEventListener("click", () => {
+        if (orderSelect.value !== "original-first") { orderSelect.value = "original-first"; savePreference("bilingualOrder", "original-first"); }
+    });
+    for (const { checkbox } of skipItems) checkbox.addEventListener("change", () => {
+        if (isChineseLanguage(checkbox.value)) {
+            for (const item of skipItems) {
+                if (isChineseLanguage(item.checkbox.value)) item.checkbox.checked = checkbox.checked;
+            }
+        }
+        savePreference("skipLanguages", normalizeSkipLanguages(
+            skipItems.filter(item => !isAutoSkippedLanguage(item.checkbox.value) && item.checkbox.checked).map(item => item.checkbox.value)
+        ));
+    });
+    dismissReviewBtn.addEventListener("click", () => {
+        dismissReviewBtn.disabled = true;
+        requestWorker({ type: "dismissReviewPrompt" }, reply => {
+            dismissReviewBtn.disabled = false;
+            if (reply?.ok) reviewPrompt.hidden = true;
+            else setStatus("saveFailed", "error");
+        });
+    });
+    byId("copyDiagnosticsBtn").addEventListener("click", async () => {
+        try {
+            const reply = await new Promise(resolve => requestWorker({ type: "getDiagnostics" }, resolve));
+            if (!reply?.ok) throw new Error("Diagnostics unavailable");
+            const { version, config, cacheEntries, usageStats } = reply;
+            const localApiSupported = typeof Translator !== "undefined" && typeof LanguageDetector !== "undefined";
+            await navigator.clipboard.writeText(JSON.stringify({ version, config, cacheEntries, usageStats, localApiSupported }, null, 2));
+            setStatus("diagnosticsCopied", "success");
+        } catch (e) { setStatus("diagnosticsCopyFailed", "error"); }
+    });
     uiLanguageSelect.addEventListener("change", async () => {
         captureForm();
-        uiLanguage = UI_TEXT[uiLanguageSelect.value] ? uiLanguageSelect.value : DEFAULT_UI_LANGUAGE;
+        uiLanguage = SUPPORTED_UI_LANGUAGES.has(uiLanguageSelect.value) ? uiLanguageSelect.value : DEFAULT_UI_LANGUAGE;
         applyI18n();
         try { await saveStorage({ uiLanguage }); } catch (e) { setStatus("saveFailed", "error"); }
     });
     targetLanguageSelect.addEventListener("change", async () => {
-        targetLanguage = TARGET_LANGUAGES.some(item => item.code === targetLanguageSelect.value) ? targetLanguageSelect.value : DEFAULT_TARGET_LANGUAGE;
+        targetLanguage = SUPPORTED_TARGET_LANGUAGES.has(targetLanguageSelect.value) ? targetLanguageSelect.value : DEFAULT_TARGET_LANGUAGE;
+        renderPreferences();
         try { await saveStorage({ targetLanguage }); } catch (e) { setStatus("saveFailed", "error"); }
     });
     Object.entries(cards).forEach(([provider, card]) => card.addEventListener("click", () => {
@@ -930,9 +950,13 @@ document.addEventListener("DOMContentLoaded", () => {
     testBtn.addEventListener("click", () => saveConfiguration(true));
     saveBtn.addEventListener("click", () => saveConfiguration(false));
     clearCacheBtn.addEventListener("click", () => {
-        chrome.storage.local.remove("translationCache", () => {
-            if (chrome.runtime.lastError) { setStatus("saveFailed", "error"); return; }
-            cacheEntryCount = 0; renderClearCacheBtn(); setStatus("cacheCleared", "success");
+        cacheCountRevision++;
+        requestWorker({ type: "cacheClear" }, reply => {
+            if (reply?.ok || isStaticPreview) {
+                cacheEntryCount = 0;
+                renderClearCacheBtn();
+                setStatus("cacheCleared", "success");
+            } else setStatus("saveFailed", "error");
         });
     });
 });

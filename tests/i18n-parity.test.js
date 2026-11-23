@@ -56,6 +56,10 @@ test('TAG_LABELS: 每个 tag 的语言集合一致', () => {
 test('UI_TEXT: popup 所有界面语言键位与 en 一致', () => {
     for (const [lang, pack] of Object.entries(popup.UI_TEXT)) {
         assertSameKeys(popup.UI_TEXT.en, pack, `UI_TEXT.${lang}`);
+        for (const [key, value] of Object.entries(pack)) {
+            assert.ok(typeof value === 'string' && value.trim(), `UI_TEXT.${lang}.${key}`);
+            if (lang !== 'en') assert.notEqual(value, popup.UI_TEXT.en[key], `UI_TEXT.${lang}.${key} 英文回落`);
+        }
     }
 });
 

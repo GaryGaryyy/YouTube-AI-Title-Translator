@@ -1,10 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { createRuntime, aiSettings, Element } = require('./runtime-harness');
 
 // content.js 顶层会读 chrome.storage、注册 DOMContentLoaded，先打桩再 require。
 // readyState 固定为 'loading'，startObserver 永远不会真正执行。
 const fakeTitles = [];
-const onChangedListeners = [];
 const storageData = {
     // 预置旧版（裸数组）缓存，混入两条损坏数据，验证加载时的逐条自愈过滤
     translationCache: [
@@ -14,20 +14,10 @@ const storageData = {
     ]
 };
 globalThis.chrome = {
-    storage: {
-        local: {
-            get(keys, cb) {
-                const result = {};
-                (Array.isArray(keys) ? keys : []).forEach(k => {
-                    if (Object.prototype.hasOwnProperty.call(storageData, k)) result[k] = storageData[k];
-                });
-                cb(result);
-            },
-            set(values, cb) { Object.assign(storageData, values); if (cb) cb(); }
-        },
-        onChanged: { addListener(fn) { onChangedListeners.push(fn); } }
-    },
-    runtime: { sendMessage() {} }
+    runtime: {
+        onMessage: { addListener() {} },
+        sendMessage(msg, callback) { if (msg.type === 'getPageBootstrap') callback({ok:false}); }
+    }
 };
 globalThis.document = {
     readyState: 'loading',
@@ -110,38 +100,33 @@ test('cacheSet 显式语言参数：切换目标语言后读不到旧语言缓�
     assert.equal(content.cacheGet('Hello').translatedTitle, '你好');
 });
 
-// ---------- 缓存加载：旧版迁移 + 损坏自愈 ----------
+// ---------- 缓存查询与清除通知 ----------
 
-test('loadCache: 旧版裸数组迁移并过滤损坏条目', () => {
-    content.applyConfigFromStorage({ translationMode: 'ai', customApiKey: 'test-key', customApiUrl: 'https://api.deepseek.com/chat/completions', customModel: 'deepseek-flash', targetLanguage: 'en' });
-    // require 时已加载预置数据：好条目可读，坏条目被丢弃且未导致崩溃
-    assert.equal(content.cacheGet('Hello legacy').translatedTitle, '旧缓存');
+test('按需 lookup 命中旧版裸数组，忽略损坏条目', async () => {
+    const runtime = createRuntime('content.js', { stored: { ...aiSettings('en'), translationCache: storageData.translationCache } });
+    assert.equal(runtime.api.cacheGet('Hello legacy'), null);
+    await runtime.api.lookupCache(['ai\nen\nHello legacy', 'ai\n42']);
+    assert.equal(runtime.api.cacheGet('Hello legacy').translatedTitle, '旧缓存');
+    assert.equal(runtime.storageReads.length, 0);
 });
 
-test('loadCache: v1 包装格式可读，彻底损坏的数据不抛错', () => {
-    storageData.translationCache = { v: 1, entries: [["en\nWrapped title", { tag: '游戏', translatedTitle: '包装格式' }]] };
-    content.loadCache();
-    content.applyConfigFromStorage({ translationMode: 'ai', customApiKey: 'test-key', customApiUrl: 'https://api.deepseek.com/chat/completions', customModel: 'deepseek-flash', targetLanguage: 'en' });
-    assert.equal(content.cacheGet('Wrapped title').translatedTitle, '包装格式');
-
-    storageData.translationCache = 'totally corrupt';
-    content.loadCache(); // 不应抛错
+test('按需 lookup 命中 v1 缓存，彻底损坏的数据不抛错', async () => {
+    const runtime = createRuntime('content.js', { stored: { ...aiSettings('en'),
+        translationCache: { v: 1, entries: [['en\nWrapped title', { tag: '游戏', translatedTitle: '包装格式' }]] } } });
+    await runtime.api.lookupCache(['ai\nen\nWrapped title']);
+    assert.equal(runtime.api.cacheGet('Wrapped title').translatedTitle, '包装格式');
+    const corrupt = createRuntime('content.js', { stored: {translationCache: 'totally corrupt'} });
+    assert.equal((await corrupt.api.lookupCache(['ai\nen\nWrapped title'])).size, 0);
 });
 
-// ---------- onChanged: 缓存清除同步 ----------
+test('cacheCleared 通知清空页面热缓存，自身落盘不清空', async () => {
+    const runtime = createRuntime('content.js', { stored: aiSettings('en') });
+    runtime.api.cacheSet('To be cleared', { tag: '科技', translatedTitle: '待清除' }, 'en');
+    await runtime.api.flushCacheWrites();
+    assert.ok(runtime.api.cacheGet('To be cleared'));
 
-test('onChanged: popup 清除缓存时同步清空内存，自身落盘不清空', () => {
-    content.applyConfigFromStorage({ translationMode: 'ai', customApiKey: 'test-key', customApiUrl: 'https://api.deepseek.com/chat/completions', customModel: 'deepseek-flash', targetLanguage: 'en' });
-    content.cacheSet('To be cleared', { tag: '科技', translatedTitle: '待清除' }, 'en');
-    assert.ok(content.cacheGet('To be cleared'));
-
-    // 自己 debounce 落盘触发的 onChanged（newValue 存在）不应清空内存
-    onChangedListeners.forEach(fn => fn({ translationCache: { oldValue: null, newValue: { v: 1, entries: [] } } }, 'local'));
-    assert.ok(content.cacheGet('To be cleared'));
-
-    // popup 点"清除缓存"（storage.remove → newValue 为 undefined）→ 内存同步清空
-    onChangedListeners.forEach(fn => fn({ translationCache: { oldValue: null } }, 'local'));
-    assert.equal(content.cacheGet('To be cleared'), null);
+    runtime.receive({type:'cacheCleared', clearedAt:Date.now()});
+    assert.equal(runtime.api.cacheGet('To be cleared'), null);
 });
 
 // ---------- process: 跳过打标 ----------
@@ -174,13 +159,11 @@ test('process: 已是目标语言的标题打 skip 标记，不再每轮重算',
 function makeFakeBox() {
     const mkSpan = () => ({ classList: { add() {}, remove() {} }, textContent: "", style: {} });
     const spans = { '.gary-tag': mkSpan(), '.gary-cn-title': mkSpan() };
-    return {
-        isConnected: true,
-        dataset: {},
+    return Object.assign(new Element(), {
         title: "",
         querySelector(sel) { return spans[sel] || null; },
         spans
-    };
+    });
 }
 
 test('translateChunk: 成功 → done 状态 + 渲染译文 + 写缓存', async (t) => {
@@ -269,7 +252,7 @@ test('内置翻译: 语言对不支持 → 安静落空', async (t) => {
     assert.equal(await content.translateBuiltin('Hello', 'ja'), null);
 });
 
-test('本机语言包需要点击触发时提示本机原因，重试成功后移除错误并缓存', async (t) => {
+test('本机语言包需要点击触发时切换为可点击下载提示，真正失败提示本机原因，重试成功后缓存', async (t) => {
     let attempts = 0;
     globalThis.LanguageDetector = {
         create: async () => ({ detect: async () => [{ detectedLanguage: 'en', confidence: 0.99 }] })
@@ -282,6 +265,11 @@ test('本机语言包需要点击触发时提示本机原因，重试成功后�
                 error.name = 'NotAllowedError';
                 throw error;
             }
+            if (attempts === 2) {
+                const error = new Error('Model initialization failed');
+                error.name = 'UnknownError';
+                throw error;
+            }
             return { translate: async () => 'Lokale Übersetzung' };
         }
     };
@@ -290,14 +278,19 @@ test('本机语言包需要点击触发时提示本机原因，重试成功后�
     const box = makeFakeBox();
 
     await content.translateBuiltinIntoBox('Local language pack test', box, 'de');
+    assert.equal(box.dataset.garyState, 'download');
+    assert.equal(content.cacheGet('Local language pack test'), null);
+
+    await content.translateBuiltinIntoBox('Local language pack test', box, 'de');
     assert.equal(box.dataset.garyState, 'error');
     assert.match(box.spans['.gary-cn-title'].textContent, /Lokale Übersetzung/);
     assert.doesNotMatch(box.spans['.gary-cn-title'].textContent, /Anbieter|provider/);
+    assert.match(box.title, /\[UnknownError\]/);
     assert.match(box.title, /Click to retry/);
     assert.equal(content.cacheGet('Local language pack test'), null);
 
     await content.translateBuiltinIntoBox('Local language pack test', box, 'de');
-    assert.equal(attempts, 2);
+    assert.equal(attempts, 3);
     assert.equal(box.dataset.garyState, 'done');
     assert.equal(box.spans['.gary-cn-title'].textContent, 'Lokale Übersetzung');
     assert.equal(content.cacheGet('Local language pack test').translatedTitle, 'Lokale Übersetzung');
@@ -318,23 +311,25 @@ test('本机模式忽略现有云端 Key；现代配置不会意外回退到旧�
     assert.equal(legacy.config.configured,true);
 });
 
-test('本机与云端缓存互不覆盖，旧本机缓存迁移后仍可读', () => {
+test('本机与云端缓存互不覆盖，旧本机缓存迁移后仍可读', async () => {
     content.applyConfigFromStorage({translationMode:'ai',targetLanguage:'en'});
     content.cacheSet('Mode title',{tag:'科技',translatedTitle:'AI result'},'en');
     content.cacheSet('Mode title',{tag:'__builtin__',translatedTitle:'Local result'},'en');
     assert.equal(content.cacheGet('Mode title').translatedTitle,'AI result');
     content.applyConfigFromStorage({translationMode:'local',targetLanguage:'en'});
     assert.equal(content.cacheGet('Mode title').translatedTitle,'Local result');
-    storageData.translationCache = {v:1,entries:[['en\nLegacy local',{tag:'__builtin__',translatedTitle:'Migrated local'}]]};
-    content.loadCache();
-    assert.equal(content.cacheGet('Legacy local').translatedTitle,'Migrated local');
-    content.applyConfigFromStorage({translationMode:'ai',targetLanguage:'en'});
-    assert.equal(content.cacheGet('Legacy local'),null);
+    const migrated = createRuntime('content.js', {stored:{targetLanguage:'en', translationCache:{v:1,
+        entries:[['en\nLegacy local',{tag:'__builtin__',translatedTitle:'Migrated local',ts:Date.now() + 1}]]}}});
+    await migrated.api.lookupCache(['local\nen\nLegacy local']);
+    assert.equal(migrated.api.cacheGet('Legacy local').translatedTitle,'Migrated local');
+    migrated.api.applyConfigFromStorage({translationMode:'ai',targetLanguage:'en'});
+    assert.equal(migrated.api.cacheGet('Legacy local'),null);
 });
 
 test('切换本机模式后不发送云端请求，旧云端回复不会重新渲染', async (t) => {
-    content.applyConfigFromStorage({translationMode:'ai',targetLanguage:'en',customApiKey:'test-key',
-        customApiUrl:'https://api.openai.com/v1/chat/completions',customModel:'gpt-6-luna'});
+    const config = {translationMode:'ai',targetLanguage:'en',customApiKey:'test-key',
+        customApiUrl:'https://api.openai.com/v1/chat/completions',customModel:'gpt-6-luna'};
+    content.applyConfigFromStorage(config);
     let complete, calls=0;
     const original=globalThis.chrome.runtime.sendMessage;
     globalThis.chrome.runtime.sendMessage=()=>{calls++;return new Promise(resolve=>{complete=resolve;});};
@@ -348,30 +343,18 @@ test('切换本机模式后不发送云端请求，旧云端回复不会重新�
     await pending;
     assert.notEqual(oldBox.dataset.garyState,'done');
     assert.equal(content.cacheGet('Old request'),null);
-    content.applyConfigFromStorage({translationMode:'ai',targetLanguage:'en'});
+    content.applyConfigFromStorage(config);
     assert.equal(content.cacheGet('Old request').translatedTitle,'Old AI result');
 });
 
-test('仅验证元数据发生变化时也作废旧回复，避免标题重建后挂回旧 badge', async (t) => {
-    const previous=structuredClone(storageData);
-    const settings={translationMode:'ai',selectedProvider:'openai',targetLanguage:'en',uiLanguage:'en',
-        providerConfigs:{openai:{apiKey:'test-key',apiUrl:'https://api.openai.com/v1/chat/completions',model:'gpt-6-luna'}}};
-    Object.assign(storageData,settings);
-    content.applyConfigFromStorage(settings);
+test('仅验证元数据发生变化时也作废旧回复，避免标题重建后挂回旧 badge', async () => {
+    const {api, chrome, receive} = createRuntime('content.js', {stored:aiSettings('en')});
+    const {buildPublicConfig} = require('../shared.js');
     let complete;
-    const original=globalThis.chrome.runtime.sendMessage;
-    globalThis.chrome.runtime.sendMessage=()=>new Promise(resolve=>{complete=resolve;});
-    t.after(()=>{
-        globalThis.chrome.runtime.sendMessage=original;
-        Object.keys(storageData).forEach(key=>delete storageData[key]);
-        Object.assign(storageData,previous);
-    });
-    const box=makeFakeBox();
-    const pending=content.translateChunk([{text:'Metadata change',box}]);
-    storageData.providerConfigs={openai:{...settings.providerConfigs.openai,testedAt:123}};
-    onChangedListeners.forEach(listener=>listener({providerConfigs:{
-        oldValue:settings.providerConfigs,newValue:storageData.providerConfigs
-    }},'local'));
+    chrome.runtime.sendMessage = () => new Promise(resolve => { complete = resolve; });
+    const box = makeFakeBox();
+    const pending = api.translateChunk([{text:'Metadata change',box}]);
+    receive({type:'configUpdated', config:buildPublicConfig(aiSettings('en'), 'en')});
     complete({ok:true,results:[{tag:'科技',translatedTitle:'Old reply'}]});
     await pending;
     assert.notEqual(box.dataset.garyState,'done');

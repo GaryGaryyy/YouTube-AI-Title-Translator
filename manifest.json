@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "8.1.0",
+  "version": "8.2.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "icons": {
@@ -19,6 +19,15 @@
       "128": "icon/icon128.png"
     },
     "default_title": "__MSG_actionTitle__"
+  },
+  "commands": {
+    "toggle-translation": {
+      "suggested_key": {
+        "default": "Alt+Shift+T",
+        "mac": "Alt+Shift+T"
+      },
+      "description": "__MSG_commandToggle__"
+    }
   },
   "background": {
     "service_worker": "background.js"
@@ -44,6 +53,7 @@
         "https://m.youtube.com/*"
       ],
       "js": [
+        "shared.js",
         "content.js"
       ],
       "css": [

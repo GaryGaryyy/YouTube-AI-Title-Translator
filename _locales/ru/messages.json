@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "Настроить перевод заголовков",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "Включить или приостановить автоперевод заголовков"
   }
 }

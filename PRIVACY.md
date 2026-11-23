@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: October 1, 2026
+Effective date: November 23, 2026
 
 YouTube Title Translator - AI Bilingual is a Chrome extension that translates YouTube video titles and shows bilingual title information on YouTube pages.
 
@@ -11,7 +11,7 @@ The extension may process the following data to provide its core translation fea
 - YouTube video titles visible on the page.
 - Translation settings selected by the user.
 - API keys, model names, and endpoint settings entered by the user.
-- Local translation cache and extension preferences.
+- Local translation cache, extension preferences, and aggregated local usage counters (translation counts, error category counts, and up to 30 active calendar dates used solely for local diagnostics and a dismissible store rating link; no titles, URLs, or API keys are recorded).
 
 ## How Data Is Stored
 
@@ -61,7 +61,7 @@ https://github.com/GaryGaryyy/YouTube-AI-Title-Translator/issues
 
 # 隐私政策
 
-生效日期：2026 年 10 月 1 日
+生效日期：2026 年 11 月 23 日
 
 YouTube 标题翻译 - AI双语标题 是一款 Chrome 扩展，用于翻译 YouTube 视频标题，并在 YouTube 页面中显示双语标题信息。
 
@@ -72,7 +72,7 @@ YouTube 标题翻译 - AI双语标题 是一款 Chrome 扩展，用于翻译 You
 - YouTube 页面中可见的视频标题。
 - 用户选择的翻译设置。
 - 用户填写的 API Key、模型名称和接口地址设置。
-- 本地翻译缓存和扩展偏好设置。
+- 本地翻译缓存、扩展偏好设置以及仅存于本地的聚合使用计数（翻译成功/失败次数、错误类型计数和最多 30 个活跃日期，仅用于用户主动复制诊断信息与判断是否展示可关闭的商店评分入口；不记录任何标题、网址或 API Key，也不会上传）。
 
 ## 数据如何存储
 

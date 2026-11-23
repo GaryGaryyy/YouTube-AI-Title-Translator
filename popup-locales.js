@@ -158,6 +158,47 @@
     };
     const verified = {en:"Verified","zh-Hans":"已验证",ja:"確認済み",ko:"확인 완료",th:"ตรวจสอบแล้ว",es:"Verificado",fr:"Vérifié",de:"Geprüft",pt:"Verificado",id:"Terverifikasi",vi:"Đã kiểm tra",ru:"Проверено",ar:"تم التحقق",hi:"जाँच पूरी"};
     Object.entries(verified).forEach(([code, value]) => { text[code].verifiedStatus = value; });
+    const preview = {
+        en: "Open the installed extension’s popup to test the configuration.",
+        "zh-Hans": "请打开已安装扩展的弹窗来测试配置。",
+        ja: "設定の動作確認はインストール済みの拡張機能のポップアップから行ってください。",
+        ko: "설정 테스트는 설치된 확장 프로그램의 팝업에서 실행할 수 있습니다.",
+        th: "ทดสอบการตั้งค่าได้จากป๊อปอัปของส่วนขยายที่ติดตั้งแล้วเท่านั้น",
+        es: "Para probar la configuración, abre la ventana emergente de la extensión instalada.",
+        fr: "Pour tester les réglages, ouvrez la fenêtre de l’extension installée.",
+        de: "Öffne das Popup der installierten Erweiterung, um die Einstellungen zu testen.",
+        pt: "Para testar a configuração, abra a janela pop-up da extensão instalada.",
+        id: "Untuk menguji pengaturan, buka pop-up ekstensi yang sudah terpasang.",
+        vi: "Để kiểm tra cấu hình, hãy mở cửa sổ bật lên của tiện ích đã cài đặt.",
+        ru: "Чтобы проверить настройки, откройте всплывающее окно установленного расширения.",
+        ar: "لاختبار الإعدادات، افتح النافذة المنبثقة للإضافة المثبّتة.",
+        hi: "सेटिंग की जाँच करने के लिए इंस्टॉल किए गए एक्सटेंशन का पॉप-अप खोलें।"
+    };
+    Object.entries(preview).forEach(([code, value]) => { text[code].previewTestUnavailable = value; });
+    text.de.feedback = "Rückmeldung";
+    text.pt.feedback = "Comentários";
+    text.fr.diagnosticTypeLabel = "Type d’erreur";
+    const preferenceKeys = ["showTags", "bilingualOrder", "translatedFirst", "originalFirst", "skipLanguages", "skipLanguagesHint",
+        "copyDiagnostics", "diagnosticsCopied", "diagnosticsCopyFailed", "rateInStore", "dismissReview"];
+    const preferences = {
+        en: ["Show category tags", "Title order", "Translation first", "Original first", "Also skip languages", "Your target language is always skipped automatically.", "Copy diagnostics", "Diagnostics copied.", "Couldn’t copy diagnostics. Try again.", "Rate on the Chrome Web Store", "Don’t show again"],
+        "zh-Hans": ["显示分类标签", "双语显示顺序", "译文在上", "原文在上", "额外跳过的语言", "目标语言已自动跳过（本机与 AI 通用）", "复制诊断信息", "诊断信息已复制。", "无法复制诊断信息，请重试。", "去商店评分", "不再提示"],
+        ja: ["カテゴリタグを表示", "タイトルの表示順", "翻訳を上に表示", "原文を上に表示", "追加でスキップする言語", "翻訳先の言語は常に自動でスキップされます。", "診断情報をコピー", "診断情報をコピーしました。", "診断情報をコピーできませんでした。再試行してください。", "Chrome ウェブストアで評価する", "今後表示しない"],
+        ko: ["카테고리 태그 표시", "제목 표시 순서", "번역문 먼저", "원문 먼저", "추가로 건너뛸 언어", "번역 대상 언어는 항상 자동으로 건너뜁니다.", "진단 정보 복사", "진단 정보를 복사했습니다.", "진단 정보를 복사하지 못했습니다. 다시 시도하세요.", "Chrome 웹 스토어에서 평가하기", "다시 표시하지 않기"],
+        th: ["แสดงแท็กหมวดหมู่", "ลำดับการแสดงชื่อ", "คำแปลอยู่ด้านบน", "ต้นฉบับอยู่ด้านบน", "ข้ามภาษาเพิ่มเติม", "ระบบข้ามภาษาปลายทางให้อัตโนมัติเสมอ", "คัดลอกข้อมูลการวินิจฉัย", "คัดลอกข้อมูลการวินิจฉัยแล้ว", "คัดลอกข้อมูลการวินิจฉัยไม่ได้ โปรดลองอีกครั้ง", "ให้คะแนนใน Chrome เว็บสโตร์", "ไม่ต้องแสดงอีก"],
+        es: ["Mostrar etiquetas de categoría", "Orden de los títulos", "Traducción arriba", "Original arriba", "Omitir también idiomas", "Tu idioma de destino siempre se omite automáticamente.", "Copiar datos de diagnóstico", "Datos de diagnóstico copiados.", "No se pudieron copiar los datos de diagnóstico. Inténtalo de nuevo.", "Valorar en Chrome Web Store", "No volver a mostrar"],
+        fr: ["Afficher les étiquettes de catégorie", "Ordre des titres", "Traduction en premier", "Original en premier", "Ignorer aussi ces langues", "La langue cible est toujours ignorée automatiquement.", "Copier les données de diagnostic", "Données de diagnostic copiées.", "Impossible de copier les données de diagnostic. Réessayez.", "Noter sur le Chrome Web Store", "Ne plus afficher"],
+        de: ["Kategorie-Tags anzeigen", "Reihenfolge der Titel", "Übersetzung zuerst", "Original zuerst", "Weitere Sprachen überspringen", "Deine Zielsprache wird immer automatisch übersprungen.", "Diagnosedaten kopieren", "Diagnosedaten wurden kopiert.", "Diagnosedaten konnten nicht kopiert werden. Versuche es erneut.", "Im Chrome Web Store bewerten", "Nicht mehr anzeigen"],
+        pt: ["Mostrar etiquetas de categoria", "Ordem dos títulos", "Tradução primeiro", "Original primeiro", "Ignorar também idiomas", "O idioma de destino é sempre ignorado automaticamente.", "Copiar dados de diagnóstico", "Dados de diagnóstico copiados.", "Não foi possível copiar os dados de diagnóstico. Tente novamente.", "Avaliar na Chrome Web Store", "Não mostrar novamente"],
+        id: ["Tampilkan tag kategori", "Urutan judul", "Terjemahan di atas", "Judul asli di atas", "Lewati juga bahasa lain", "Bahasa tujuan selalu dilewati secara otomatis.", "Salin informasi diagnostik", "Informasi diagnostik disalin.", "Informasi diagnostik tidak dapat disalin. Coba lagi.", "Beri nilai di Chrome Web Store", "Jangan tampilkan lagi"],
+        vi: ["Hiện nhãn thể loại", "Thứ tự hiển thị tiêu đề", "Bản dịch ở trên", "Bản gốc ở trên", "Bỏ qua thêm ngôn ngữ", "Ngôn ngữ đích luôn được tự động bỏ qua.", "Sao chép thông tin chẩn đoán", "Đã sao chép thông tin chẩn đoán.", "Không thể sao chép thông tin chẩn đoán. Hãy thử lại.", "Đánh giá trên Cửa hàng Chrome trực tuyến", "Không hiện lại"],
+        ru: ["Показывать метки категорий", "Порядок заголовков", "Сначала перевод", "Сначала оригинал", "Дополнительно пропускать языки", "Целевой язык всегда пропускается автоматически.", "Скопировать данные диагностики", "Данные диагностики скопированы.", "Не удалось скопировать данные диагностики. Попробуйте ещё раз.", "Оценить в Интернет-магазине Chrome", "Больше не показывать"],
+        ar: ["إظهار وسوم الفئات", "ترتيب العناوين", "الترجمة أولًا", "الأصل أولًا", "تخطّي لغات إضافية", "يتم تخطّي لغة الترجمة المستهدفة تلقائيًا دائمًا.", "نسخ معلومات التشخيص", "نُسخت معلومات التشخيص.", "تعذّر نسخ معلومات التشخيص. حاول مرة أخرى.", "قيّم الإضافة في سوق Chrome الإلكتروني", "عدم الإظهار مجددًا"],
+        hi: ["श्रेणी के टैग दिखाएँ", "शीर्षकों का क्रम", "अनुवाद ऊपर", "मूल शीर्षक ऊपर", "अतिरिक्त भाषाएँ छोड़ें", "आपकी लक्ष्य भाषा हमेशा अपने-आप छोड़ दी जाती है।", "निदान की जानकारी कॉपी करें", "निदान की जानकारी कॉपी हो गई।", "निदान की जानकारी कॉपी नहीं हो सकी। दोबारा कोशिश करें।", "Chrome वेब स्टोर पर रेटिंग दें", "फिर न दिखाएँ"]
+    };
+    for (const [code, values] of Object.entries(preferences)) {
+        preferenceKeys.forEach((key, index) => { text[code][key] = values[index]; });
+    }
     root.POPUP_REVIEW_TEXT = text;
     if (typeof module !== "undefined" && module.exports) module.exports = text;
 })(globalThis);

@@ -5,6 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '..', 'popup.js'), 'utf8');
 const reviewedCopy = fs.readFileSync(path.join(__dirname, '..', 'popup-locales.js'), 'utf8');
+const {source: readSource, createRuntime} = require('./runtime-harness');
 const html = fs.readFileSync(path.join(__dirname, '..', 'popup.html'), 'utf8');
 
 // 运行真实弹窗脚本，以轻量 DOM 和 Chrome API 桩验证事件、保存和异步竞态；不调用付费 API。
@@ -39,7 +40,7 @@ class Element {
     focus() { this.focused = true; }
     async fire(event) { for (const handler of this.listeners[event] || []) await handler({key:'',preventDefault(){}}); }
 }
-function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',translatedTitle:'示例译文'} }, browserLanguage = '') {
+function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',translatedTitle:'示例译文'} }, browserLanguage = '', browserAPIs = {}) {
     const elements = [], ids = {};
     for (const [,tag,raw] of html.matchAll(/<([a-z][a-z0-9-]*)([^<>]*?)>/gi)) {
         const attrs = {};
@@ -61,9 +62,9 @@ function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',tr
             throw new Error('Unexpected DOM query: '+selector);
         }
     };
-    const data = structuredClone(initial), messages = [], permissions = [];
+    const data = structuredClone(initial), messages = [], permissions = [], reads = [];
     let setError = false, grant = true, messagingError = false, messagingThrows = false;
-    const chrome = { i18n:{getUILanguage:()=>browserLanguage}, runtime:{lastError:null,getManifest(){return {version:'8.1.0'};},sendMessage(message,callback){
+    const chrome = { i18n:{getUILanguage:()=>browserLanguage}, runtime:{lastError:null,getManifest(){return {version:'8.2.0'};},sendMessage(message,callback){
         messages.push(structuredClone(message));
         if (messagingThrows) throw new Error('Extension context invalidated');
         if (messagingError) {
@@ -72,29 +73,169 @@ function createPopup(initial = {}, response = { ok:true, result:{tag:'科技',tr
             chrome.runtime.lastError = null;
             return;
         }
+        if (message.type === 'migrateSettings') { callback({ok:false}); return; }
+        if (message.type === 'getCacheStats') { callback(initial.workerStats); return; }
         if (typeof response === 'function') response(message,callback);
         else callback(structuredClone(response));
     }}, storage:{ local:{
-        get(defaults,callback){ callback(Object.assign({}, defaults, structuredClone(data))); },
+        get(defaults,callback){
+            reads.push(defaults);
+            callback(Array.isArray(defaults) ? Object.fromEntries(defaults.filter(key=>Object.hasOwn(data,key)).map(key=>[key,structuredClone(data[key])]))
+                : Object.assign({}, defaults, structuredClone(data)));
+        },
         set(values,callback){
             chrome.runtime.lastError = setError ? {message:'test storage failure'} : null;
             if (!setError) Object.assign(data, structuredClone(values));
             if (callback) callback();
             chrome.runtime.lastError = null;
         },
-        remove(key,callback){ delete data[key]; if(callback)callback(); }
+        remove(key,callback){ delete data[key]; if(callback)queueMicrotask(callback); }
     }}, permissions:{async request(request){ permissions.push(request); return grant; }} };
-    const context = vm.createContext({document,chrome,URL,Date,console,module:{exports:{}}});
+    const context = vm.createContext({document,chrome,URL,Date,console,module:{exports:{}}, ...browserAPIs});
+    vm.runInContext(readSource('shared.js'),context,{filename:'shared.js'});
+    context.GaryShared = context.module.exports;
+    context.module.exports = {};
     vm.runInContext(reviewedCopy,context,{filename:'popup-locales.js'});
     vm.runInContext(source,context,{filename:'popup.js'});
     onReady();
-    return { elements:ids, data, messages, permissions, document, api:context.module.exports,
+    return { elements:ids, data, messages, permissions, reads, document, api:context.module.exports,
         failStorage(value){setError=value;}, failMessaging(value){messagingError=value;}, throwMessaging(value){messagingThrows=value;}, grantPermission(value){grant=value;} };
 }
+
+test('2B-AC3 advanced popup controls save changes without verifying the provider', async () => {
+    const popup = createPopup({ translationMode: 'ai', targetLanguage: 'zh-Hans', showTags: false, bilingualOrder: 'original-first', skipLanguages: ['en', 'xx'] });
+    const { showTagsToggle, bilingualOrderSelect, skipLanguageChoices, modeLocal, modeAi } = popup.elements;
+    const labels = skipLanguageChoices.children;
+    const inputs = labels.map(label => label.children[0]);
+    assert.equal(showTagsToggle.checked, false);
+    assert.equal(bilingualOrderSelect.value, 'original-first');
+    assert.equal(inputs.length, 12);
+    // When target is zh-Hans or zh-Hant, both Chinese variants are auto-skipped and hidden.
+    assert.equal(labels.find(l => l.children[0].value === 'zh-Hans').hidden, true);
+    assert.equal(labels.find(l => l.children[0].value === 'zh-Hant').hidden, true);
+    assert.deepEqual(inputs.filter(el => el.checked).map(el => el.value), ['en']);
+    showTagsToggle.checked = true;
+    await showTagsToggle.fire('change');
+    bilingualOrderSelect.value = 'translated-first';
+    await bilingualOrderSelect.fire('change');
+    const japanese = inputs.find(input => input.value === 'ja');
+    japanese.checked = true;
+    await japanese.fire('change');
+    assert.equal(popup.data.showTags, true);
+    assert.equal(popup.data.bilingualOrder, 'translated-first');
+    assert.deepEqual(popup.data.skipLanguages, ['en', 'ja']);
+    assert.ok(!popup.messages.some(message => message.type === 'testTranslation'));
+
+    // Switching target to English reveals both Chinese variants and links them together.
+    popup.elements.targetLanguageSelect.value = 'en';
+    await popup.elements.targetLanguageSelect.fire('change');
+    assert.equal(labels.find(l => l.children[0].value === 'zh-Hans').hidden, false);
+    assert.equal(labels.find(l => l.children[0].value === 'zh-Hant').hidden, false);
+    const zhHans = inputs.find(input => input.value === 'zh-Hans');
+    const zhHant = inputs.find(input => input.value === 'zh-Hant');
+    zhHans.checked = true;
+    await zhHans.fire('change');
+    assert.equal(zhHant.checked, true);
+    assert.deepEqual(popup.data.skipLanguages, ['ja', 'zh-Hans', 'zh-Hant']);
+
+    // Switching to local mode completely hides the category tags toggle row; AI mode restores it.
+    await modeLocal.fire('click');
+    assert.equal(popup.elements.showTagsRow.hidden, true);
+    await modeAi.fire('click');
+    assert.equal(popup.elements.showTagsRow.hidden, false);
+    assert.equal(showTagsToggle.checked, true);
+
+    // Segmented bilingual order buttons stay synced with bilingualOrderSelect and storage.
+    await popup.elements.orderOriginalBtn.fire('click');
+    assert.equal(popup.data.bilingualOrder, 'original-first');
+    assert.equal(bilingualOrderSelect.value, 'original-first');
+    assert.equal(popup.elements.orderOriginalBtn.getAttribute('aria-pressed'), 'true');
+    assert.equal(popup.elements.orderTranslatedBtn.getAttribute('aria-pressed'), 'false');
+
+    popup.failStorage(true);
+    showTagsToggle.checked = false;
+    await showTagsToggle.fire('change');
+    assert.equal(showTagsToggle.checked, true);
+    assert.equal(popup.elements.status.textContent, popup.api.UI_TEXT.en.saveFailed);
+});
+
+test('2B-AC5 review visibility requires both thresholds and dismissal persists in the worker', async () => {
+    const activeDays = ['2026-11-20', '2026-11-21', '2026-11-22'];
+    for (const usageStats of [{ successCount: 49, activeDays }, { successCount: 50, activeDays: activeDays.slice(0, 2) }]) {
+        assert.equal(createPopup({ usageStats }).elements.reviewPrompt.hidden, true);
+    }
+    const worker = createRuntime('background.js', { stored: { usageStats: { successCount: 50, activeDays } } });
+    const popup = createPopup(worker.data, (message, callback) => worker.send(message).then(callback));
+    assert.equal(popup.elements.reviewPrompt.hidden, false);
+    assert.match(html, /href="https:\/\/chromewebstore\.google\.com\/detail\/bhajnflcikmidmdalnjhknillnkaojhk\/reviews"/);
+    await popup.elements.dismissReviewBtn.fire('click');
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(popup.elements.reviewPrompt.hidden, true);
+    assert.equal(worker.data.usageStats.reviewPromptDismissed, true);
+    assert.equal(createPopup(worker.data).elements.reviewPrompt.hidden, true);
+});
+
+test('2B-AC5 copy writes a redacted diagnostic JSON and shows clipboard feedback', async () => {
+    const worker = createRuntime('background.js', { stored: {
+        ...seed(), uiLanguage: 'en', customApiKey: 'private-key', customApiUrl: 'https://private-url.example',
+        providerConfigs: { openai: { model: 'https://private-model.example', apiKey: 'private-key', apiUrl: 'https://private-url.example' } },
+        translationCache: [['en\nprivate-video-title', { tag: '科技', cn: 'private translation' }]]
+    } });
+    let clipboard, copyError = false;
+    const popup = createPopup(worker.data, (message, callback) => worker.send(message).then(callback), 'en', {
+        Translator: {}, LanguageDetector: {}, navigator: { clipboard: { async writeText(value) {
+            if (copyError) throw new Error('Clipboard denied');
+            clipboard = value;
+        } } }
+    });
+    await popup.elements.copyDiagnosticsBtn.fire('click');
+    assert.doesNotMatch(clipboard, /apiKey|apiUrl|private|https?:\/\//);
+    const result = JSON.parse(clipboard);
+    assert.deepEqual(Object.keys(result), ['version', 'config', 'cacheEntries', 'usageStats', 'localApiSupported']);
+    assert.equal(result.localApiSupported, true);
+    assert.equal(result.cacheEntries, 1);
+    assert.equal(popup.elements.status.textContent, popup.api.UI_TEXT.en.diagnosticsCopied);
+    copyError = true;
+    await popup.elements.copyDiagnosticsBtn.fire('click');
+    assert.equal(popup.elements.status.textContent, popup.api.UI_TEXT.en.diagnosticsCopyFailed);
+});
 const seed = () => ({ translationMode:'ai', selectedProvider:'openai', uiLanguage:'zh-Hans', targetLanguage:'zh-Hans',
     providerConfigs:{openai:{apiKey:'saved-test-key',apiUrl:'https://api.openai.com/v1/chat/completions',model:'gpt-6-luna'}},
     customApiKey:'saved-test-key',customApiUrl:'https://api.openai.com/v1/chat/completions',customModel:'gpt-6-luna' });
 async function input(ui,id,value,event='input'){ui.elements[id].value=value;await ui.elements[id].fire(event);}
+
+test('清缓存由后台串行处理，通信失败保留计数并显示错误', async () => {
+    const seedCache = { translationCache: { v: 2, entries: [['title', {}]] } };
+    const handled = createPopup(seedCache, { ok: true });
+    await handled.elements.clearCacheBtn.fire('click');
+    assert.deepEqual(handled.messages.map(msg => msg.type), ['migrateSettings','getCacheStats','cacheClear']);
+    assert.ok(handled.data.translationCache, 'worker success does not also remove storage in the popup');
+    assert.match(handled.elements.clearCacheBtn.textContent, /\(0\)$/);
+
+    const failures = [createPopup(seedCache, { ok: false }), createPopup(seedCache), createPopup(seedCache)];
+    failures[1].failMessaging(true);
+    failures[2].throwMessaging(true);
+    for (const ui of failures) {
+        await ui.elements.clearCacheBtn.fire('click');
+        assert.equal(ui.messages.at(-1).type, 'cacheClear');
+        assert.deepEqual(ui.data.translationCache, seedCache.translationCache);
+        assert.match(ui.elements.clearCacheBtn.textContent, /\(1\)$/);
+        assert.equal(ui.elements.status.textContent, ui.api.UI_TEXT.en.saveFailed);
+    }
+});
+
+test('弹窗计数优先读取 SW，仅在不可用时依次回退元信息和旧缓存', () => {
+    const seedCache = { translationCache: { v: 2, entries: [['title', {}]] } };
+    const primary = createPopup({...seedCache, workerStats:{ok:true,totalEntries:27}});
+    const meta = createPopup({...seedCache, translationCacheMeta:{v:3,totalEntries:21}});
+    const legacy = createPopup(seedCache);
+    assert.match(primary.elements.clearCacheBtn.textContent, /\(27\)$/);
+    assert.match(meta.elements.clearCacheBtn.textContent, /\(21\)$/);
+    assert.match(legacy.elements.clearCacheBtn.textContent, /\(1\)$/);
+    assert.equal(primary.reads.some(keys => [].concat(Array.isArray(keys) ? keys : Object.keys(keys)).includes('translationCache')), false);
+    assert.deepEqual(Array.from(meta.reads[1]), ['translationCacheMeta']);
+    assert.deepEqual(Array.from(legacy.reads[2]), ['translationCache']);
+});
 
 test('model presets: 每家最多四个，推荐项唯一且排第一，所有新文案有本地化', () => {
     const ui=createPopup();
@@ -162,7 +303,7 @@ test('测试中锁定配置；成功后保存并标记通过；修改 Key 后仅
     const ui=createPopup(seed(),(message,callback)=>{finish=callback;});
     await input(ui,'apiKey','new-test-key');
     const pending=ui.elements.testBtn.fire('click');
-    assert.equal(ui.messages[0].type,'testTranslation');
+    assert.equal(ui.messages.find(msg=>msg.type==='testTranslation').type,'testTranslation');
     assert.equal(ui.elements.aiSettings.disabled,true);
     assert.equal(ui.data.providerConfigs.openai.apiKey,'saved-test-key');
     await ui.elements['card-anthropic'].fire('click');
@@ -187,7 +328,7 @@ test('本机模式可无 Key 保存、不发送测试请求，并保留所有服
     assert.equal(ui.data.translationMode,'local');
     assert.equal(ui.data.customApiKey,'');
     assert.equal(ui.data.providerConfigs.openai.apiKey,'saved-test-key');
-    assert.equal(ui.messages.length,0);
+    assert.equal(ui.messages.filter(msg=>msg.type==='testTranslation').length,0);
     await ui.elements.modeAi.fire('click');
     assert.equal(ui.elements.apiKey.value,'saved-test-key');
 });
@@ -210,13 +351,13 @@ test('自定义端点先校验和授权，拒绝时不测试或保存', async ()
     await input(ui,'modelName','manual-model');
     await input(ui,'apiUrl','http://example.com/v1/chat/completions');
     await ui.elements.testBtn.fire('click');
-    assert.equal(ui.messages.length,0);
+    assert.equal(ui.messages.filter(msg=>msg.type==='testTranslation').length,0);
     assert.equal(ui.permissions.length,0);
     await input(ui,'apiUrl','https://example.com/v1/chat/completions');
     ui.grantPermission(false);
     await ui.elements.testBtn.fire('click');
     assert.equal(ui.permissions.length,1);
-    assert.equal(ui.messages.length,0);
+    assert.equal(ui.messages.filter(msg=>msg.type==='testTranslation').length,0);
     assert.equal(ui.data.selectedProvider,'openai');
     assert.equal(ui.elements.status.dataset.kind,'error');
 });
@@ -287,14 +428,16 @@ test('中文浏览器的 popup 默认中文，显式保存 en 时保持英文', 
 test('下线预设读取时迁移为 custom，保留凭证、清理旧项，提示重新授权且只迁移一次', async () => {
     for (const provider of ['google','minimax','zhipu','kimi']) {
         const cfg={apiKey:'retired-key',apiUrl:'https://old-provider.test/v1/chat/completions',model:'retired-model'};
-        const ui=createPopup({selectedProvider:provider,translationMode:'ai',providerConfigs:{[provider]:cfg}});
+        const worker = createRuntime('background.js', {stored:{selectedProvider:provider,translationMode:'ai',providerConfigs:{[provider]:cfg}}});
+        assert.equal((await worker.send({type:'migrateSettings'})).ok,true);
+        const ui=createPopup(worker.data);
         assert.equal(ui.data.selectedProvider,'custom');
         assert.deepEqual(ui.data.providerConfigs.custom,{...cfg,apiUrl:provider==='google'?'':cfg.apiUrl});
         assert.equal(ui.data.providerConfigs[provider],undefined);
         assert.equal(ui.data.providerMigrationPending,true);
         assert.equal(ui.elements.status.textContent,ui.api.UI_TEXT.en.providerRetired);
-        const again=createPopup(ui.data);
-        assert.deepEqual(again.data,ui.data);
+        await worker.send({type:'migrateSettings'});
+        assert.equal(worker.writes.length,1);
         assert.equal(Object.keys(ui.api.migrateProviderSettings(ui.data).updates).length,0);
         if (provider==='google') {
             assert.equal(ui.elements.apiUrl.value,'');
@@ -314,16 +457,31 @@ test('迁移不覆盖已存在的 custom，包括空配置；旧扁平下线配�
         const initial={selectedProvider:'kimi',providerConfigs:{custom,kimi:{apiKey:'retired-key',model:'retired-model',apiUrl:'https://old.test'}}};
         const ui=createPopup(initial);
         assert.deepEqual(ui.data.providerConfigs.custom,custom);
-        assert.equal(ui.data.providerConfigs.kimi,undefined);
+        assert.deepEqual(ui.data.providerConfigs.kimi,initial.providerConfigs.kimi);
+        assert.equal(ui.elements.apiKey.value,custom.apiKey || '');
     }
     const ui=createPopup({selectedProvider:'zhipu',customApiKey:'legacy-key',customApiUrl:'https://legacy.test',customModel:'legacy-model'});
-    assert.deepEqual(ui.data.providerConfigs.custom,{apiKey:'legacy-key',apiUrl:'https://legacy.test',model:'legacy-model'});
+    assert.equal(ui.data.providerConfigs,undefined);
+    assert.equal(ui.elements.apiKey.value,'legacy-key');
+    assert.equal(ui.elements.apiUrl.value,'https://legacy.test');
+    assert.equal(ui.elements.modelName.value,'legacy-model');
 });
 
-test('旧模型在读取时持久回落推荐项、保留 Key，custom 模型不变，后台与弹窗迁移完全相同', () => {
-    const bg=require('./runtime-harness').createRuntime('background.js').api;
+test('SW 不可用时只读显示待迁移服务商，保存不会覆盖未归档凭证', async () => {
+    const initial = {selectedProvider:'kimi', translationMode:'ai',
+        providerConfigs:{kimi:{apiKey:'legacy-key',apiUrl:'https://legacy.test/chat/completions',model:'legacy-model'}}};
+    const ui = createPopup(initial);
+    assert.equal(ui.elements.apiKey.value,'legacy-key');
+    await ui.elements.saveBtn.fire('click');
+    assert.deepEqual(ui.data,initial);
+    assert.equal(ui.elements.status.textContent,ui.api.UI_TEXT.en.saveFailed);
+});
+
+test('旧模型由 SW 持久回落推荐项，弹窗预览只归一化显示', async () => {
     const configs={openai:{apiKey:'key',model:'gpt-6-astra',testedAt:123},anthropic:{apiKey:'claude-key',model:'claude-fable-5-1'},deepseek:{apiKey:'deep-key',model:'old-model'},custom:{apiKey:'custom-key',model:'keep-model'}};
-    const ui=createPopup({selectedProvider:'anthropic',providerConfigs:configs});
+    const worker = createRuntime('background.js', {stored:{selectedProvider:'anthropic',providerConfigs:configs}});
+    await worker.send({type:'migrateSettings'});
+    const ui=createPopup(worker.data);
     assert.equal(ui.data.providerConfigs.openai.model,'gpt-6-luna');
     assert.equal(ui.data.providerConfigs.anthropic.model,'claude-haiku-5-5');
     assert.equal(ui.data.providerConfigs.deepseek.model,'old-model');   // 手动填写的模型名不改写
@@ -332,10 +490,11 @@ test('旧模型在读取时持久回落推荐项、保留 Key，custom 模型不
     assert.equal(ui.data.providerConfigs.openai.apiKey,'key');
     assert.equal(ui.elements.modelName.value,'claude-haiku-5-5');
     const oldHaiku=createPopup({selectedProvider:'anthropic',providerConfigs:{anthropic:{apiKey:'key',model:'claude-haiku-4-5-20251001'}}});
-    assert.equal(oldHaiku.data.providerConfigs.anthropic.model,'claude-haiku-5-5');
+    assert.equal(oldHaiku.data.providerConfigs.anthropic.model,'claude-haiku-4-5-20251001');
+    assert.equal(oldHaiku.elements.modelName.value,'claude-haiku-5-5');
     for (const selectedProvider of ['google','minimax','zhipu','kimi','openai','anthropic']) {
         const initial={selectedProvider,providerConfigs:configs,customApiKey:'legacy-key'};
-        assert.equal(JSON.stringify(bg.migrateProviderSettings(initial)),JSON.stringify(ui.api.migrateProviderSettings(initial)));
+        assert.equal(JSON.stringify(worker.api.migrateProviderSettings(initial)),JSON.stringify(ui.api.migrateProviderSettings(initial)));
     }
     for (const [provider,ids] of Object.entries({openai:['gpt-6-luna','gpt-6.1-terra','gpt-6.1-sol'],anthropic:['claude-haiku-5-5','claude-sonnet-5-5','claude-opus-5-5'],deepseek:['deepseek-flash','deepseek-v4-pro']})) {
         assert.deepEqual(Array.from(ui.api.PRESETS[provider].models,m=>m.id),ids);

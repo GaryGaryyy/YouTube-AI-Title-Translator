@@ -50,6 +50,7 @@ test('AI 等待检测时配置变化、关闭、移出文档或标题变化都�
         const runtime=createRuntime('content.js',{stored:aiSettings()});
         runtime.chrome.i18n.detectLanguage=(text,cb)=>{complete=cb;};
         const item=candidate(runtime); const processing=runtime.api.process();
+        await settle();
         assert.equal(item.el.getAttribute('data-gary-done'),'true');
         if(mode==='config')runtime.api.applyConfigFromStorage(aiSettings('de'));
         if(mode==='disabled')runtime.api.applyConfigFromStorage({...aiSettings(),enabled:false});
@@ -71,6 +72,7 @@ test('慢拉丁检测不阻塞非拉丁请求和缓存命中标题，也不额�
     const cached=candidate(runtime,'Recetas caseras fáciles para principiantes');
     runtime.api.cacheSet(cached.el.textContent,{tag:'科技',translatedTitle:'Cached translation'},'es');
     const pending=runtime.api.process();
+    await settle();
     assert.equal(requests(runtime).length,1);
     assert.deepEqual(requests(runtime)[0].items,[nonLatin.el.textContent]);
     assert.equal(cached.parent.querySelectorAll().length,1);
@@ -116,6 +118,7 @@ test('较早完成的检测在等待其它标题期间配置变化，旧候选�
     const first=candidate(runtime);
     const second=candidate(runtime,'Explorando lugares maravillosos cerca de casa');
     const processing=runtime.api.process();
+    await settle();
     completions[0]({isReliable:false,languages:[]});
     await settle();
     assert.equal(first.parent.querySelectorAll().length,1);

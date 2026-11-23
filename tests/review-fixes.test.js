@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {createRuntime, title, aiSettings, settle} = require('./runtime-harness');
+const {createRuntime, title, aiSettings, settle, shardedEntries} = require('./runtime-harness');
 
 // 审查时补的三处：语言检测不能拖住页面扫描、扫描期间的触发不能丢、清缓存不能被在途写入复活。
 const spanish = 'Cómo preparar deliciosas recetas caseras';
@@ -55,8 +55,8 @@ test('检测结果带地区码（pt-BR）时按主语言判断为同语言', asy
 });
 
 const cacheEntry = (text, ts) => ['ai\nen\n' + text, {tag: '科技', translatedTitle: text, ...(ts ? {ts} : {})}];
-const storedKeys = runtime => runtime.data.translationCache.entries.map(([key]) => key);
-const userClear = runtime => runtime.change({translationCache: {oldValue: {v: 2, entries: []}}});
+const storedKeys = runtime => shardedEntries(runtime.data).map(([key]) => key);
+const userClear = runtime => runtime.send({type:'cacheClear'});
 
 test('落盘途中清缓存：晚到的写入不让旧条目复活，清除后排队的新条目照常落盘', async () => {
     let finishFirstSet;
@@ -66,10 +66,11 @@ test('落盘途中清缓存：晚到的写入不让旧条目复活，清除后�
     }});
     const stale = runtime.api.cachePut([cacheEntry('old')]);
     await settle();
-    userClear(runtime);                                        // 用户清缓存先到
-    const fresh = runtime.api.cachePut([cacheEntry('new')]);   // 清除后排队的新条目
+    const clear = userClear(runtime);                           // 用户清缓存先到
+    const fresh = runtime.api.cachePut([cacheEntry('new', Date.now() + 1000)]);
     finishFirstSet();                                          // 在途的旧写入后到，把旧条目写回
     assert.equal((await stale).ok, true);
+    assert.equal((await clear).ok, true);
     assert.equal((await fresh).ok, true);
     assert.deepEqual(storedKeys(runtime), ['ai\nen\nnew']);
 });
@@ -77,8 +78,7 @@ test('落盘途中清缓存：晚到的写入不让旧条目复活，清除后�
 test('清缓存之前翻译、之后才送达的条目被拒收，之后翻译的照收', async () => {
     const runtime = createRuntime('background.js');
     await runtime.api.cachePut([cacheEntry('before')]);
-    delete runtime.data.translationCache;
-    userClear(runtime);
+    await userClear(runtime);
     await runtime.api.cachePut([cacheEntry('late-old', Date.now() - 60000), cacheEntry('after', Date.now() + 1000)]);
     assert.deepEqual(storedKeys(runtime), ['ai\nen\nafter']);
 });
@@ -97,13 +97,18 @@ test('译文 badge 是链接，会被标题选择器再次选中：不能把它�
     assert.equal(requests(runtime).length, 1);
 });
 
-test('清缓存后，迟到广播里的旧条目不会合并回页面内存；清除后的新条目照常合并', async () => {
+test('清缓存后，迟到的 lookup 回复不会合并回页面，下一次查询仍可命中', async () => {
     const runtime = createRuntime('content.js', {stored: aiSettings('en')});
-    runtime.api.cacheSet('Old title', {tag: '科技', translatedTitle: '旧译文'}, 'en');
-    runtime.change({translationCache: {oldValue: {v: 2, entries: []}}});
-    assert.equal(runtime.api.cacheGet('Old title'), null);
-    runtime.change({translationCache: {newValue: {v: 2, entries: [
-        cacheEntry('Old title', Date.now() - 60000), cacheEntry('New title', Date.now() + 1000)]}}});
+    const old = cacheEntry('Old title', Date.now() - 60000);
+    const fresh = cacheEntry('New title', Date.now() + 1000);
+    let reply;
+    runtime.chrome.runtime.sendMessage = () => new Promise(resolve => { reply = resolve; });
+    const stale = runtime.api.lookupCache([old[0], fresh[0]]);
+    runtime.receive({type:'cacheCleared',clearedAt:Date.now()});
+    reply({ok:true,hits:[old,fresh]});
+    assert.equal((await stale).size,0);
+    runtime.chrome.runtime.sendMessage = async () => ({ok:true,hits:[old,fresh]});
+    await runtime.api.lookupCache([old[0],fresh[0]]);
     assert.equal(runtime.api.cacheGet('Old title'), null);
     assert.equal(runtime.api.cacheGet('New title').translatedTitle, 'New title');
 });
@@ -120,23 +125,22 @@ test('后台没确认落盘的增量会随下一次写入重发，不会悄悄�
     await runtime.api.flushCacheWrites();
     await runtime.api.flushCacheWrites();
     assert.equal(sent.length, 2);
-    assert.deepEqual([...sent[1]].sort(), ['ai\nen\nFirst', 'ai\nen\nSecond']);
+    assert.deepEqual([...sent[1]].sort(), ['ai\nen\n["custom","test"]\nFirst', 'ai\nen\n["custom","test"]\nSecond']);
 });
 
-test('等待语言检测期间别的标签页已翻好同一标题：检测结束后用缓存渲染，不重复请求', async () => {
+test('等待语言检测期间本页另一处已翻好同一标题：检测结束后用缓存渲染，不重复请求', async () => {
     const runtime = createRuntime('content.js', {stored: aiSettings(), extra: {LanguageDetector: hangingDetector}});
     const item = addTitle(runtime, spanish);
     const scan = runtime.api.process();
     await settle();
-    runtime.change({translationCache: {newValue: {v: 2, entries: [
-        ['ai\nes\n' + spanish, {tag: '美食', translatedTitle: 'Otra pestaña ya lo tradujo', ts: Date.now()}]]}}});
+    runtime.api.cacheSet(spanish, {tag: '美食', translatedTitle: 'Una traducción en esta página'}, 'es');
     runTimers(runtime);
     await scan; await settle();
     assert.equal(requests(runtime).length, 0);
     assert.equal(badges(item), 1);
 });
 
-test('同一轮里先排好队的标题，在等其它标题检测期间被别的标签页翻好：派发前用缓存，不重复请求', async () => {
+test('同一轮里先排好队的标题，在等其它标题检测期间被本页另一处翻好：派发前用缓存，不重复请求', async () => {
     // 第一条的检测立刻返回“不同语言”并排队，第二条的检测一直挂起，直到超时。
     let calls = 0;
     const detector = {create: async () => ({detect: () => (++calls === 1
@@ -146,8 +150,7 @@ test('同一轮里先排好队的标题，在等其它标题检测期间被别�
     const second = addTitle(runtime, spanish);
     const scan = runtime.api.process();
     await settle();
-    runtime.change({translationCache: {newValue: {v: 2, entries: [
-        ['ai\nes\n' + first.el.textContent, {tag: '美食', translatedTitle: 'Cómo hacer pan casero', ts: Date.now()}]]}}});
+    runtime.api.cacheSet(first.el.textContent, {tag: '美食', translatedTitle: 'Cómo hacer pan casero'}, 'es');
     runTimers(runtime);
     await scan; await settle();
     const sentTexts = requests(runtime).flatMap(msg => msg.items);
@@ -165,6 +168,7 @@ test('排队等待期间整张卡片被移出再插回：不会永久停在排�
     const first = addTitle(runtime, 'Comment faire du pain maison facilement');
     addTitle(runtime, spanish);
     const scan = runtime.api.process();
+    await settle();
     await settle();
     const [queued] = first.parent.querySelectorAll();
     first.el.isConnected = false; queued.isConnected = false;     // YouTube 把整张卡片移出文档
@@ -187,19 +191,20 @@ test('命中过的旧条目随下一次写入告知后台，缓存满时按最�
     const tab = createRuntime('content.js', {stored: {...aiSettings('en'), translationCache: {v: 2, entries: [
         cacheEntry('oldest', 1), cacheEntry('second', 2)]}}});
     tab.chrome.runtime.sendMessage = msg => background.send(msg);
+    await tab.api.lookupCache([cacheEntry('oldest',1)[0]]);
+    const writesAfterMigration = background.writes.length;
     assert.equal(tab.api.cacheGet('oldest').translatedTitle, 'oldest');     // 页面命中最旧的一条
     await tab.api.flushCacheWrites();
-    assert.equal(background.writes.length, 0);                              // 只命中不写盘
+    assert.equal(background.writes.length, writesAfterMigration);                              // 只命中不写盘
     tab.api.cacheSet('newest', {tag: '科技', translatedTitle: 'newest'}, 'en');
     await tab.api.flushCacheWrites();
-    assert.deepEqual(storedKeys(background), ['ai\nen\nsecond', 'ai\nen\noldest', 'ai\nen\nnewest']);
+    assert.deepEqual(storedKeys(background), ['ai\nen\nsecond', 'ai\nen\noldest', 'ai\nen\n["custom","test"]\nnewest']);
 });
 
 test('清缓存后才送达的命中记录只是 key：不会把已清除的旧条目带回来', async () => {
     const runtime = createRuntime('background.js');
     await runtime.api.cachePut([cacheEntry('hit-before-clear')]);
-    delete runtime.data.translationCache;
-    userClear(runtime);
+    await userClear(runtime);
     await runtime.send({type: 'cachePut', touched: ['ai\nen\nhit-before-clear', 42, 'ai\nen\nnever-existed'],
         entries: [cacheEntry('after-clear', Date.now() + 1000)]});
     assert.deepEqual(storedKeys(runtime), ['ai\nen\nafter-clear']);

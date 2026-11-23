@@ -129,11 +129,11 @@ test('迁移后待确认期间不自动翻译，走现有错误路径，不产�
     assert.deepEqual(plain(runtime.data.providerConfigs.custom),{apiKey:'saved-key',apiUrl:'https://api.minimax.io/v1/chat/completions',model:'saved-model'});
 });
 
-test('四家服务商列表、8.1.0 版本和精确域名权限一致，不注入其他 YouTube 子域', () => {
+test('四家服务商列表、8.2.0 版本和精确域名权限一致，不注入其他 YouTube 子域', () => {
     const manifest=JSON.parse(source('manifest.json'));
-    assert.equal(manifest.version,'8.1.0');
-    assert.equal(JSON.parse(source('package.json')).version,'8.1.0');
-    assert.match(source('content.js'),/v8\.1\.0/);
+    assert.equal(manifest.version,'8.2.0');
+    assert.equal(JSON.parse(source('package.json')).version,'8.2.0');
+    assert.match(source('content.js'),/v8\.2\.0/);
     assert.deepEqual(manifest.content_scripts[0].matches,['https://www.youtube.com/*','https://m.youtube.com/*']);
     assert.deepEqual(manifest.host_permissions,[...manifest.content_scripts[0].matches,
         'https://api.deepseek.com/*','https://api.openai.com/*','https://api.anthropic.com/*']);
@@ -141,14 +141,14 @@ test('四家服务商列表、8.1.0 版本和精确域名权限一致，不注�
     const api=createRuntime('popup.js').api;
     assert.deepEqual(Object.keys(api.PRESETS),['openai','anthropic','deepseek','custom']);
     assert.equal((source('popup.html').match(/class="provider-card"/g)||[]).length,4);
-    assert.match(source('popup.html'),/grid-template-columns:repeat\(4,/);
+    assert.match(source('popup.html'),/grid-template-columns:\s*repeat\(4,/);
     assert.match(source('popup.html'),/GaryGaryyy\/YouTube-AI-Title-Translator\/issues/);
 });
 
 test('旧预设没有可用 URL 时，content 仍请求后台迁移；回复不泄露配置且重复读取不再写入', async () => {
     const stored={translationMode:'ai',selectedProvider:'google',providerConfigs:{google:{apiKey:'legacy-key',apiUrl:'https://old.test/{MODEL}',model:'old-model'}}};
     const page=createRuntime('content.js',{stored});
-    assert.equal(page.messages.some(msg=>msg.type==='migrateSettings'),true);
+    assert.equal(page.messages.some(msg=>msg.type==='getPageBootstrap'),true);
     assert.equal(page.api.getActiveTranslationConfig(stored).config.configured,false);
     const worker=backgroundRuntime(stored,async()=>{throw new Error('No network expected');});
     assert.deepEqual(plain(await worker.send({type:'migrateSettings'})),{ok:true});

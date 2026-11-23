@@ -6,7 +6,11 @@ const {initWelcome,WELCOME_TARGET_LANGUAGES} = require('../welcome.js');
 function makeDoc() {
     const ids={};
     for (const id of ['title','subtitle','targetLabel','localNote','localUnsupported','aiNote','pinTip','openYouTube','privacy','targetLanguage','saveStatus',
-        'beforeLabel','afterLabel','exampleOriginal','exampleTranslated','exampleOriginalAfter','chooseLanguage','pinTitle']) ids[id]=new Element(id==='targetLanguage'?'select':'p');
+        'beforeLabel','afterLabel','exampleOriginal','exampleTranslated','exampleOriginalAfter','chooseLanguage','pinTitle','readyTitle',
+        'pinExtName','pinStep1','pinStep2','previewBadge','afterCard','exampleChannelBefore','exampleChannelAfter','uiLanguageSelect',
+        'localTrialRow','tryLocalBtn','tryLocalStatus','tryLocalOutput',
+        'compareHeading','compareOrigLabel','compareOrig','compareLocalLabel','compareLocalMeta','compareLocalResult','compareLocalNote',
+        'compareAiLabel','compareAiMeta','compareAiTag','compareAiResult','compareAiNote']) ids[id]=new Element(['targetLanguage','uiLanguageSelect'].includes(id)?'select':'p');
     return {documentElement:{},ids,getElementById:id=>ids[id],createElement:tag=>new Element(tag)};
 }
 function makeChrome(stored={},language='zh-CN') {
@@ -31,18 +35,19 @@ test('welcome 14 种界面均渲染前后示例和三步文案，译文与原文
     const html=source('welcome.html');
     const steps=html.match(/<ol class="steps"[^>]*>([\s\S]*?)<\/ol>/)[1];
     assert.equal([...steps.matchAll(/<li>/g)].length,3);
-    assert.match(steps,/<li>\s*<h2 id="chooseLanguage"[\s\S]*?<li>\s*<a id="openYouTube"[\s\S]*?<li>\s*<h2 id="pinTitle"/);
+    assert.match(steps,/<li>[\s\S]*?<h2 id="chooseLanguage"[\s\S]*?<li>[\s\S]*?<h2 id="pinTitle"[\s\S]*?<li>[\s\S]*?<h2 id="readyTitle"[\s\S]*?<a id="openYouTube"/);
     assert.equal([...html.matchAll(/class="thumbnail" aria-hidden="true"/g)].length,2);
     assert.match(html,/id="exampleTranslated"[\s\S]*?id="exampleOriginalAfter"/);
+    assert.match(html,/src="icon\/icon48\.png"/);
     for (const [language,copy] of Object.entries(WELCOME_TEXT)) {
         const doc=makeDoc(),{chrome}=makeChrome({uiLanguage:language});
         await initWelcome(doc,chrome,WELCOME_TEXT,true);
-        for (const id of ['beforeLabel','afterLabel','exampleOriginal','exampleTranslated','chooseLanguage','openYouTube','pinTitle']) {
+        for (const id of ['beforeLabel','afterLabel','chooseLanguage','openYouTube','pinTitle','readyTitle','pinExtName','pinStep1','pinStep2']) {
             assert.match(html,new RegExp(`id="${id}"`));
             assert.equal(doc.ids[id].textContent,copy[id],`${language}.${id}`);
         }
-        assert.notEqual(copy.exampleOriginal,copy.exampleTranslated,language);
-        assert.equal(doc.ids.exampleOriginalAfter.textContent,copy.exampleOriginal);
+        assert.notEqual(doc.ids.exampleOriginal.textContent,doc.ids.exampleTranslated.textContent,language);
+        assert.equal(doc.ids.exampleOriginalAfter.textContent,doc.ids.exampleOriginal.textContent);
         assert.equal(doc.documentElement.dir,language==='ar'?'rtl':'ltr');
     }
 });
@@ -92,11 +97,13 @@ test('welcome 保存 callback 失败、同步异常、Promise 拒绝显示当前
 });
 test('welcome HTML 使用本地外部脚本、指定 YouTube 链接和无障碍主题样式', () => {
     const html=source('welcome.html');
-    assert.equal([...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].length,2);
+    assert.deepEqual([...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map(match=>match[1]),
+        ['welcome-locales.js','shared.js','welcome.js']);
+    assert.equal([...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].length,3);
     for (const [,body] of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) assert.equal(body.trim(),'');
     assert.match(html,/href="https:\/\/www.youtube.com\/" target="_blank" rel="noopener"/);
-    assert.match(html,/prefers-color-scheme:dark/); assert.match(html,/:focus-visible/);
-    assert.match(html,/icon\/icon128.png/); assert.match(html,/--accent:#d9153c/);
+    assert.match(html,/prefers-color-scheme:\s*dark/); assert.match(html,/:focus-visible/);
+    assert.match(html,/icon\/icon128\.png/); assert.match(html,/--accent:\s*#d9153c/);
     assert.doesNotMatch(source('welcome.js'),/innerHTML/);
 });
 test('welcome 仅主链接使用按钮样式，资源均本地加载且保留窄屏布局', () => {
@@ -107,7 +114,22 @@ test('welcome 仅主链接使用按钮样式，资源均本地加载且保留窄
     assert.doesNotMatch(html,/<link\b|@import|url\s*\(/i);
     const links=html.match(/(?:^|\n)\s*a\s*\{([^}]+)\}/)[1];
     assert.doesNotMatch(links,/background|padding|border-radius|display/);
-    assert.match(html,/#openYouTube\s*\{[^}]*background:var\(--accent\)/);
-    assert.match(html,/@media \(max-width:600px\)/);
-    assert.match(html,/\[dir="rtl"\] \.preview-arrow::before/);
+    assert.match(html,/#openYouTube\s*\{[^}]*background:\s*var\(--accent\)/);
+    assert.match(html,/@media\s*\(max-width:\s*600px\)/);
+    assert.match(html,/\[dir="rtl"\]\s*\.preview-arrow::before/);
+    assert.match(html,/\[dir="rtl"\]\s*\.pin-arrow::before/);
+    assert.match(html,/class="pin-flow"/);
+});
+test('welcome 切换界面语言与目标语言时实时更新示例卡片并保存设置', async () => {
+    const doc=makeDoc(), {chrome,writes}=makeChrome({},'zh-CN');
+    await initWelcome(doc,chrome,WELCOME_TEXT,true);
+    assert.equal(doc.ids.exampleOriginal.textContent,'How global creators explain AI tools');
+    assert.equal(doc.ids.exampleTranslated.textContent,'全球创作者如何解读 AI 工具');
+    doc.ids.targetLanguage.value='en'; await doc.ids.targetLanguage.fire('change');
+    assert.equal(doc.ids.exampleOriginal.textContent,'東京旅行Vlog 2026 おすすめスポット');
+    assert.equal(doc.ids.exampleTranslated.textContent,'Tokyo Travel Vlog 2026: Top Recommended Spots');
+    doc.ids.uiLanguageSelect.value='ja'; await doc.ids.uiLanguageSelect.fire('change');
+    assert.equal(doc.documentElement.lang,'ja');
+    assert.equal(doc.ids.title.textContent,WELCOME_TEXT.ja.title);
+    assert.deepEqual(writes,[{targetLanguage:'en'},{uiLanguage:'ja'}]);
 });

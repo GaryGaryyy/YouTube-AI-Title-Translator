@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "配置标题翻译",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "开启或暂停标题自动翻译"
   }
 }

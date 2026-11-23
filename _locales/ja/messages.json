@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "タイトル翻訳の設定",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "タイトルの自動翻訳を切り替える"
   }
 }

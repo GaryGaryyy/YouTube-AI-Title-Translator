@@ -3,13 +3,88 @@
     text-decoration: none;
     color: inherit;
     display: block;
+    box-sizing: border-box;
     margin-block-end: 4px;
     cursor: pointer;
     font-family: inherit;
 }
 
+.gary-cn-box:not(.gary-main-title-box) {
+    padding-inline-end: 24px;
+}
+
 .gary-cn-box:hover {
     text-decoration: none;
+}
+
+.gary-cn-box.gary-original-first:not(.gary-main-title-box) {
+    margin-block: 4px 0;
+}
+
+.gary-original-first .gary-original-title {
+    margin-block: 0 4px;
+    color: inherit;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.gary-original-first.gary-main-title-box:is([data-gary-state="done"], [data-gary-state="pending"]) .gary-cn-title {
+    font-size: 1.6rem;
+}
+
+.gary-hide-tags[data-gary-state="done"] .gary-tag,
+.gary-hide-tags[data-gary-state="pending"] .gary-tag {
+    display: none;
+}
+
+.gary-cn-box[role="button"]:focus-visible,
+.gary-setup-banner button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.gary-setup-banner {
+    position: fixed;
+    inset-block-end: 16px;
+    inset-inline-end: 16px;
+    z-index: 2200;
+    box-sizing: border-box;
+    max-inline-size: min(440px, calc(100% - 32px));
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    background: #fff;
+    color: #212121;
+    box-shadow: 0 3px 12px #0003;
+    font: 500 14px/1.4 Roboto, Arial, sans-serif;
+}
+
+.gary-setup-banner span {
+    flex: 1 1 215px;
+}
+
+.gary-setup-banner button {
+    padding: 5px 9px;
+    border: 1px solid currentColor;
+    border-radius: 5px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+html[dark] .gary-setup-banner {
+    background: #272727;
+    border-color: #555;
+    color: #f1f1f1;
+}
+:fullscreen .gary-setup-banner,
+:root:has(:fullscreen) .gary-setup-banner {
+    display: none;
 }
 
 .gary-cn-box:not(.gary-main-title-box):hover .gary-cn-title {
@@ -90,11 +165,15 @@ html[dark] .gary-en-sub {
 html[dark] .gary-original-title {
     color: #aaa;
 }
+html[dark] .gary-original-first .gary-original-title {
+    color: #f1f1f1;
+}
 
 /* 状态提示：标签与最多两行的次要文字并排，观看页原文独占一行。 */
 .gary-cn-box[data-gary-state="error"],
 .gary-cn-box[data-gary-state="download"] {
     display: grid;
+    cursor: pointer;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
     column-gap: 8px;
@@ -139,9 +218,6 @@ html[dark] .gary-cn-box[data-gary-state="download"] .gary-cn-title {
 }
 
 /* 下载语言包是可操作提示，不使用失败配色。 */
-.gary-cn-box[data-gary-state="download"] {
-    cursor: pointer;
-}
 .gary-cn-box[data-gary-state="download"] .gary-tag {
     background-color: #e8f0fe;
     color: #065fd4;

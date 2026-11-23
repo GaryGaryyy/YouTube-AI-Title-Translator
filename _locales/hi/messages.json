@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "शीर्षक अनुवाद कॉन्फ़िगर करें",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "शीर्षकों का अपने आप अनुवाद चालू करें या रोकें"
   }
 }

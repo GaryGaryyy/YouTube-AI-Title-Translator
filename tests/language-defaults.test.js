@@ -9,10 +9,12 @@ const rows = [
     ['pt-BR','pt','pt'], ['es-419','es','es'], ['ja','ja','ja'], ['ru','ru','en'], ['ar','ar','en'],
     ['hi','hi','en'], ['nb','en','en'], ['','en','en'], [undefined,'en','en']
 ];
-test('四份浏览器语言实现完全相同，全部语言映射与未知值一致', () => {
+test('四个运行入口复用共享语言实现，全部语言映射与未知值一致', () => {
     const files = ['content.js','background.js','popup.js','welcome.js'];
-    const implementations = files.map(file => source(file).match(/\/\/ 用户从未保存过语言时[\s\S]*?function getBrowserLanguage\(\) \{[\s\S]*?\n\}/)[0]);
-    implementations.forEach(copy => assert.equal(copy, implementations[0]));
+    for (const file of files) {
+        assert.match(source(file), /require\("\.\/shared\.js"\)/);
+        assert.doesNotMatch(source(file), /function getBrowserDefaultLanguages\(/);
+    }
     const apis = files.slice(0, 3).map(file => createRuntime(file).api).concat(welcome);
     for (const api of apis) for (const [input, uiLanguage, targetLanguage] of rows) {
         assert.deepEqual(plain(api.getBrowserDefaultLanguages(input)), {uiLanguage,targetLanguage});

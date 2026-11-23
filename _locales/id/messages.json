@@ -10,5 +10,8 @@
   "actionTitle": {
     "message": "Atur terjemahan judul",
     "description": "Toolbar tooltip"
+  },
+  "commandToggle": {
+    "message": "Aktifkan atau jeda terjemahan judul otomatis"
   }
 }
